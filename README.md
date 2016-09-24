@@ -3,5 +3,4 @@ This is SJSU Fall 2016 CMPE 243 Autonomous car project. Our team name is Spartan
 2. Shaurya Jain - GEO Controller (added new branch)
 3. Sukriti Choudhary - Master Controller
 4. Bhushan Muthiyan - Sensor controller(NEW)
-5. Manali Deshmukh - Android Application and Communication bridge controller
-
+5. Manali Deshmukh - Android Application and Communication bridge controller(New)
