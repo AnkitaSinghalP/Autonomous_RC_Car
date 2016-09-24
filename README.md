@@ -5,4 +5,4 @@ This is SJSU Fall 2016 CMPE 243 Autonomous car project. The roles of project mem
 
 
 2. Sukriti Choudhary - Master Controller
->>>>>>> sukriti
+
