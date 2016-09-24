@@ -6,7 +6,7 @@ This is SJSU Fall 2016 CMPE 243 Autonomous car project. The roles and responsibi
 
 2. Shaurya Jain - GEO Controlller
 
-3. Karthik Parameswaran - Sensorand I/O controller
+3. Karthik Parameswaran - Sensorand I/O controller(new)
 
 
 
