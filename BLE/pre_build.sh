@@ -4,4 +4,4 @@
 # This file executes from the build directory by the Eclipse "Pre Build" step
 #
 
-python ../_can_dbc/dbc_parse.py -i ../_can_dbc/snf.dbc -s BLE > ../_can_dbc/generated_can.h
+python ../_can_dbc/dbc_parse.py -i C:/SJSU_Dev/projects/CMPE243Project/snf.dbc -s BLE > ../_can_dbc/generated_can.h

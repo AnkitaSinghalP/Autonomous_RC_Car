@@ -1,4 +1,4 @@
-/// DBC file: ../_can_dbc/243.dbc    Self node: 'DRIVER'  (ALL = 0)
+/// DBC file: C:/SJSU_Dev/projects/CMPE243Project/snf.dbc    Self node: 'MASTER'  (ALL = 0)
 /// This file can be included by a source file, for example: #include "generated.h"
 #ifndef __GENEARTED_DBC_PARSER
 #define __GENERATED_DBC_PARSER
@@ -23,137 +23,320 @@ typedef struct {
     uint8_t  dlc; ///< Data length of the message
 } dbc_msg_hdr_t; 
 
-// static const dbc_msg_hdr_t DBC_TEST1_HDR =                        {  500, 8 };
-// static const dbc_msg_hdr_t DBC_TEST2_HDR =                        {  501, 8 };
-// static const dbc_msg_hdr_t DBC_TEST3_HDR =                        {  502, 8 };
-static const dbc_msg_hdr_t DRIVER_HEARTBEAT_HDR =                 {  100, 1 };
-static const dbc_msg_hdr_t MOTOR_CMD_HDR =                        {  101, 1 };
-static const dbc_msg_hdr_t MOTOR_STATUS_HDR =                     {  400, 3 };
-static const dbc_msg_hdr_t SENSOR_SONARS_HDR =                    {  200, 8 };
-// static const dbc_msg_hdr_t DBC_TEST4_HDR =                        {  503, 8 };
+static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {  010, 1 };
+static const dbc_msg_hdr_t SYSTEM_CMD_HDR =                       {  100, 1 };
+static const dbc_msg_hdr_t MASTER_HEARTBEAT_HDR =                 {  134, 4 };
+static const dbc_msg_hdr_t MOTOR_CMD_HDR =                        {  151, 3 };
+static const dbc_msg_hdr_t SYSTEM_STATUS_HDR =                    {  162, 2 };
+static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 7 };
+static const dbc_msg_hdr_t SENSOR_SPEED_HDR =                     {  212, 1 };
+static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
+static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
+// static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 4 };
+static const dbc_msg_hdr_t BLE_DEST_RCHD_HDR =                    {  312, 1 };
+static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
+// static const dbc_msg_hdr_t BLE_MAP_DATA_HDR =                     {  361, 8 };
+static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
+static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 1 };
+static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
+// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 5 };
+static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
+static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
-/// Enumeration(s) for Message: 'DRIVER_HEARTBEAT' from 'DRIVER'
+/// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    DRIVER_HEARTBEAT_cmd_NOOP = 0,
-    DRIVER_HEARTBEAT_cmd_SYNC = 1,
-    DRIVER_HEARTBEAT_cmd_REBOOT = 2,
-} DRIVER_HEARTBEAT_cmd_E ;
+    SYSTEM_START = 1,
+    SYSTEM_STOP = 0,
+    SYSTEM_RESET = 2,
+} SYSTEM_CMD_enum_E ;
+
+/// Enumeration(s) for Message: 'MOTOR_CMD' from 'MASTER'
+typedef enum {
+    STEER_FORWARD = 4,
+    STEER_LEFT = 0,
+    STEER_RIGHT = 2,
+    STEER_REVERSE = 5,
+    STEER_HALF_LEFT = 1,
+    STEER_HALF_RIGHT = 3,
+} MOTOR_CMD_steer_E ;
+
+typedef enum {
+    START = 1,
+    BRAKE = 2,
+    RESUME = 3,
+    STOP = 0,
+} MOTOR_CMD_drive_E ;
 
 
 
 
-/// Message: DRIVER_HEARTBEAT from 'DRIVER', DLC: 1 byte(s), MID: 100
+/// Message: BLE_COMM_CMD from 'BLE', DLC: 1 byte(s), MID: 010
 typedef struct {
-    DRIVER_HEARTBEAT_cmd_E DRIVER_HEARTBEAT_cmd; ///< B7:0   Destination: SENSOR,MOTOR
+    uint8_t BLE_COMM_CMD_enum;                ///< B7:0   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} BLE_COMM_CMD_t;
+
+
+/// Message: SYSTEM_CMD from 'MASTER', DLC: 1 byte(s), MID: 100
+typedef struct {
+    SYSTEM_CMD_enum_E SYSTEM_CMD_enum;        ///< B7:0   Destination: BLE,GEO,IO,MOTOR,SENSOR
 
     // No dbc_mia_info_t for a message that we will send
-} DRIVER_HEARTBEAT_t;
+} SYSTEM_CMD_t;
 
 
-/// Message: MOTOR_CMD from 'DRIVER', DLC: 1 byte(s), MID: 101
+/// Message: MASTER_HEARTBEAT from 'MASTER', DLC: 4 byte(s), MID: 134
 typedef struct {
-    int8_t MOTOR_CMD_steer : 4;               ///< B3:0  Min: -5 Max: 5   Destination: MOTOR
-    uint8_t MOTOR_CMD_drive : 4;              ///< B7:4  Min: 0 Max: 9   Destination: MOTOR
+    uint16_t MASTER_HEARTBEAT_rx_bytes;       ///< B15:0   Destination: BLE
+    uint16_t MASTER_HEARTBEAT_tx_bytes;       ///< B31:16   Destination: BLE
+
+    // No dbc_mia_info_t for a message that we will send
+} MASTER_HEARTBEAT_t;
+
+
+/// Message: MOTOR_CMD from 'MASTER', DLC: 3 byte(s), MID: 151
+typedef struct {
+    uint8_t MOTOR_CMD_speed;                  ///< B4:0  Min: 10 Max: 20   Destination: MOTOR,IO
+    MOTOR_CMD_steer_E MOTOR_CMD_steer;        ///< B15:8   Destination: MOTOR,IO
+    MOTOR_CMD_drive_E MOTOR_CMD_drive;        ///< B23:16   Destination: MOTOR,IO
 
     // No dbc_mia_info_t for a message that we will send
 } MOTOR_CMD_t;
 
 
-/// Message: MOTOR_STATUS from 'MOTOR', DLC: 3 byte(s), MID: 400
+/// Message: SYSTEM_STATUS from 'MASTER', DLC: 2 byte(s), MID: 162
 typedef struct {
-    uint8_t MOTOR_STATUS_wheel_error : 1;     ///< B0:0   Destination: DRIVER,IO
-    float MOTOR_STATUS_speed_kph;             ///< B23:8   Destination: DRIVER,IO
+    uint8_t SYSTEM_STATUS_ble : 1;            ///< B0:0   Destination: BLE,IO
+    uint8_t SYSTEM_STATUS_geo : 1;            ///< B1:1   Destination: BLE,IO
+    uint8_t SYSTEM_STATUS_io : 1;             ///< B2:2   Destination: BLE,IO
+    uint8_t SYSTEM_STATUS_master : 1;         ///< B3:3   Destination: BLE,IO
+    uint8_t SYSTEM_STATUS_motor : 1;          ///< B4:4   Destination: BLE,IO
+    uint8_t SYSTEM_STATUS_sensor : 1;         ///< B5:5   Destination: BLE,IO
+    uint8_t SYSTEM_STATUS_util;               ///< B15:8  Min: 0 Max: 100   Destination: BLE,IO
 
-    dbc_mia_info_t mia_info;
-} MOTOR_STATUS_t;
+    // No dbc_mia_info_t for a message that we will send
+} SYSTEM_STATUS_t;
 
-/// @{ MUX'd message: SENSOR_SONARS
+/// @{ MUX'd message: SENSOR_ULTRASONIC
 
 /// Struct for MUX: m0 (used for transmitting)
 typedef struct {
-    uint16_t SENSOR_SONARS_err_count;         ///< B15:4   Destination: DRIVER,IO
-    float SENSOR_SONARS_left;                 ///< B27:16   Destination: DRIVER,IO
-    float SENSOR_SONARS_middle;               ///< B39:28   Destination: DRIVER,IO
-    float SENSOR_SONARS_right;                ///< B51:40   Destination: DRIVER,IO
-    float SENSOR_SONARS_rear;                 ///< B63:52   Destination: DRIVER,IO
+    uint16_t SENSOR_ULTRASONIC_err_count;     ///< B15:4   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_left;           ///< B23:16   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_middle;         ///< B31:24   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_right;          ///< B39:32   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_rear_right;     ///< B47:40   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_rear_left;      ///< B55:48   Destination: MASTER
 
     dbc_mia_info_t mia_info;
-} SENSOR_SONARS_m0_t;
+} SENSOR_ULTRASONIC_m0_t;
 
 /// Struct for MUX: m1 (used for transmitting)
 typedef struct {
-    uint16_t SENSOR_SONARS_err_count;         ///< B15:4   Destination: DRIVER,IO
-    float SENSOR_SONARS_no_filt_left;         ///< B27:16   Destination: DBG
-    float SENSOR_SONARS_no_filt_middle;       ///< B39:28   Destination: DBG
-    float SENSOR_SONARS_no_filt_right;        ///< B51:40   Destination: DBG
-    float SENSOR_SONARS_no_filt_rear;         ///< B63:52   Destination: DBG
+    uint16_t SENSOR_ULTRASONIC_err_count;     ///< B15:4   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_left;   ///< B23:16   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_middle; ///< B31:24   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_right;  ///< B39:32   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_rear_right; ///< B47:40   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_rear_left; ///< B55:48   Destination: MASTER
 
     dbc_mia_info_t mia_info;
-} SENSOR_SONARS_m1_t;
+} SENSOR_ULTRASONIC_m1_t;
 
 /// Struct with all the child MUX'd signals (Used for receiving)
 typedef struct {
-    SENSOR_SONARS_m0_t m0; ///< MUX'd structure
-    SENSOR_SONARS_m1_t m1; ///< MUX'd structure
-} SENSOR_SONARS_t;
+    SENSOR_ULTRASONIC_m0_t m0; ///< MUX'd structure
+    SENSOR_ULTRASONIC_m1_t m1; ///< MUX'd structure
+} SENSOR_ULTRASONIC_t;
 /// @} MUX'd message
 
 
+/// Message: SENSOR_SPEED from 'SENSOR', DLC: 1 byte(s), MID: 212
+typedef struct {
+    uint8_t SENSOR_SPEED_data;                ///< B7:0   Destination: MASTER,IO,BLE
+
+    dbc_mia_info_t mia_info;
+} SENSOR_SPEED_t;
+
+
+/// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 213
+typedef struct {
+    uint8_t SENSOR_BATT_stat;                 ///< B6:0  Min: 0 Max: 100   Destination: MASTER,IO,BLE
+
+    dbc_mia_info_t mia_info;
+} SENSOR_BATT_t;
+
+
+/// Message: SENSOR_HEARTBEAT from 'SENSOR', DLC: 4 byte(s), MID: 214
+typedef struct {
+    uint16_t SENSOR_HEARTBEAT_rx_bytes;       ///< B15:0   Destination: MASTER
+    uint16_t SENSOR_HEARTBEAT_tx_bytes;       ///< B31:16   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} SENSOR_HEARTBEAT_t;
+
+
+/// Message: BLE_DEST_RCHD from 'BLE', DLC: 1 byte(s), MID: 312
+typedef struct {
+    uint8_t BLE_DEST_RCHD_stat : 1;           ///< B0:0  Min: 0 Max: 1   Destination: MASTER,IO
+
+    dbc_mia_info_t mia_info;
+} BLE_DEST_RCHD_t;
+
+
+/// Message: BLE_HEARTBEAT from 'BLE', DLC: 4 byte(s), MID: 314
+typedef struct {
+    uint16_t BLE_HEARTBEAT_rx_bytes;          ///< B15:0   Destination: MASTER
+    uint16_t BLE_HEARTBEAT_tx_bytes;          ///< B31:16   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} BLE_HEARTBEAT_t;
+
+
+/// Message: GEO_DIRECTION from 'GEO', DLC: 1 byte(s), MID: 411
+typedef struct {
+    uint8_t GEO_DIRECTION_data;               ///< B7:0   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} GEO_DIRECTION_t;
+
+
+/// Message: GEO_ACCELEROMETER from 'GEO', DLC: 1 byte(s), MID: 412
+typedef struct {
+    uint8_t GEO_ACCELEROMETER_tilt;           ///< B7:0   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} GEO_ACCELEROMETER_t;
+
+
+/// Message: GEO_HEARTBEAT from 'GEO', DLC: 4 byte(s), MID: 414
+typedef struct {
+    uint16_t GEO_HEARTBEAT_rx_bytes;          ///< B15:0   Destination: MASTER
+    uint16_t GEO_HEARTBEAT_tx_bytes;          ///< B31:16   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} GEO_HEARTBEAT_t;
+
+
+/// Message: MOTOR_HEARTBEAT from 'MOTOR', DLC: 4 byte(s), MID: 514
+typedef struct {
+    uint16_t MOTOR_HEARTBEAT_rx_bytes;        ///< B15:0   Destination: MASTER
+    uint16_t MOTOR_HEARTBEAT_tx_bytes;        ///< B31:16   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} MOTOR_HEARTBEAT_t;
+
+
+/// Message: IO_HEARTBEAT from 'IO', DLC: 4 byte(s), MID: 614
+typedef struct {
+    uint16_t IO_HEARTBEAT_rx_bytes;           ///< B15:0   Destination: MASTER
+    uint16_t IO_HEARTBEAT_tx_bytes;           ///< B31:16   Destination: MASTER
+
+    dbc_mia_info_t mia_info;
+} IO_HEARTBEAT_t;
+
+
 /// @{ These 'externs' need to be defined in a source file of your project
-extern const uint32_t                             MOTOR_STATUS__MIA_MS;
-extern const MOTOR_STATUS_t                       MOTOR_STATUS__MIA_MSG;
-extern const uint32_t                             SENSOR_SONARS_m0__MIA_MS;
-extern const SENSOR_SONARS_m0_t                   SENSOR_SONARS_m0__MIA_MSG;
-extern const uint32_t                             SENSOR_SONARS_m1__MIA_MS;
-extern const SENSOR_SONARS_m1_t                   SENSOR_SONARS_m1__MIA_MSG;
+extern const uint32_t                             BLE_COMM_CMD__MIA_MS;
+extern const BLE_COMM_CMD_t                       BLE_COMM_CMD__MIA_MSG;
+extern const uint32_t                             SENSOR_ULTRASONIC_m0__MIA_MS;
+extern const SENSOR_ULTRASONIC_m0_t               SENSOR_ULTRASONIC_m0__MIA_MSG;
+extern const uint32_t                             SENSOR_ULTRASONIC_m1__MIA_MS;
+extern const SENSOR_ULTRASONIC_m1_t               SENSOR_ULTRASONIC_m1__MIA_MSG;
+extern const uint32_t                             SENSOR_SPEED__MIA_MS;
+extern const SENSOR_SPEED_t                       SENSOR_SPEED__MIA_MSG;
+extern const uint32_t                             SENSOR_BATT__MIA_MS;
+extern const SENSOR_BATT_t                        SENSOR_BATT__MIA_MSG;
+extern const uint32_t                             SENSOR_HEARTBEAT__MIA_MS;
+extern const SENSOR_HEARTBEAT_t                   SENSOR_HEARTBEAT__MIA_MSG;
+extern const uint32_t                             BLE_DEST_RCHD__MIA_MS;
+extern const BLE_DEST_RCHD_t                      BLE_DEST_RCHD__MIA_MSG;
+extern const uint32_t                             BLE_HEARTBEAT__MIA_MS;
+extern const BLE_HEARTBEAT_t                      BLE_HEARTBEAT__MIA_MSG;
+extern const uint32_t                             GEO_DIRECTION__MIA_MS;
+extern const GEO_DIRECTION_t                      GEO_DIRECTION__MIA_MSG;
+extern const uint32_t                             GEO_ACCELEROMETER__MIA_MS;
+extern const GEO_ACCELEROMETER_t                  GEO_ACCELEROMETER__MIA_MSG;
+extern const uint32_t                             GEO_HEARTBEAT__MIA_MS;
+extern const GEO_HEARTBEAT_t                      GEO_HEARTBEAT__MIA_MSG;
+extern const uint32_t                             MOTOR_HEARTBEAT__MIA_MS;
+extern const MOTOR_HEARTBEAT_t                    MOTOR_HEARTBEAT__MIA_MSG;
+extern const uint32_t                             IO_HEARTBEAT__MIA_MS;
+extern const IO_HEARTBEAT_t                       IO_HEARTBEAT__MIA_MSG;
 /// @}
 
 
-/// Not generating code for dbc_encode_DBC_TEST1() since the sender is IO and we are DRIVER
+/// Not generating code for dbc_encode_BLE_COMM_CMD() since the sender is BLE and we are MASTER
 
-/// Not generating code for dbc_encode_DBC_TEST2() since the sender is IO and we are DRIVER
-
-/// Not generating code for dbc_encode_DBC_TEST3() since the sender is IO and we are DRIVER
-
-/// Encode DRIVER's 'DRIVER_HEARTBEAT' message
+/// Encode MASTER's 'SYSTEM_CMD' message
 /// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_DRIVER_HEARTBEAT(uint8_t bytes[8], DRIVER_HEARTBEAT_t *from)
+static inline dbc_msg_hdr_t dbc_encode_SYSTEM_CMD(uint8_t bytes[8], SYSTEM_CMD_t *from)
 {
     uint32_t raw;
     bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
-    raw = ((uint32_t)(((from->DRIVER_HEARTBEAT_cmd)))) & 0xff;
+    raw = ((uint32_t)(((from->SYSTEM_CMD_enum)))) & 0xff;
     bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
 
-    return DRIVER_HEARTBEAT_HDR;
+    return SYSTEM_CMD_HDR;
 }
 
-/// Encode and send for dbc_encode_DRIVER_HEARTBEAT() message
-static inline bool dbc_encode_and_send_DRIVER_HEARTBEAT(DRIVER_HEARTBEAT_t *from)
+/// Encode and send for dbc_encode_SYSTEM_CMD() message
+static inline bool dbc_encode_and_send_SYSTEM_CMD(SYSTEM_CMD_t *from)
 {
     uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_DRIVER_HEARTBEAT(bytes, from);
+    const dbc_msg_hdr_t hdr = dbc_encode_SYSTEM_CMD(bytes, from);
     return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
 }
 
 
 
-/// Encode DRIVER's 'MOTOR_CMD' message
+/// Encode MASTER's 'MASTER_HEARTBEAT' message
+/// @returns the message header of this message
+static inline dbc_msg_hdr_t dbc_encode_MASTER_HEARTBEAT(uint8_t bytes[8], MASTER_HEARTBEAT_t *from)
+{
+    uint32_t raw;
+    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
+
+    raw = ((uint32_t)(((from->MASTER_HEARTBEAT_rx_bytes)))) & 0xffff;
+    bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
+    bytes[1] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B8
+
+    raw = ((uint32_t)(((from->MASTER_HEARTBEAT_tx_bytes)))) & 0xffff;
+    bytes[2] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B16
+    bytes[3] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B24
+
+    return MASTER_HEARTBEAT_HDR;
+}
+
+/// Encode and send for dbc_encode_MASTER_HEARTBEAT() message
+static inline bool dbc_encode_and_send_MASTER_HEARTBEAT(MASTER_HEARTBEAT_t *from)
+{
+    uint8_t bytes[8];
+    const dbc_msg_hdr_t hdr = dbc_encode_MASTER_HEARTBEAT(bytes, from);
+    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
+}
+
+
+
+/// Encode MASTER's 'MOTOR_CMD' message
 /// @returns the message header of this message
 static inline dbc_msg_hdr_t dbc_encode_MOTOR_CMD(uint8_t bytes[8], MOTOR_CMD_t *from)
 {
     uint32_t raw;
     bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
-    if(from->MOTOR_CMD_steer < -5) { from->MOTOR_CMD_steer = -5; } // Min value: -5
-    if(from->MOTOR_CMD_steer > 5) { from->MOTOR_CMD_steer = 5; } // Max value: 5
-    raw = ((uint32_t)(((from->MOTOR_CMD_steer - (-5))))) & 0x0f;
-    bytes[0] |= (((uint8_t)(raw) & 0x0f)); ///< 4 bit(s) starting from B0
+    if(from->MOTOR_CMD_speed < 10) { from->MOTOR_CMD_speed = 10; } // Min value: 10
+    if(from->MOTOR_CMD_speed > 20) { from->MOTOR_CMD_speed = 20; } // Max value: 20
+    raw = ((uint32_t)(((from->MOTOR_CMD_speed)))) & 0x1f;
+    bytes[0] |= (((uint8_t)(raw) & 0x1f)); ///< 5 bit(s) starting from B0
 
-    // Not doing min value check since the signal is unsigned already
-    if(from->MOTOR_CMD_drive > 9) { from->MOTOR_CMD_drive = 9; } // Max value: 9
-    raw = ((uint32_t)(((from->MOTOR_CMD_drive)))) & 0x0f;
-    bytes[0] |= (((uint8_t)(raw) & 0x0f) << 4); ///< 4 bit(s) starting from B4
+    raw = ((uint32_t)(((from->MOTOR_CMD_steer)))) & 0xff;
+    bytes[1] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B8
+
+    raw = ((uint32_t)(((from->MOTOR_CMD_drive)))) & 0xff;
+    bytes[2] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B16
 
     return MOTOR_CMD_HDR;
 }
@@ -168,38 +351,90 @@ static inline bool dbc_encode_and_send_MOTOR_CMD(MOTOR_CMD_t *from)
 
 
 
-/// Not generating code for dbc_encode_MOTOR_STATUS() since the sender is MOTOR and we are DRIVER
+/// Encode MASTER's 'SYSTEM_STATUS' message
+/// @returns the message header of this message
+static inline dbc_msg_hdr_t dbc_encode_SYSTEM_STATUS(uint8_t bytes[8], SYSTEM_STATUS_t *from)
+{
+    uint32_t raw;
+    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
-/// Not generating code for dbc_encode_SENSOR_SONARS() since the sender is SENSOR and we are DRIVER
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_ble)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01)); ///< 1 bit(s) starting from B0
 
-/// Not generating code for dbc_encode_DBC_TEST4() since the sender is IO and we are DRIVER
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_geo)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 1); ///< 1 bit(s) starting from B1
 
-/// Not generating code for dbc_decode_DBC_TEST1() since 'DRIVER' is not the recipient of any of the signals
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_io)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 2); ///< 1 bit(s) starting from B2
 
-/// Not generating code for dbc_decode_DBC_TEST2() since 'DRIVER' is not the recipient of any of the signals
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_master)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 3); ///< 1 bit(s) starting from B3
 
-/// Not generating code for dbc_decode_DBC_TEST3() since 'DRIVER' is not the recipient of any of the signals
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_motor)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 4); ///< 1 bit(s) starting from B4
 
-/// Not generating code for dbc_decode_DRIVER_HEARTBEAT() since 'DRIVER' is not the recipient of any of the signals
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_sensor)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 5); ///< 1 bit(s) starting from B5
 
-/// Not generating code for dbc_decode_MOTOR_CMD() since 'DRIVER' is not the recipient of any of the signals
+    // Not doing min value check since the signal is unsigned already
+    if(from->SYSTEM_STATUS_util > 100) { from->SYSTEM_STATUS_util = 100; } // Max value: 100
+    raw = ((uint32_t)(((from->SYSTEM_STATUS_util)))) & 0xff;
+    bytes[1] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B8
 
-/// Decode MOTOR's 'MOTOR_STATUS' message
+    return SYSTEM_STATUS_HDR;
+}
+
+/// Encode and send for dbc_encode_SYSTEM_STATUS() message
+static inline bool dbc_encode_and_send_SYSTEM_STATUS(SYSTEM_STATUS_t *from)
+{
+    uint8_t bytes[8];
+    const dbc_msg_hdr_t hdr = dbc_encode_SYSTEM_STATUS(bytes, from);
+    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
+}
+
+
+
+/// Not generating code for dbc_encode_SENSOR_ULTRASONIC() since the sender is SENSOR and we are MASTER
+
+/// Not generating code for dbc_encode_SENSOR_SPEED() since the sender is SENSOR and we are MASTER
+
+/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are MASTER
+
+/// Not generating code for dbc_encode_SENSOR_HEARTBEAT() since the sender is SENSOR and we are MASTER
+
+/// Not generating code for dbc_encode_BLE_CHCK_PT() since the sender is BLE and we are MASTER
+
+/// Not generating code for dbc_encode_BLE_DEST_RCHD() since the sender is BLE and we are MASTER
+
+/// Not generating code for dbc_encode_BLE_HEARTBEAT() since the sender is BLE and we are MASTER
+
+/// Not generating code for dbc_encode_BLE_MAP_DATA() since the sender is BLE and we are MASTER
+
+/// Not generating code for dbc_encode_GEO_DIRECTION() since the sender is GEO and we are MASTER
+
+/// Not generating code for dbc_encode_GEO_ACCELEROMETER() since the sender is GEO and we are MASTER
+
+/// Not generating code for dbc_encode_GEO_HEARTBEAT() since the sender is GEO and we are MASTER
+
+/// Not generating code for dbc_encode_GEO_LOCATION() since the sender is GEO and we are MASTER
+
+/// Not generating code for dbc_encode_MOTOR_HEARTBEAT() since the sender is MOTOR and we are MASTER
+
+/// Not generating code for dbc_encode_IO_HEARTBEAT() since the sender is IO and we are MASTER
+
+/// Decode BLE's 'BLE_COMM_CMD' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
-static inline bool dbc_decode_MOTOR_STATUS(MOTOR_STATUS_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+static inline bool dbc_decode_BLE_COMM_CMD(BLE_COMM_CMD_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
 {
     const bool success = true;
     // If msg header is provided, check if the DLC and the MID match
-    if (NULL != hdr && (hdr->dlc != MOTOR_STATUS_HDR.dlc || hdr->mid != MOTOR_STATUS_HDR.mid)) {
+    if (NULL != hdr && (hdr->dlc != BLE_COMM_CMD_HDR.dlc || hdr->mid != BLE_COMM_CMD_HDR.mid)) {
         return !success;
     }
 
     uint32_t raw;
-    raw  = ((uint32_t)((bytes[0]) & 0x01)); ///< 1 bit(s) from B0
-    to->MOTOR_STATUS_wheel_error = ((raw));
-    raw  = ((uint32_t)((bytes[1]))); ///< 8 bit(s) from B8
-    raw |= ((uint32_t)((bytes[2]))) << 8; ///< 8 bit(s) from B16
-    to->MOTOR_STATUS_speed_kph = ((raw * 0.001));
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    to->BLE_COMM_CMD_enum = ((raw));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
@@ -207,13 +442,21 @@ static inline bool dbc_decode_MOTOR_STATUS(MOTOR_STATUS_t *to, const uint8_t byt
 }
 
 
-/// Decode SENSOR's 'SENSOR_SONARS' message
+/// Not generating code for dbc_decode_SYSTEM_CMD() since 'MASTER' is not the recipient of any of the signals
+
+/// Not generating code for dbc_decode_MASTER_HEARTBEAT() since 'MASTER' is not the recipient of any of the signals
+
+/// Not generating code for dbc_decode_MOTOR_CMD() since 'MASTER' is not the recipient of any of the signals
+
+/// Not generating code for dbc_decode_SYSTEM_STATUS() since 'MASTER' is not the recipient of any of the signals
+
+/// Decode SENSOR's 'SENSOR_ULTRASONIC' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
-static inline bool dbc_decode_SENSOR_SONARS(SENSOR_SONARS_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+static inline bool dbc_decode_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
 {
     const bool success = true;
     // If msg header is provided, check if the DLC and the MID match
-    if (NULL != hdr && (hdr->dlc != SENSOR_SONARS_HDR.dlc || hdr->mid != SENSOR_SONARS_HDR.mid)) {
+    if (NULL != hdr && (hdr->dlc != SENSOR_ULTRASONIC_HDR.dlc || hdr->mid != SENSOR_ULTRASONIC_HDR.mid)) {
         return !success;
     }
 
@@ -226,20 +469,18 @@ static inline bool dbc_decode_SENSOR_SONARS(SENSOR_SONARS_t *to, const uint8_t b
         // Non Muxed signals (part of all MUX'd structures)
         raw  = ((uint32_t)((bytes[0] >> 4) & 0x0f)); ///< 4 bit(s) from B4
         raw |= ((uint32_t)((bytes[1]))) << 4; ///< 8 bit(s) from B8
-        to->m0.SENSOR_SONARS_err_count = ((raw));
+        to->m0.SENSOR_ULTRASONIC_err_count = ((raw));
 
         raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
-        raw |= ((uint32_t)((bytes[3]) & 0x0f)) << 8; ///< 4 bit(s) from B24
-        to->m0.SENSOR_SONARS_left = ((raw * 0.1));
-        raw  = ((uint32_t)((bytes[3] >> 4) & 0x0f)); ///< 4 bit(s) from B28
-        raw |= ((uint32_t)((bytes[4]))) << 4; ///< 8 bit(s) from B32
-        to->m0.SENSOR_SONARS_middle = ((raw * 0.1));
+        to->m0.SENSOR_ULTRASONIC_left = ((raw));
+        raw  = ((uint32_t)((bytes[3]))); ///< 8 bit(s) from B24
+        to->m0.SENSOR_ULTRASONIC_middle = ((raw));
+        raw  = ((uint32_t)((bytes[4]))); ///< 8 bit(s) from B32
+        to->m0.SENSOR_ULTRASONIC_right = ((raw));
         raw  = ((uint32_t)((bytes[5]))); ///< 8 bit(s) from B40
-        raw |= ((uint32_t)((bytes[6]) & 0x0f)) << 8; ///< 4 bit(s) from B48
-        to->m0.SENSOR_SONARS_right = ((raw * 0.1));
-        raw  = ((uint32_t)((bytes[6] >> 4) & 0x0f)); ///< 4 bit(s) from B52
-        raw |= ((uint32_t)((bytes[7]))) << 4; ///< 8 bit(s) from B56
-        to->m0.SENSOR_SONARS_rear = ((raw * 0.1));
+        to->m0.SENSOR_ULTRASONIC_rear_right = ((raw));
+        raw  = ((uint32_t)((bytes[6]))); ///< 8 bit(s) from B48
+        to->m0.SENSOR_ULTRASONIC_rear_left = ((raw));
 
         to->m0.mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
     }
@@ -247,20 +488,18 @@ static inline bool dbc_decode_SENSOR_SONARS(SENSOR_SONARS_t *to, const uint8_t b
         // Non Muxed signals (part of all MUX'd structures)
         raw  = ((uint32_t)((bytes[0] >> 4) & 0x0f)); ///< 4 bit(s) from B4
         raw |= ((uint32_t)((bytes[1]))) << 4; ///< 8 bit(s) from B8
-        to->m1.SENSOR_SONARS_err_count = ((raw));
+        to->m1.SENSOR_ULTRASONIC_err_count = ((raw));
 
         raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
-        raw |= ((uint32_t)((bytes[3]) & 0x0f)) << 8; ///< 4 bit(s) from B24
-        to->m1.SENSOR_SONARS_no_filt_left = ((raw * 0.1));
-        raw  = ((uint32_t)((bytes[3] >> 4) & 0x0f)); ///< 4 bit(s) from B28
-        raw |= ((uint32_t)((bytes[4]))) << 4; ///< 8 bit(s) from B32
-        to->m1.SENSOR_SONARS_no_filt_middle = ((raw * 0.1));
+        to->m1.SENSOR_ULTRASONIC_no_filt_left = ((raw));
+        raw  = ((uint32_t)((bytes[3]))); ///< 8 bit(s) from B24
+        to->m1.SENSOR_ULTRASONIC_no_filt_middle = ((raw));
+        raw  = ((uint32_t)((bytes[4]))); ///< 8 bit(s) from B32
+        to->m1.SENSOR_ULTRASONIC_no_filt_right = ((raw));
         raw  = ((uint32_t)((bytes[5]))); ///< 8 bit(s) from B40
-        raw |= ((uint32_t)((bytes[6]) & 0x0f)) << 8; ///< 4 bit(s) from B48
-        to->m1.SENSOR_SONARS_no_filt_right = ((raw * 0.1));
-        raw  = ((uint32_t)((bytes[6] >> 4) & 0x0f)); ///< 4 bit(s) from B52
-        raw |= ((uint32_t)((bytes[7]))) << 4; ///< 8 bit(s) from B56
-        to->m1.SENSOR_SONARS_no_filt_rear = ((raw * 0.1));
+        to->m1.SENSOR_ULTRASONIC_no_filt_rear_right = ((raw));
+        raw  = ((uint32_t)((bytes[6]))); ///< 8 bit(s) from B48
+        to->m1.SENSOR_ULTRASONIC_no_filt_rear_left = ((raw));
 
         to->m1.mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
     }
@@ -272,25 +511,249 @@ static inline bool dbc_decode_SENSOR_SONARS(SENSOR_SONARS_t *to, const uint8_t b
 }
 
 
-/// Not generating code for dbc_decode_DBC_TEST4() since 'DRIVER' is not the recipient of any of the signals
+/// Decode SENSOR's 'SENSOR_SPEED' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_SENSOR_SPEED(SENSOR_SPEED_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != SENSOR_SPEED_HDR.dlc || hdr->mid != SENSOR_SPEED_HDR.mid)) {
+        return !success;
+    }
 
-/// Handle the MIA for MOTOR's MOTOR_STATUS message
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    to->SENSOR_SPEED_data = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Decode SENSOR's 'SENSOR_BATT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_SENSOR_BATT(SENSOR_BATT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != SENSOR_BATT_HDR.dlc || hdr->mid != SENSOR_BATT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]) & 0x7f)); ///< 7 bit(s) from B0
+    to->SENSOR_BATT_stat = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Decode SENSOR's 'SENSOR_HEARTBEAT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_SENSOR_HEARTBEAT(SENSOR_HEARTBEAT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != SENSOR_HEARTBEAT_HDR.dlc || hdr->mid != SENSOR_HEARTBEAT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
+    to->SENSOR_HEARTBEAT_rx_bytes = ((raw));
+    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw |= ((uint32_t)((bytes[3]))) << 8; ///< 8 bit(s) from B24
+    to->SENSOR_HEARTBEAT_tx_bytes = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Not generating code for dbc_decode_BLE_CHCK_PT() since 'MASTER' is not the recipient of any of the signals
+
+/// Decode BLE's 'BLE_DEST_RCHD' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_BLE_DEST_RCHD(BLE_DEST_RCHD_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != BLE_DEST_RCHD_HDR.dlc || hdr->mid != BLE_DEST_RCHD_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]) & 0x01)); ///< 1 bit(s) from B0
+    to->BLE_DEST_RCHD_stat = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Decode BLE's 'BLE_HEARTBEAT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_BLE_HEARTBEAT(BLE_HEARTBEAT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != BLE_HEARTBEAT_HDR.dlc || hdr->mid != BLE_HEARTBEAT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
+    to->BLE_HEARTBEAT_rx_bytes = ((raw));
+    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw |= ((uint32_t)((bytes[3]))) << 8; ///< 8 bit(s) from B24
+    to->BLE_HEARTBEAT_tx_bytes = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Not generating code for dbc_decode_BLE_MAP_DATA() since 'MASTER' is not the recipient of any of the signals
+
+/// Decode GEO's 'GEO_DIRECTION' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_GEO_DIRECTION(GEO_DIRECTION_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != GEO_DIRECTION_HDR.dlc || hdr->mid != GEO_DIRECTION_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    to->GEO_DIRECTION_data = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Decode GEO's 'GEO_ACCELEROMETER' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_GEO_ACCELEROMETER(GEO_ACCELEROMETER_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != GEO_ACCELEROMETER_HDR.dlc || hdr->mid != GEO_ACCELEROMETER_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    to->GEO_ACCELEROMETER_tilt = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Decode GEO's 'GEO_HEARTBEAT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_GEO_HEARTBEAT(GEO_HEARTBEAT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != GEO_HEARTBEAT_HDR.dlc || hdr->mid != GEO_HEARTBEAT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
+    to->GEO_HEARTBEAT_rx_bytes = ((raw));
+    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw |= ((uint32_t)((bytes[3]))) << 8; ///< 8 bit(s) from B24
+    to->GEO_HEARTBEAT_tx_bytes = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Not generating code for dbc_decode_GEO_LOCATION() since 'MASTER' is not the recipient of any of the signals
+
+/// Decode MOTOR's 'MOTOR_HEARTBEAT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_MOTOR_HEARTBEAT(MOTOR_HEARTBEAT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != MOTOR_HEARTBEAT_HDR.dlc || hdr->mid != MOTOR_HEARTBEAT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
+    to->MOTOR_HEARTBEAT_rx_bytes = ((raw));
+    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw |= ((uint32_t)((bytes[3]))) << 8; ///< 8 bit(s) from B24
+    to->MOTOR_HEARTBEAT_tx_bytes = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Decode IO's 'IO_HEARTBEAT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_IO_HEARTBEAT(IO_HEARTBEAT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != IO_HEARTBEAT_HDR.dlc || hdr->mid != IO_HEARTBEAT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
+    to->IO_HEARTBEAT_rx_bytes = ((raw));
+    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw |= ((uint32_t)((bytes[3]))) << 8; ///< 8 bit(s) from B24
+    to->IO_HEARTBEAT_tx_bytes = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
+
+/// Handle the MIA for BLE's BLE_COMM_CMD message
 /// @param   time_incr_ms  The time to increment the MIA counter with
 /// @returns true if the MIA just occurred
 /// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
-static inline bool dbc_handle_mia_MOTOR_STATUS(MOTOR_STATUS_t *msg, uint32_t time_incr_ms)
+static inline bool dbc_handle_mia_BLE_COMM_CMD(BLE_COMM_CMD_t *msg, uint32_t time_incr_ms)
 {
     bool mia_occurred = false;
     const dbc_mia_info_t old_mia = msg->mia_info;
-    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= MOTOR_STATUS__MIA_MS);
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= BLE_COMM_CMD__MIA_MS);
 
     if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
         msg->mia_info.mia_counter_ms += time_incr_ms;
     }
     else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
-        *msg = MOTOR_STATUS__MIA_MSG;
-        msg->mia_info.mia_counter_ms = MOTOR_STATUS__MIA_MS;
+        *msg = BLE_COMM_CMD__MIA_MSG;
+        msg->mia_info.mia_counter_ms = BLE_COMM_CMD__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }
@@ -298,23 +761,23 @@ static inline bool dbc_handle_mia_MOTOR_STATUS(MOTOR_STATUS_t *msg, uint32_t tim
     return mia_occurred;
 }
 
-/// Handle the MIA for SENSOR's SENSOR_SONARS for MUX "m0" message
+/// Handle the MIA for SENSOR's SENSOR_ULTRASONIC for MUX "m0" message
 /// @param   time_incr_ms  The time to increment the MIA counter with
 /// @returns true if the MIA just occurred
 /// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
-static inline bool dbc_handle_mia_SENSOR_SONARS_m0(SENSOR_SONARS_m0_t *msg, uint32_t time_incr_ms)
+static inline bool dbc_handle_mia_SENSOR_ULTRASONIC_m0(SENSOR_ULTRASONIC_m0_t *msg, uint32_t time_incr_ms)
 {
     bool mia_occurred = false;
     const dbc_mia_info_t old_mia = msg->mia_info;
-    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_SONARS_m0__MIA_MS);
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_ULTRASONIC_m0__MIA_MS);
 
     if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
         msg->mia_info.mia_counter_ms += time_incr_ms;
     }
     else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
-        *msg = SENSOR_SONARS_m0__MIA_MSG;
-        msg->mia_info.mia_counter_ms = SENSOR_SONARS_m0__MIA_MS;
+        *msg = SENSOR_ULTRASONIC_m0__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_ULTRASONIC_m0__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }
@@ -322,23 +785,263 @@ static inline bool dbc_handle_mia_SENSOR_SONARS_m0(SENSOR_SONARS_m0_t *msg, uint
     return mia_occurred;
 }
 
-/// Handle the MIA for SENSOR's SENSOR_SONARS for MUX "m1" message
+/// Handle the MIA for SENSOR's SENSOR_ULTRASONIC for MUX "m1" message
 /// @param   time_incr_ms  The time to increment the MIA counter with
 /// @returns true if the MIA just occurred
 /// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
-static inline bool dbc_handle_mia_SENSOR_SONARS_m1(SENSOR_SONARS_m1_t *msg, uint32_t time_incr_ms)
+static inline bool dbc_handle_mia_SENSOR_ULTRASONIC_m1(SENSOR_ULTRASONIC_m1_t *msg, uint32_t time_incr_ms)
 {
     bool mia_occurred = false;
     const dbc_mia_info_t old_mia = msg->mia_info;
-    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_SONARS_m1__MIA_MS);
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_ULTRASONIC_m1__MIA_MS);
 
     if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
         msg->mia_info.mia_counter_ms += time_incr_ms;
     }
     else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
-        *msg = SENSOR_SONARS_m1__MIA_MSG;
-        msg->mia_info.mia_counter_ms = SENSOR_SONARS_m1__MIA_MS;
+        *msg = SENSOR_ULTRASONIC_m1__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_ULTRASONIC_m1__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for SENSOR's SENSOR_SPEED message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_SENSOR_SPEED(SENSOR_SPEED_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_SPEED__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = SENSOR_SPEED__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_SPEED__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for SENSOR's SENSOR_BATT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_SENSOR_BATT(SENSOR_BATT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_BATT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = SENSOR_BATT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_BATT__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for SENSOR's SENSOR_HEARTBEAT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_SENSOR_HEARTBEAT(SENSOR_HEARTBEAT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_HEARTBEAT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = SENSOR_HEARTBEAT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_HEARTBEAT__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for BLE's BLE_DEST_RCHD message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_BLE_DEST_RCHD(BLE_DEST_RCHD_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= BLE_DEST_RCHD__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = BLE_DEST_RCHD__MIA_MSG;
+        msg->mia_info.mia_counter_ms = BLE_DEST_RCHD__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for BLE's BLE_HEARTBEAT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_BLE_HEARTBEAT(BLE_HEARTBEAT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= BLE_HEARTBEAT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = BLE_HEARTBEAT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = BLE_HEARTBEAT__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for GEO's GEO_DIRECTION message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_GEO_DIRECTION(GEO_DIRECTION_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= GEO_DIRECTION__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = GEO_DIRECTION__MIA_MSG;
+        msg->mia_info.mia_counter_ms = GEO_DIRECTION__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for GEO's GEO_ACCELEROMETER message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_GEO_ACCELEROMETER(GEO_ACCELEROMETER_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= GEO_ACCELEROMETER__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = GEO_ACCELEROMETER__MIA_MSG;
+        msg->mia_info.mia_counter_ms = GEO_ACCELEROMETER__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for GEO's GEO_HEARTBEAT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_GEO_HEARTBEAT(GEO_HEARTBEAT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= GEO_HEARTBEAT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = GEO_HEARTBEAT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = GEO_HEARTBEAT__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for MOTOR's MOTOR_HEARTBEAT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_MOTOR_HEARTBEAT(MOTOR_HEARTBEAT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= MOTOR_HEARTBEAT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = MOTOR_HEARTBEAT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = MOTOR_HEARTBEAT__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for IO's IO_HEARTBEAT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_IO_HEARTBEAT(IO_HEARTBEAT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= IO_HEARTBEAT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = IO_HEARTBEAT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = IO_HEARTBEAT__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }
