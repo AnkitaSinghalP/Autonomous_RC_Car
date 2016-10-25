@@ -31,8 +31,10 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
-
-
+#include "_can_dbc//generated_can.h"
+#include <stdio.h>
+#include "can.h"
+#include "string.h"
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -45,9 +47,20 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
  */
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
+bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
+{
+	can_msg_t can_msg = { 0 };
+	can_msg.msg_id = mid;
+	can_msg.frame_fields.data_len = dlc;
+	memcpy(can_msg.data.bytes, bytes, dlc);
+	return CAN_tx(can1, &can_msg, 0);
+}
+
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+    CAN_init(can1, 100, 20, 20, 0, 0);
+    CAN_reset_bus(can1);
     return true; // Must return true upon success
 }
 
@@ -66,12 +79,21 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-    LE.toggle(1);
+	CAN_is_bus_off(can1);
+	CAN_reset_bus(can1);
+	LE.toggle(1);
 }
 
 void period_10Hz(uint32_t count)
 {
-    LE.toggle(2);
+		GEO_HEARTBEAT_t geo_heartbeat = { 0 };
+		geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
+
+		if (dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat))
+		{
+			printf("Geo Heartbeat Message sent: %d\n", geo_heartbeat.GEO_HEARTBEAT_tx_bytes);
+		}
+		LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
