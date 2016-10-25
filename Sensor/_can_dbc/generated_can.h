@@ -1,4 +1,4 @@
-/// DBC file: C:/SJSU_Dev/projects/spartan_and_furious/snf.dbc    Self node: 'SENSOR'  (ALL = 0)
+/// DBC file: ../../snf.dbc    Self node: 'SENSOR'  (ALL = 0)
 /// This file can be included by a source file, for example: #include "generated.h"
 #ifndef __GENEARTED_DBC_PARSER
 #define __GENERATED_DBC_PARSER
@@ -45,8 +45,8 @@ static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
     SYSTEM_RESET = 2,
+    SYSTEM_STOP = 0,
     SYSTEM_START = 1,
 } SYSTEM_CMD_enum_E ;
 
