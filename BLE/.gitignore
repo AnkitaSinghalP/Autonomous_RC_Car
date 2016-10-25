@@ -2,4 +2,8 @@
 /_build_with_dbc/
 =======
 /_build/
+<<<<<<< HEAD
 >>>>>>> Modified pre_build.sh
+=======
+/_build_with_dbc/
+>>>>>>> added BLE_heartbeat

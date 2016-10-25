@@ -31,8 +31,16 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
+#include "can.h"
+#include <stdio.h>
+#include "_can_dbc/generated_can.h"
+#include "string.h"
 
 
+bool flag1;
+can_std_id_t id;
+bool flag_tx;
+can_msg_t abc;
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -48,6 +56,11 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+	flag1 = CAN_init(can1, 100, 100, 100, 0, 0);
+	if(flag1!=true){
+    printf("CAN init failed \n");
+	}
+	CAN_reset_bus(can1);
     return true; // Must return true upon success
 }
 
@@ -64,14 +77,33 @@ bool period_reg_tlm(void)
  * The argument 'count' is the number of times each periodic task is called.
  */
 
+bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
+{
+    can_msg_t can_msg = { 0 };
+    can_msg.msg_id = mid;
+    can_msg.frame_fields.data_len = dlc;
+    memcpy(can_msg.data.bytes, bytes, dlc);
+    return CAN_tx(can1, &can_msg, 0);
+}
+
 void period_1Hz(uint32_t count)
 {
-    LE.toggle(1);
+	if(CAN_is_bus_off(can1)){
+	CAN_reset_bus(can1);
+	}
 }
 
 void period_10Hz(uint32_t count)
 {
-    LE.toggle(2);
+	    BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
+		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
+		//ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x5;
+
+	    printf("can_msg");
+	    if(dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t)){
+	    printf("can_msg %d \n", ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes);
+	    }
+
 }
 
 void period_100Hz(uint32_t count)
