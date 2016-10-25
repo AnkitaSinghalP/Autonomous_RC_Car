@@ -41,6 +41,7 @@ bool flag1;
 can_std_id_t id;
 bool flag_tx;
 can_msg_t abc;
+<<<<<<< HEAD
 
 MASTER_HEARTBEAT_t master_heartbeat = { 0 };
 SYSTEM_STATUS_t system_status = { 0 };
@@ -55,6 +56,8 @@ BLE_COMM_CMD_t ble_cmd = { 0 };
 BLE_CHCK_PT_t ble_chk_pt = { 0 };
 BLE_DEST_RCHD_t ble_dest_rchd = { 0 };
 BLE_MAP_DATA_t ble_map_data = { 0 };
+=======
+>>>>>>> added BLE_heartbeat
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -70,13 +73,19 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+<<<<<<< HEAD
 
+=======
+>>>>>>> added BLE_heartbeat
 	flag1 = CAN_init(can1, 100, 100, 100, 0, 0);
 	if(flag1!=true){
     printf("CAN init failed \n");
 	}
 	CAN_reset_bus(can1);
+<<<<<<< HEAD
 	CAN_bypass_filter_accept_all_msgs();
+=======
+>>>>>>> added BLE_heartbeat
     return true; // Must return true upon success
 }
 
@@ -107,6 +116,7 @@ void period_1Hz(uint32_t count)
 	if(CAN_is_bus_off(can1)){
 	CAN_reset_bus(can1);
 	}
+<<<<<<< HEAD
 
 	while(CAN_rx(can1, &can_msg, 0))
 			    {
@@ -170,10 +180,13 @@ void period_1Hz(uint32_t count)
 		 	   }
 
 
+=======
+>>>>>>> added BLE_heartbeat
 }
 
 void period_10Hz(uint32_t count)
 {
+<<<<<<< HEAD
 
 
 		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
@@ -187,10 +200,15 @@ void period_10Hz(uint32_t count)
 		ble_map_data.BLE_MAP_DATA_start_lat = 0x3333;
 		ble_map_data.BLE_MAP_DATA_start_long = 0x4444;
 
+=======
+	    BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
+		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
+>>>>>>> added BLE_heartbeat
 		//ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x5;
 
 	    printf("can_msg");
 	    if(dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t)){
+<<<<<<< HEAD
 	    printf("can_msg tx %d \n", ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes);
 	    printf("can_msg rx %d \n", ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes);
 	    }
@@ -214,6 +232,11 @@ void period_10Hz(uint32_t count)
 	   	    printf("can_msg %d \n", ble_map_data.BLE_MAP_DATA_start_lat);
 	   	    printf("can_msg %d \n", ble_map_data.BLE_MAP_DATA_start_long);
 	   	    }
+=======
+	    printf("can_msg %d \n", ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes);
+	    }
+
+>>>>>>> added BLE_heartbeat
 }
 
 void period_100Hz(uint32_t count)
