@@ -33,10 +33,13 @@
 #include "periodic_callback.h"
 #include "_can_dbc/generated_can.h"
 #include "stdio.h"
+#include "can.h"
 
-MOTOR_STATUS_t motor_status = {0};
 can_msg_t can_msg = { 0 };
 can_msg_t msg_received;
+MOTOR_CMD_t motorcmd;
+MOTOR_HEARTBEAT_t motorheartbeat;
+
 
 
 
@@ -57,7 +60,6 @@ bool period_init(void)
 {
 	CAN_init(can1,100,128,256,0,0);
 	CAN_reset_bus(can1);
-
 	return true; // Must return true upon success
 }
 
@@ -76,59 +78,40 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-	if(CAN_is_bus_off(can1))
-	{
-		CAN_reset_bus(can1);
-
-	}
 	CAN_bypass_filter_accept_all_msgs();
-	if (CAN_rx(can1, &amp;can_msg_received, 0))
-
-	{dbc_msg_hdr_t can_msg_hdr;
-
-	can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
-
-	can_msg_hdr.mid = can_msg_received.msg_id;
-	can_msg_received.data.bytes, &amp;can_msg_hdr);
-
-	if(dbc_decode_MOTOR_STATUS(&amp;motor_status_msg,can_msg_received.data.bytes, &amp;can_msg_hdr))
-
+	if (CAN_rx(can1, &msg_received, 0))
 	{
+		dbc_msg_hdr_t can_msg_hdr;
+		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
+		can_msg_hdr.mid = msg_received.msg_id;
+		if(dbc_decode_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr))
+		{
 
-	printf("received0 : %d",motor_status_msg.MOTOR_STATUS_wheel_error );
+			printf("Received0 : %d \n",motorcmd.MOTOR_CMD_speed);
 
-	printf("received12 : %f",motor_status_msg.MOTOR_STATUS_speed_kph );
-
-	printf("received3 : %f",motor_status_msg.BLE_cordinates);
-
-	LD.setNumber(motor_status_msg.MOTOR_STATUS_speed_kph);
-
+		}
 	}
+
 	LE.toggle(1);
-}
+
 }
 
 void period_10Hz(uint32_t count)
 {
-	motor_status.MOTOR_STATUS_speed_kph =32.0;
 
-	motor_status.MOTOR_STATUS_wheel_error= 1;
-
-	dbc_encode_MOTOR_STATUS(can_msg.data.bytes,&motor_status);
+	dbc_msg_hdr_t msg_hdr = dbc_encode_and_send_MOTOR_HEARTBEAT(&motorheartbeat);
 	can_msg.msg_id = msg_hdr.mid;
 
 	printf("msg id %d\n", can_msg.msg_id);
 	can_msg.frame_fields.data_len = msg_hdr.dlc;
-
-	// Queue the CAN message to be sent out
 	if(CAN_tx(can1, &can_msg, 0))
 	{
-		printf("Speed %f\n",motor_status.MOTOR_STATUS_speed_kph);
 		printf("sent 0 %d\n",can_msg.data.bytes[0]);
 		printf("sent 1 %f\n",can_msg.data.bytes[1]);
 		printf("sent 2 %f\n",can_msg.data.bytes[2]);
-		printf("sent 3 %d\n",can_msg.data.bytes[3]);
+
 	}
+
 
 	LE.toggle(2);
 }
