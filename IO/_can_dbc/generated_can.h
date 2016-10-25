@@ -1,4 +1,4 @@
-/// DBC file: C:/SJSU_Dev/projects/spartan_and_furious/snf.dbc    Self node: 'IO'  (ALL = 0)
+/// DBC file: ../../snf.dbc    Self node: 'IO'  (ALL = 0)
 /// This file can be included by a source file, for example: #include "generated.h"
 #ifndef __GENEARTED_DBC_PARSER
 #define __GENERATED_DBC_PARSER
@@ -52,19 +52,19 @@ typedef enum {
 
 /// Enumeration(s) for Message: 'MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_HALF_LEFT = 1,
-    STEER_FORWARD = 4,
-    STEER_HALF_RIGHT = 3,
-    STEER_LEFT = 0,
-    STEER_RIGHT = 2,
     STEER_REVERSE = 5,
+    STEER_FORWARD = 4,
+    STEER_HALF_LEFT = 1,
+    STEER_RIGHT = 2,
+    STEER_LEFT = 0,
+    STEER_HALF_RIGHT = 3,
 } MOTOR_CMD_steer_E ;
 
 typedef enum {
-    BRAKE = 2,
-    RESUME = 3,
-    STOP = 0,
     START = 1,
+    STOP = 0,
+    RESUME = 3,
+    BRAKE = 2,
 } MOTOR_CMD_drive_E ;
 
 
