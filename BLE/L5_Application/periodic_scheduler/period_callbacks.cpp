@@ -42,9 +42,6 @@ can_std_id_t id;
 bool flag_tx;
 can_msg_t abc;
 
-
-
-
 SYSTEM_CMD_t system_cmd = {SYSTEM_STOP};
 
 GEO_LOCATION_t geo_location = { 0 };
@@ -71,19 +68,17 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-<<<<<<< HEAD
-=======
 
->>>>>>> Modified periodic_callbacks.cpp
 	flag1 = CAN_init(can1, 100, 100, 100, 0, 0);
 	if(flag1!=true){
     printf("CAN init failed \n");
 	}
 	CAN_reset_bus(can1);
-<<<<<<< HEAD
-=======
+
 	CAN_bypass_filter_accept_all_msgs();
->>>>>>> Modified periodic_callbacks.cpp
+
+	CAN_bypass_filter_accept_all_msgs();
+
     return true; // Must return true upon success
 }
 
@@ -135,10 +130,12 @@ void period_1Hz(uint32_t count)
 		 		      }
 
 
+
 }
 
 void period_10Hz(uint32_t count)
 {
+
 
 	    BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
 		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
@@ -153,6 +150,7 @@ void period_10Hz(uint32_t count)
 		ble_map_data.BLE_MAP_DATA_start_lat = 0x3333;
 		ble_map_data.BLE_MAP_DATA_start_long = 0x4444;
 
+
 	    dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t);
 
 	   dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd);
@@ -160,7 +158,40 @@ void period_10Hz(uint32_t count)
 	   dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
 
 	    dbc_encode_and_send_BLE_MAP_DATA(&ble_map_data);
-}
+
+	    BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
+		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
+
+		//ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x5;
+
+	    printf("can_msg");
+	    if(dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t)){
+
+	    printf("can_msg tx %d \n", ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes);
+	    printf("can_msg rx %d \n", ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes);
+	    }
+
+	    if(dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd)){
+	   	    printf("can_msg %d \n", ble_cmd.BLE_COMM_CMD_enum);
+	   	    }
+
+	    if(dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt)){
+	   	    printf("can_msg %d \n", ble_chk_pt.BLE_CHCK_PT_lat);
+	   	    printf("can_msg %d \n", ble_chk_pt.BLE_CHCK_PT_long);
+	   	    }
+
+
+
+	    if(dbc_encode_and_send_BLE_MAP_DATA(&ble_map_data)){
+	   	    printf("can_msg %d \n", ble_map_data.BLE_MAP_DATA_dest_lat);
+	   	    printf("can_msg %d \n", ble_map_data.BLE_MAP_DATA_dest_long);
+	   	    printf("can_msg %d \n", ble_map_data.BLE_MAP_DATA_start_lat);
+	   	    printf("can_msg %d \n", ble_map_data.BLE_MAP_DATA_start_long);
+	   	    }
+
+	    }
+
+
 
 void period_100Hz(uint32_t count)
 {
