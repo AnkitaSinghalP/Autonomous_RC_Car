@@ -31,6 +31,13 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
+#include "_can_dbc/generated_can.h"
+#include "stdio.h"
+
+MOTOR_STATUS_t motor_status = {0};
+can_msg_t can_msg = { 0 };
+can_msg_t msg_received;
+
 
 
 
@@ -48,14 +55,17 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-    return true; // Must return true upon success
+	CAN_init(can1,100,128,256,0,0);
+	CAN_reset_bus(can1);
+
+	return true; // Must return true upon success
 }
 
 /// Register any telemetry variables
 bool period_reg_tlm(void)
 {
-    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-    return true; // Must return true upon success
+	// Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+	return true; // Must return true upon success
 }
 
 
@@ -66,22 +76,71 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-    LE.toggle(1);
+	if(CAN_is_bus_off(can1))
+	{
+		CAN_reset_bus(can1);
+
+	}
+	CAN_bypass_filter_accept_all_msgs();
+	if (CAN_rx(can1, &amp;can_msg_received, 0))
+
+	{dbc_msg_hdr_t can_msg_hdr;
+
+	can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
+
+	can_msg_hdr.mid = can_msg_received.msg_id;
+	can_msg_received.data.bytes, &amp;can_msg_hdr);
+
+	if(dbc_decode_MOTOR_STATUS(&amp;motor_status_msg,can_msg_received.data.bytes, &amp;can_msg_hdr))
+
+	{
+
+	printf("received0 : %d",motor_status_msg.MOTOR_STATUS_wheel_error );
+
+	printf("received12 : %f",motor_status_msg.MOTOR_STATUS_speed_kph );
+
+	printf("received3 : %f",motor_status_msg.BLE_cordinates);
+
+	LD.setNumber(motor_status_msg.MOTOR_STATUS_speed_kph);
+
+	}
+	LE.toggle(1);
+}
 }
 
 void period_10Hz(uint32_t count)
 {
-    LE.toggle(2);
+	motor_status.MOTOR_STATUS_speed_kph =32.0;
+
+	motor_status.MOTOR_STATUS_wheel_error= 1;
+
+	dbc_encode_MOTOR_STATUS(can_msg.data.bytes,&motor_status);
+	can_msg.msg_id = msg_hdr.mid;
+
+	printf("msg id %d\n", can_msg.msg_id);
+	can_msg.frame_fields.data_len = msg_hdr.dlc;
+
+	// Queue the CAN message to be sent out
+	if(CAN_tx(can1, &can_msg, 0))
+	{
+		printf("Speed %f\n",motor_status.MOTOR_STATUS_speed_kph);
+		printf("sent 0 %d\n",can_msg.data.bytes[0]);
+		printf("sent 1 %f\n",can_msg.data.bytes[1]);
+		printf("sent 2 %f\n",can_msg.data.bytes[2]);
+		printf("sent 3 %d\n",can_msg.data.bytes[3]);
+	}
+
+	LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
 {
-    LE.toggle(3);
+	LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-    LE.toggle(4);
+	LE.toggle(4);
 }
