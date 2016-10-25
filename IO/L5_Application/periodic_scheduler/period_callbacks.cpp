@@ -59,7 +59,7 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 }
 bool period_init(void)
 {
-    if( CAN_init(can1, 9600,10,10,NULL,NULL)){
+    if( CAN_init(can1, 100,10,10,NULL,NULL)){
         printf("CAN Initialization Success");
     }
     CAN_reset_bus(can1);
