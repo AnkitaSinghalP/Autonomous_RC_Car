@@ -31,9 +31,17 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
+#include "io.hpp"
+#include "stdio.h"
+#include "timers.h"
+#include "utilities.h"
+#include "file_logger.h"
+#include "can.h"
+#include "_can_dbc/generated_can.h"
+#include "lpc_timers.h"
 
-
-
+ MASTER_HEARTBEAT_t master_heartbeat_message = {0};
+ can_msg_t can_msg_master = { 0 };
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
@@ -48,7 +56,10 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-    return true; // Must return true upon success
+	CAN_init(can1, 200, 500, 500,0,0);
+	CAN_reset_bus(can1);
+	CAN_bypass_filter_accept_all_msgs();
+	return true; // Must return true upon success
 }
 
 /// Register any telemetry variables
@@ -66,12 +77,21 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
+
+	 	if(CAN_is_bus_off(can1))
+	 	{
+	 		CAN_reset_bus(can1);
+	 	}
     LE.toggle(1);
 }
 
 void period_10Hz(uint32_t count)
 {
-    LE.toggle(2);
+	master_heartbeat_message.MASTER_HEARTBEAT_tx_bytes = count;
+	master_heartbeat_message.MASTER_HEARTBEAT_rx_bytes = count;
+	dbc_encode_and_send_MASTER_HEARTBEAT(&master_heartbeat_message);
+
+	LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
