@@ -74,7 +74,7 @@ int main(void)
      * This is a the board demonstration task that can be used to test the board.
      * This also shows you how to send a wireless packets to other boards.
      */
-    #if 0
+    #if 1
         scheduler_add_task(new example_io_demo());
     #endif
 
