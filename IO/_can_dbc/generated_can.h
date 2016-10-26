@@ -1,4 +1,4 @@
-/// DBC file: C:/SJSU_Dev/projects/spartan_and_furious/snf.dbc    Self node: 'IO'  (ALL = 0)
+/// DBC file: ../../snf.dbc    Self node: 'IO'  (ALL = 0)
 /// This file can be included by a source file, for example: #include "generated.h"
 #ifndef __GENEARTED_DBC_PARSER
 #define __GENERATED_DBC_PARSER
@@ -45,8 +45,8 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_START = 1,
     SYSTEM_RESET = 2,
+    SYSTEM_START = 1,
     SYSTEM_STOP = 0,
 } SYSTEM_CMD_enum_E ;
 
@@ -54,17 +54,17 @@ typedef enum {
 typedef enum {
     STEER_HALF_LEFT = 1,
     STEER_FORWARD = 4,
-    STEER_HALF_RIGHT = 3,
     STEER_LEFT = 0,
-    STEER_RIGHT = 2,
     STEER_REVERSE = 5,
+    STEER_HALF_RIGHT = 3,
+    STEER_RIGHT = 2,
 } MOTOR_CMD_steer_E ;
 
 typedef enum {
     BRAKE = 2,
+    START = 1,
     RESUME = 3,
     STOP = 0,
-    START = 1,
 } MOTOR_CMD_drive_E ;
 
 
