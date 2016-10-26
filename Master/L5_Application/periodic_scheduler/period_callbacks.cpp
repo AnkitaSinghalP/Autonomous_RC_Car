@@ -40,8 +40,28 @@
 #include "_can_dbc/generated_can.h"
 #include "lpc_timers.h"
 
- MASTER_HEARTBEAT_t master_heartbeat_message = {0};
- can_msg_t can_msg_master = { 0 };
+
+MASTER_HEARTBEAT_t master_heartbeat_message = {0};
+can_msg_t can_msg_master = { 0 };
+
+const uint32_t            BLE_CMD__MIA_MS = 1000;
+const BLE_HEARTBEAT_t      BLE_CMD__MIA_MSG = { 0 };
+const uint32_t            SENSOR_CMD__MIA_MS = 1000;
+const SENSOR_HEARTBEAT_t      SENSOR_CMD__MIA_MSG = { 0 };
+const uint32_t            GEO_CMD__MIA_MS = 1000;
+const GEO_HEARTBEAT_t      GEO_CMD__MIA_MSG = { 0 };
+const uint32_t            MOTOR_CMD__MIA_MS = 1000;
+const MOTOR_HEARTBEAT_t      MOTOR_CMD__MIA_MSG = { 0 };
+const uint32_t            IO_CMD__MIA_MS = 1000;
+const IO_HEARTBEAT_t      IO_CMD__MIA_MSG = { 0 };
+
+BLE_HEARTBEAT_t ble_heartbeat_cmd = { 0 };
+SENSOR_HEARTBEAT_t sensor_heartbeat_cmd = { 0 };
+GEO_HEARTBEAT_t geo_heartbeat_cmd = { 0 };
+MOTOR_HEARTBEAT_t motor_heartbeat_cmd = { 0 };
+IO_HEARTBEAT_t io_heartbeat_cmd = { 0 };
+
+
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
@@ -87,11 +107,50 @@ void period_1Hz(uint32_t count)
 
 void period_10Hz(uint32_t count)
 {
+
 	master_heartbeat_message.MASTER_HEARTBEAT_tx_bytes = count;
 	master_heartbeat_message.MASTER_HEARTBEAT_rx_bytes = count;
 	dbc_encode_and_send_MASTER_HEARTBEAT(&master_heartbeat_message);
 
-	LE.toggle(2);
+	can_msg_t can_msg;
+
+		     while(CAN_rx(can1, &can_msg, 0))
+		    {
+
+		        dbc_msg_hdr_t can_msg_hdr;
+		        can_msg_hdr.dlc = can_msg.frame_fields.data_len;
+		        can_msg_hdr.mid = can_msg.msg_id;
+
+		        if(dbc_decode_BLE_HEARTBEAT(&ble_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+		        {
+		        	printf("%x  ", can_msg.data.bytes[0]);
+		        }
+
+		        if(dbc_decode_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+		        {
+		        	printf("%x  ", can_msg.data.bytes[0]);
+		        }
+
+		        if(dbc_decode_GEO_HEARTBEAT(&geo_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+		        {
+		        	printf("%x  ", can_msg.data.bytes[0]);
+		        }
+		        if(dbc_decode_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+		        {
+		             printf("%x  ", can_msg.data.bytes[0]);
+		         }
+		        if(dbc_decode_IO_HEARTBEAT(&io_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+		        {
+		             printf("%x  ", can_msg.data.bytes[0]);
+		        }
+
+
+		    }
+
+
+
+    LE.toggle(2);
+
 }
 
 void period_100Hz(uint32_t count)
