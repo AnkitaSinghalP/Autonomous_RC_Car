@@ -28,6 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include <sensor_sonar.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -39,10 +40,19 @@
 #include "can.h"
 #include "_can_dbc/generated_can.h"
 #include "lpc_timers.h"
-
+#include "string.h"
+#include "eint.h"
 
 SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
 can_msg_t can_msg_sensor = { 0 };
+
+sensor_readings obstacle_detected;
+
+//SYSTEM_CMD_t master_cmd = {0};
+
+const uint32_t            MASTER_CMD__MIA_MS = 3000;
+//const SYSTEM_CMD_t      MASTER_CMD__MIA_MSG = { 25 };
+
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -56,8 +66,19 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
+
+bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
+{
+	can_msg_t can_msg = { 0 };
+	can_msg.msg_id = mid;
+	can_msg.frame_fields.data_len = dlc;
+	memcpy(can_msg.data.bytes, bytes, dlc);
+	return CAN_tx(can1, &can_msg, 0);
+}
+
 bool period_init(void)
 {
+	sensor_init();
 	CAN_init(can1, 100, 128, 256,0,0);
 	CAN_reset_bus(can1);
 	CAN_bypass_filter_accept_all_msgs();
@@ -83,27 +104,31 @@ void period_1Hz(uint32_t count)
 	{
 		CAN_reset_bus(can1);
 	}
+	sensor_measure();
 
 	LE.toggle(1);
 }
 
 void period_10Hz(uint32_t count)
 {
-	sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = count;
-	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = count;
-	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);
+	/*sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
+	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
+	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);*/
+
+	//puts("sent");
+
 
 	LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
 {
-	LE.toggle(3);
+	//LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-	LE.toggle(4);
+	//LE.toggle(4);
 }
