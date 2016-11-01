@@ -84,6 +84,7 @@ GEO_ACCELEROMETER_t geo_accelerometer_cmd = { 0 };
 GEO_DEST_RCHD_t geo_dest_rchd_cmd = { 0 };
 
 can_msg_t can_msg;
+int mia_count=0;
 
 bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 {
@@ -117,6 +118,7 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
  * printf inside these functions, you need about 1500 bytes minimum
  */
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
+
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -161,12 +163,32 @@ void period_1Hz(uint32_t count)
 	 		dbc_decode_IO_HEARTBEAT(&io_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
 	 	}
 
-	 	dbc_handle_mia_BLE_HEARTBEAT(&ble_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_GEO_HEARTBEAT(&geo_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_IO_HEARTBEAT(&io_heartbeat_cmd, 1000);
+	 	if(dbc_handle_mia_BLE_HEARTBEAT(&ble_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_GEO_HEARTBEAT(&geo_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_IO_HEARTBEAT(&io_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(mia_count>99)
+	 		{
+	 		mia_count=0;
 
+	 		}
+	 	LD.setNumber(mia_count);
 	 	system_status_message.SYSTEM_STATUS_ble = 1;
 	 	system_status_message.SYSTEM_STATUS_geo = 1;
 	 	system_status_message.SYSTEM_STATUS_io = 1;
@@ -202,45 +224,41 @@ void period_10Hz(uint32_t count)
 		dbc_decode_SENSOR_ULTRASONIC(&sensor_ultrasonic_cmd, can_msg.data.bytes, &can_msg_hdr);
 	}
 
-	dbc_handle_mia_BLE_COMM_CMD(&ble_comm_cmd, 10);
-	dbc_handle_mia_GEO_ACCELEROMETER(&geo_accelerometer_cmd, 10);
-	dbc_handle_mia_GEO_DEST_RCHD(&geo_dest_rchd_cmd, 10);
-	dbc_handle_mia_GEO_DIRECTION(&geo_direction_cmd, 10);
-	dbc_handle_mia_SENSOR_BATT(&sensor_batt_status, 10);
-	dbc_handle_mia_SENSOR_ULTRASONIC_m0(&sensor_ultrasonic_cmd.m0, 10);
-	dbc_handle_mia_SENSOR_ULTRASONIC_m1(&sensor_ultrasonic_cmd.m1, 10);
-
-	while(CAN_rx(can1, &can_msg, 0))
+	if(dbc_handle_mia_BLE_COMM_CMD(&ble_comm_cmd, 10))
 	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_GEO_ACCELEROMETER(&geo_accelerometer_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_GEO_DEST_RCHD(&geo_dest_rchd_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_GEO_DIRECTION(&geo_direction_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_SENSOR_BATT(&sensor_batt_status, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_SENSOR_ULTRASONIC_m0(&sensor_ultrasonic_cmd.m0, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_SENSOR_ULTRASONIC_m1(&sensor_ultrasonic_cmd.m1, 10))
+	{
+		mia_count++;
+	}
 
-		dbc_msg_hdr_t can_msg_hdr;
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;
-
-		if(dbc_decode_BLE_HEARTBEAT(&ble_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
-		{
-			printf("%x  ", can_msg.data.bytes[0]);
-		}
-
-		if(dbc_decode_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
-		{
-			printf("%x  ", can_msg.data.bytes[0]);
-		}
-
-		if(dbc_decode_GEO_HEARTBEAT(&geo_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
-		{
-			printf("%x  ", can_msg.data.bytes[0]);
-		}
-		if(dbc_decode_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
-		{
-			printf("%x  ", can_msg.data.bytes[0]);
-		}
-		if(dbc_decode_IO_HEARTBEAT(&io_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
-		{
-			printf("%x  ", can_msg.data.bytes[0]);
-		}
+	if(mia_count>99)
+	{
+		mia_count=0;
 
 	}
+	LD.setNumber(mia_count);
 
 }
 
