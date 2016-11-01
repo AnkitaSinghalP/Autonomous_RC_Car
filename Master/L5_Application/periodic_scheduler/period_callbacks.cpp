@@ -84,6 +84,7 @@ GEO_ACCELEROMETER_t geo_accelerometer_cmd = { 0 };
 GEO_DEST_RCHD_t geo_dest_rchd_cmd = { 0 };
 
 can_msg_t can_msg;
+int mia_count=0;
 
 bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 {
@@ -94,6 +95,17 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 
     return CAN_tx(can1, &can_msg, 0);
 }
+
+const uint32_t            BLE_CMD__MIA_MS = 1000;
+const BLE_HEARTBEAT_t      BLE_CMD__MIA_MSG = { 0 };
+const uint32_t            SENSOR_CMD__MIA_MS = 1000;
+const SENSOR_HEARTBEAT_t      SENSOR_CMD__MIA_MSG = { 0 };
+const uint32_t            GEO_CMD__MIA_MS = 1000;
+const GEO_HEARTBEAT_t      GEO_CMD__MIA_MSG = { 0 };
+const uint32_t            MOTOR_CMD__MIA_MS = 1000;
+const MOTOR_HEARTBEAT_t      MOTOR_CMD__MIA_MSG = { 0 };
+const uint32_t            IO_CMD__MIA_MS = 1000;
+const IO_HEARTBEAT_t      IO_CMD__MIA_MSG = { 0 };
 
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
@@ -106,6 +118,7 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
  * printf inside these functions, you need about 1500 bytes minimum
  */
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
+
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -150,12 +163,32 @@ void period_1Hz(uint32_t count)
 	 		dbc_decode_IO_HEARTBEAT(&io_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
 	 	}
 
-	 	dbc_handle_mia_BLE_HEARTBEAT(&ble_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_GEO_HEARTBEAT(&geo_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, 1000);
-	 	dbc_handle_mia_IO_HEARTBEAT(&io_heartbeat_cmd, 1000);
+	 	if(dbc_handle_mia_BLE_HEARTBEAT(&ble_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_GEO_HEARTBEAT(&geo_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(dbc_handle_mia_IO_HEARTBEAT(&io_heartbeat_cmd, 1000))
+	 	{
+	 		mia_count++;
+	 	}
+	 	if(mia_count>99)
+	 		{
+	 		mia_count=0;
 
+	 		}
+	 	LD.setNumber(mia_count);
 	 	system_status_message.SYSTEM_STATUS_ble = 1;
 	 	system_status_message.SYSTEM_STATUS_geo = 1;
 	 	system_status_message.SYSTEM_STATUS_io = 1;
@@ -164,12 +197,11 @@ void period_1Hz(uint32_t count)
 	 	system_status_message.SYSTEM_STATUS_sensor = 1;
 	 	system_status_message.SYSTEM_STATUS_util = 5;
 	 	dbc_encode_and_send_SYSTEM_STATUS(&system_status_message);
-
 }
+
 
 void period_10Hz(uint32_t count)
 {
-
 	system_cmd_message.SYSTEM_CMD_enum = SYSTEM_START;
 	dbc_encode_and_send_SYSTEM_CMD(&system_cmd_message);
 
@@ -192,13 +224,39 @@ void period_10Hz(uint32_t count)
 		dbc_decode_SENSOR_ULTRASONIC(&sensor_ultrasonic_cmd, can_msg.data.bytes, &can_msg_hdr);
 	}
 
-	dbc_handle_mia_BLE_COMM_CMD(&ble_comm_cmd, 10);
-	dbc_handle_mia_GEO_ACCELEROMETER(&geo_accelerometer_cmd, 10);
-	dbc_handle_mia_GEO_DEST_RCHD(&geo_dest_rchd_cmd, 10);
-	dbc_handle_mia_GEO_DIRECTION(&geo_direction_cmd, 10);
-	dbc_handle_mia_SENSOR_BATT(&sensor_batt_status, 10);
-	dbc_handle_mia_SENSOR_ULTRASONIC_m0(&sensor_ultrasonic_cmd.m0, 10);
-	dbc_handle_mia_SENSOR_ULTRASONIC_m1(&sensor_ultrasonic_cmd.m1, 10);
+	if(dbc_handle_mia_BLE_COMM_CMD(&ble_comm_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_GEO_ACCELEROMETER(&geo_accelerometer_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_GEO_DEST_RCHD(&geo_dest_rchd_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_GEO_DIRECTION(&geo_direction_cmd, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_SENSOR_BATT(&sensor_batt_status, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_SENSOR_ULTRASONIC_m0(&sensor_ultrasonic_cmd.m0, 10))
+	{
+		mia_count++;
+	}
+	if(dbc_handle_mia_SENSOR_ULTRASONIC_m1(&sensor_ultrasonic_cmd.m1, 10))
+	{
+		mia_count++;
+	}
+
+	if(mia_count>99)
+	{
+		mia_count=0;
+	}
 
 }
 

@@ -34,7 +34,7 @@ static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
 // static const dbc_msg_hdr_t BLE_MAP_DATA_HDR =                     {  361, 8 };
 static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
-static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 1 };
+static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 2 };
 static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
 // static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 5 };
@@ -44,26 +44,26 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_START = 1,
     SYSTEM_RESET = 2,
     SYSTEM_STOP = 0,
+    SYSTEM_START = 1,
 } SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_FORWARD = 4,
-    STEER_HALF_RIGHT = 3,
-    STEER_REVERSE = 5,
     STEER_RIGHT = 2,
+    STEER_FORWARD = 4,
     STEER_HALF_LEFT = 1,
     STEER_LEFT = 0,
+    STEER_HALF_RIGHT = 3,
+    STEER_REVERSE = 5,
 } MOTOR_CMD_steer_E ;
 
 typedef enum {
     BRAKE = 2,
+    RESUME = 3,
     START = 1,
     STOP = 0,
-    RESUME = 3,
 } MOTOR_CMD_drive_E ;
 
 
@@ -176,9 +176,9 @@ typedef struct {
 } GEO_DIRECTION_t;
 
 
-/// Message: GEO_ACCELEROMETER from 'GEO', DLC: 1 byte(s), MID: 412
+/// Message: GEO_ACCELEROMETER from 'GEO', DLC: 2 byte(s), MID: 412
 typedef struct {
-    uint8_t GEO_ACCELEROMETER_tilt;           ///< B7:0   Destination: MASTER
+    int16_t GEO_ACCELEROMETER_tilt;           ///< B10:0   Destination: MASTER
 
     dbc_mia_info_t mia_info;
 } GEO_ACCELEROMETER_t;
@@ -565,7 +565,8 @@ static inline bool dbc_decode_GEO_ACCELEROMETER(GEO_ACCELEROMETER_t *to, const u
 
     uint32_t raw;
     raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
-    to->GEO_ACCELEROMETER_tilt = ((raw));
+    raw |= ((uint32_t)((bytes[1]) & 0x07)) << 8; ///< 3 bit(s) from B8
+    to->GEO_ACCELEROMETER_tilt = ((raw) + (-1024));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
