@@ -42,6 +42,21 @@ can_std_id_t id;
 bool flag_tx;
 can_msg_t abc;
 
+
+
+
+SYSTEM_CMD_t system_cmd = {SYSTEM_STOP};
+
+GEO_LOCATION_t geo_location = { 0 };
+can_msg_t can_msg;
+
+BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
+BLE_COMM_CMD_t ble_cmd = { 0 };
+BLE_CHCK_PT_t ble_chk_pt = { 0 };
+
+BLE_MAP_DATA_t ble_map_data = { 0 };
+
+
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
@@ -56,11 +71,19 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+<<<<<<< HEAD
+=======
+
+>>>>>>> Modified periodic_callbacks.cpp
 	flag1 = CAN_init(can1, 100, 100, 100, 0, 0);
 	if(flag1!=true){
     printf("CAN init failed \n");
 	}
 	CAN_reset_bus(can1);
+<<<<<<< HEAD
+=======
+	CAN_bypass_filter_accept_all_msgs();
+>>>>>>> Modified periodic_callbacks.cpp
     return true; // Must return true upon success
 }
 
@@ -91,24 +114,80 @@ void period_1Hz(uint32_t count)
 	if(CAN_is_bus_off(can1)){
 	CAN_reset_bus(can1);
 	}
+
+	while(CAN_rx(can1, &can_msg, 0))
+			    {
+			      dbc_msg_hdr_t can_msg_hdr;
+			      can_msg_hdr.dlc = can_msg.frame_fields.data_len;
+			      can_msg_hdr.mid = can_msg.msg_id;
+
+
+			      dbc_decode_SYSTEM_CMD(&system_cmd, can_msg.data.bytes, &can_msg_hdr)
+
+
+		     }
+
+		 if(dbc_handle_mia_SYSTEM_CMD(&system_cmd, 10)){
+			static int count = 1;
+			LD.setNumber(count);
+			count++;
+			LE.toggle(0);
+		 		      }
+
+
 }
 
 void period_10Hz(uint32_t count)
 {
+
 	    BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
 		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
-		//ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x5;
 
-	    printf("can_msg");
-	    if(dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t)){
-	    printf("can_msg %d \n", ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes);
-	    }
+		ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
+		ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x7;
+		ble_cmd.BLE_COMM_CMD_enum = 0x11;
+		ble_chk_pt.BLE_CHCK_PT_lat = 0x1234;
+		ble_chk_pt.BLE_CHCK_PT_long = 0x5678;
+		ble_map_data.BLE_MAP_DATA_dest_lat = 0x1111;
+		ble_map_data.BLE_MAP_DATA_dest_long = 0x2222;
+		ble_map_data.BLE_MAP_DATA_start_lat = 0x3333;
+		ble_map_data.BLE_MAP_DATA_start_long = 0x4444;
 
+	    dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t);
+
+	   dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd);
+
+	   dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
+
+	    dbc_encode_and_send_BLE_MAP_DATA(&ble_map_data);
 }
 
 void period_100Hz(uint32_t count)
 {
-    LE.toggle(3);
+
+	while(CAN_rx(can1, &can_msg, 0)){
+
+		 dbc_msg_hdr_t can_msg_hdr;
+		 can_msg_hdr.dlc = can_msg.frame_fields.data_len;
+		 can_msg_hdr.mid = can_msg.msg_id;
+
+		 if(dbc_decode_GEO_LOCATION(&geo_location, can_msg.data.bytes, &can_msg_hdr)){
+			for(int i =0; i<5; i++){
+		    printf("%x  ", can_msg.data.bytes[i]);
+		}
+	}
+
+	}
+
+
+	 if(dbc_handle_mia_GEO_LOCATION(&geo_location, 10)){
+	    static int count5 = 1;
+		LD.setNumber(count5);
+		count5++;
+	   }
+
+
+    //LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():

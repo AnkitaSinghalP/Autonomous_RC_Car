@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 /_build_with_dbc/
+<<<<<<< HEAD
 =======
 /_build/
 <<<<<<< HEAD
@@ -7,3 +8,6 @@
 =======
 /_build_with_dbc/
 >>>>>>> added BLE_heartbeat
+=======
+
+>>>>>>> Modified periodic_callbacks.cpp
