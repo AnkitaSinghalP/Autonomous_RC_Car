@@ -34,13 +34,21 @@
 #include "_can_dbc/generated_can.h"
 #include "stdio.h"
 #include "can.h"
+#include "string.h"
 
 can_msg_t can_msg = { 0 };
 can_msg_t msg_received;
-MOTOR_CMD_t motorcmd;
+MOTOR_CMD_t motorcmd={0};
+SYSTEM_CMD_t systemcmd;
 MOTOR_HEARTBEAT_t motorheartbeat;
+MOTOR_SPEED_t motorspeed_actual;
 
 
+
+const uint32_t        SYSTEM_CMD__MIA_MS = 1000;
+const SYSTEM_CMD_t      SYSTEM_CMD__MIA_MSG  = {SYSTEM_STOP};
+const uint32_t          MOTOR_CMD__MIA_MS =3000 ;
+const MOTOR_CMD_t         MOTOR_CMD__MIA_MSG = {0};
 
 
 
@@ -76,49 +84,60 @@ bool period_reg_tlm(void)
  * The argument 'count' is the number of times each periodic task is called.
  */
 
+bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
+{
+	can_msg_t can_msg = {0};
+	can_msg.msg_id = mid;
+	can_msg.frame_fields.data_len = dlc;
+	memcpy(can_msg.data.bytes, bytes, dlc);
+	return CAN_tx(can1, &can_msg, 0);
+}
+
+
 void period_1Hz(uint32_t count)
 {
+
+	motorheartbeat.MOTOR_HEARTBEAT_tx_bytes=count;
+	motorheartbeat.MOTOR_HEARTBEAT_rx_bytes=count;
+	motorspeed_actual.MOTOR_SPEED_actual = 35.0;
+	dbc_encode_and_send_MOTOR_HEARTBEAT(&motorheartbeat);
+	dbc_encode_and_send_MOTOR_SPEED(&motorspeed_actual);
+	/*if(CAN_tx(can1, &can_msg, 0))
+			{
+				printf("sent 0 %d\n",can_msg.data.bytes[0]);
+				printf("sent 1 %f\n",can_msg.data.bytes[1]);
+				printf("sent 2 %f\n",can_msg.data.bytes[2]);
+
+			}*/
+
+
+
+}
+
+void period_10Hz(uint32_t count)
+{
+	static int countmia=0;
 	CAN_bypass_filter_accept_all_msgs();
 	if (CAN_rx(can1, &msg_received, 0))
 	{
 		dbc_msg_hdr_t can_msg_hdr;
 		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
 		can_msg_hdr.mid = msg_received.msg_id;
-		if(dbc_decode_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr))
-		{
-
-			printf("Received0 : %d \n",motorcmd.MOTOR_CMD_speed);
-
-		}
+		dbc_decode_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr);
+		dbc_decode_SYSTEM_CMD(&systemcmd,msg_received.data.bytes,&can_msg_hdr);
 	}
-
-	LE.toggle(1);
-
-}
-
-void period_10Hz(uint32_t count)
-{
-
-	dbc_msg_hdr_t msg_hdr = dbc_encode_and_send_MOTOR_HEARTBEAT(&motorheartbeat);
-	can_msg.msg_id = msg_hdr.mid;
-
-	printf("msg id %d\n", can_msg.msg_id);
-	can_msg.frame_fields.data_len = msg_hdr.dlc;
-	if(CAN_tx(can1, &can_msg, 0))
-	{
-		printf("sent 0 %d\n",can_msg.data.bytes[0]);
-		printf("sent 1 %f\n",can_msg.data.bytes[1]);
-		printf("sent 2 %f\n",can_msg.data.bytes[2]);
-
-	}
-
-
-	LE.toggle(2);
+	if(dbc_handle_mia_SYSTEM_CMD(&systemcmd, 100))
+		countmia++;
+	if(dbc_handle_mia_MOTOR_CMD(&motorcmd,1000))
+		countmia++;
+	if(countmia >99)
+		countmia=0;
+	LD.setNumber(countmia);
 }
 
 void period_100Hz(uint32_t count)
 {
-	LE.toggle(3);
+
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
