@@ -71,10 +71,10 @@ void ultrasonic_sensor_heartbeat_message()
 
 void decoded_can_sensor_message()
 {
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = 25;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = 65;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = 35;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_right = 45;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = obstacle.middle_distance;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = obstacle.left_distance;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = obstacle.right_distance;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_right = obstacle.rear_distance;
 	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_left = 55;
 
 	dbc_encode_and_send_SENSOR_ULTRASONIC_m0(&ultrasonic_sensor_data);
@@ -223,6 +223,11 @@ bool sensor_measure()
 }
 void can_communication_sensor()
 {
+	static int counter = 0;
+	counter++;
+	decoded_can_sensor_message();
+	if(counter == 50)
+	ultrasonic_sensor_heartbeat_message();
 
 }
 
