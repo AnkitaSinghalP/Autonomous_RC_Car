@@ -22,6 +22,9 @@ typedef struct
 
 bool sensor_init();
 bool sensor_measure();
+void can_communication_sensor();
+void received_sensor_can_msg();
+
 
 
 

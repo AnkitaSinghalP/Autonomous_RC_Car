@@ -10,9 +10,14 @@
 #include "tasks.hpp"
 #include "shared_handles.h"
 #include "scheduler_task.hpp"
-
+#include "can.h"
 #include "lpc_timers.h"
+#include <stdint.h>
 #include "utilities.h"
+#include "_can_dbc/generated_can.h"
+#include "io.hpp"
+#include "stdio.h"
+#include "string.h"
 
 #define TIMER_TICK 1
 
@@ -23,6 +28,59 @@ static int start_time_right=0, actual_time_right =0;
 static int start_time_left=0, actual_time_left;
 static int start_time_rear=0, actual_time_rear =0;
 
+
+SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
+//can_msg_t can_msg_sensor = { 0 };
+can_msg_t can_msg_received;
+can_msg_t can_msg = { 0 };
+
+const uint32_t SYSTEM_CMD__MIA_MS = 1000;
+const SYSTEM_CMD_t SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
+
+SENSOR_ULTRASONIC_m0_t ultrasonic_sensor_data = {0};
+
+SENSOR_ULTRASONIC_t ultrasonic_sensor_receiver = {0};
+
+SYSTEM_CMD_t master_command;
+
+dbc_mia_info_t mia_handling = {0};
+
+SENSOR_BATT_t battery_status = {0};
+
+dbc_msg_hdr_t can_msg_hdr;
+
+static int counter = 0;
+
+
+
+bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
+{
+
+	can_msg.msg_id = mid;
+	can_msg.frame_fields.data_len = dlc;
+	memcpy(can_msg.data.bytes, bytes, dlc);
+	return CAN_tx(can1, &can_msg, 0);
+}
+
+void ultrasonic_sensor_heartbeat_message()
+{
+	sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
+	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
+	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);
+}
+
+void decoded_can_sensor_message()
+{
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = 25;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = 65;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = 35;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_right = 45;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_left = 55;
+
+	dbc_encode_and_send_SENSOR_ULTRASONIC_m0(&ultrasonic_sensor_data);
+
+
+}
 
 void isr_middle1()
 {
@@ -133,14 +191,24 @@ void sensor_receiver_pins()
 	LPC_GPIO2->FIODIR |= (1 << 5);
 	LPC_GPIO2->FIODIR |= (1 << 7);
 }
+
+bool can_init_sensor()
+{
+	CAN_init(can1, 100, 128, 256,0,0);
+	CAN_reset_bus(can1);
+	CAN_bypass_filter_accept_all_msgs();
+	return true;
+
+}
+
 bool sensor_init(){
 
 	sensor_receiver_pins();
 	delay_ms(1);
 	interrupt_enable();
 	lpc_timer_enable(lpc_timer0, TIMER_TICK);
+	can_init_sensor();
 	return true;
-
 }
 
 bool sensor_measure()
@@ -150,9 +218,33 @@ bool sensor_measure()
 	delay_ms(10);
 	sensor_sonar_right_trigger();
 	sensor_sonar_left_trigger();
-
-
 	return true;
 
 }
+void can_communication_sensor()
+{
 
+}
+
+void received_sensor_can_msg()
+{
+	while(CAN_rx(can1, &can_msg_received, 0))
+	{
+		can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
+		can_msg_hdr.mid = can_msg_received.msg_id;
+
+		dbc_decode_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr);
+
+	}
+
+	if(dbc_handle_mia_SYSTEM_CMD(&master_command, 10))
+	{
+
+		counter++;
+
+		if(counter == 99 )
+			counter =0;
+
+	}
+
+}

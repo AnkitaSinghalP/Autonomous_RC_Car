@@ -43,10 +43,7 @@
 #include "string.h"
 #include "eint.h"
 
-SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
-can_msg_t can_msg_sensor = { 0 };
 
-sensor_readings obstacle_detected;
 
 //SYSTEM_CMD_t master_cmd = {0};
 
@@ -67,21 +64,10 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 
-bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
-{
-	can_msg_t can_msg = { 0 };
-	can_msg.msg_id = mid;
-	can_msg.frame_fields.data_len = dlc;
-	memcpy(can_msg.data.bytes, bytes, dlc);
-	return CAN_tx(can1, &can_msg, 0);
-}
 
 bool period_init(void)
 {
 	sensor_init();
-	CAN_init(can1, 100, 128, 256,0,0);
-	CAN_reset_bus(can1);
-	CAN_bypass_filter_accept_all_msgs();
 	return true; // Must return true upon success
 }
 
@@ -100,10 +86,7 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-	if(CAN_is_bus_off(can1))
-	{
-		CAN_reset_bus(can1);
-	}
+
 	sensor_measure();
 
 	LE.toggle(1);
