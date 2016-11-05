@@ -59,6 +59,8 @@ const SYSTEM_CMD_t SYSTEM_CMD__MIA_MSG = { SYSTEM_STOP };
 
 /*const uint32_t GEO_LOCATION__MIA_MS = 1000;
 const GEO_LOCATION_t GEO_LOCATION__MIA_MSG = { 0 };*/
+bool flag_tx;
+can_msg_t abc;
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -159,8 +161,6 @@ void period_10Hz(uint32_t count)
 					count1 = 0;
 				//LE.toggle(0);
 			}
-
-
 
 
 }
