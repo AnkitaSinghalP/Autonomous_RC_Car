@@ -44,26 +44,26 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_RESET = 2,
     SYSTEM_STOP = 0,
+    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
 } SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_RIGHT = 2,
-    STEER_REVERSE = 5,
-    STEER_FORWARD = 4,
-    STEER_HALF_LEFT = 1,
-    STEER_LEFT = 0,
     STEER_HALF_RIGHT = 3,
+    STEER_REVERSE = 5,
+    STEER_RIGHT = 2,
+    STEER_FORWARD = 4,
+    STEER_LEFT = 0,
+    STEER_HALF_LEFT = 1,
 } MOTOR_CMD_steer_E ;
 
 typedef enum {
     START = 1,
     STOP = 0,
-    BRAKE = 2,
     RESUME = 3,
+    BRAKE = 2,
 } MOTOR_CMD_drive_E ;
 
 
