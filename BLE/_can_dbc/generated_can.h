@@ -43,6 +43,13 @@ static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
 // static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 // static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
+/// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
+typedef enum {
+    COMM_STOP = 0,
+    COMM_RESET = 2,
+    COMM_START = 1,
+} BLE_COMM_CMD_enum_E ;
+
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_RESET = 2,
@@ -55,7 +62,7 @@ typedef enum {
 
 /// Message: BLE_COMM_CMD from 'BLE', DLC: 1 byte(s), MID: 010
 typedef struct {
-    uint8_t BLE_COMM_CMD_enum;                ///< B7:0   Destination: MASTER
+    BLE_COMM_CMD_enum_E BLE_COMM_CMD_enum;    ///< B7:0   Destination: MASTER
 
     // No dbc_mia_info_t for a message that we will send
 } BLE_COMM_CMD_t;
