@@ -58,7 +58,7 @@ int main(void)
     scheduler_add_task(new wirelessTask(PRIORITY_CRITICAL));
 
     /* Change "#if 0" to "#if 1" to run period tasks; @see period_callbacks.cpp */
-    #if 0
+    #if 1
     const bool run_1Khz = false;
     scheduler_add_task(new periodicSchedulerTask(run_1Khz));
     #endif
@@ -74,7 +74,7 @@ int main(void)
      * This is a the board demonstration task that can be used to test the board.
      * This also shows you how to send a wireless packets to other boards.
      */
-    #if 0
+    #if 1
         scheduler_add_task(new example_io_demo());
     #endif
 

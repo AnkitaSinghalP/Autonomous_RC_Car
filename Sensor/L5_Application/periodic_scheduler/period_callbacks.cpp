@@ -28,10 +28,27 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include <sensor_sonar.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
+#include "io.hpp"
+#include "stdio.h"
+#include "timers.h"
+#include "utilities.h"
+#include "file_logger.h"
+#include "can.h"
+#include "_can_dbc/generated_can.h"
+#include "lpc_timers.h"
+#include "string.h"
+#include "eint.h"
 
+
+
+//SYSTEM_CMD_t master_cmd = {0};
+
+const uint32_t            MASTER_CMD__MIA_MS = 3000;
+//const SYSTEM_CMD_t      MASTER_CMD__MIA_MSG = { 25 };
 
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
@@ -46,16 +63,19 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
+
+
 bool period_init(void)
 {
-    return true; // Must return true upon success
+	sensor_init();
+	return true; // Must return true upon success
 }
 
 /// Register any telemetry variables
 bool period_reg_tlm(void)
 {
-    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-    return true; // Must return true upon success
+	// Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+	return true; // Must return true upon success
 }
 
 
@@ -66,22 +86,33 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-    LE.toggle(1);
+
+	sensor_measure();
+
+	LE.toggle(1);
 }
 
 void period_10Hz(uint32_t count)
 {
-    LE.toggle(2);
+	/*sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
+	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
+	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);*/
+
+	//puts("sent");
+
+
+	LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
 {
-    LE.toggle(3);
+	//LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-    LE.toggle(4);
+	//LE.toggle(4);
 }
+
