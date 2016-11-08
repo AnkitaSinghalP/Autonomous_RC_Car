@@ -25,28 +25,28 @@ typedef struct {
 
 // static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {  010, 1 };
 static const dbc_msg_hdr_t SYSTEM_CMD_HDR =                       {  100, 1 };
-// static const dbc_msg_hdr_t MASTER_HEARTBEAT_HDR =                 {  134, 4 };
 // static const dbc_msg_hdr_t MOTOR_CMD_HDR =                        {  151, 3 };
 // static const dbc_msg_hdr_t SYSTEM_STATUS_HDR =                    {  162, 2 };
-static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 7 };
-static const dbc_msg_hdr_t SENSOR_SPEED_HDR =                     {  212, 1 };
+static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 6 };
 static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 4 };
-// static const dbc_msg_hdr_t BLE_DEST_RCHD_HDR =                    {  312, 1 };
 // static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
 // static const dbc_msg_hdr_t BLE_MAP_DATA_HDR =                     {  361, 8 };
 // static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
-// static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 1 };
+// static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 2 };
+// static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 // static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
-// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 5 };
+// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
+// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  461, 8 };
 // static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
+// static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 // static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_START = 1,
     SYSTEM_STOP = 0,
+    SYSTEM_START = 1,
     SYSTEM_RESET = 2,
 } SYSTEM_CMD_enum_E ;
 
@@ -68,8 +68,7 @@ typedef struct {
     uint8_t SENSOR_ULTRASONIC_left;           ///< B23:16   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_middle;         ///< B31:24   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_right;          ///< B39:32   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_rear_right;     ///< B47:40   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_rear_left;      ///< B55:48   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_rear;           ///< B47:40   Destination: MASTER
 
     // No dbc_mia_info_t for a message that we will send
 } SENSOR_ULTRASONIC_m0_t;
@@ -80,8 +79,7 @@ typedef struct {
     uint8_t SENSOR_ULTRASONIC_no_filt_left;   ///< B23:16   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_no_filt_middle; ///< B31:24   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_no_filt_right;  ///< B39:32   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_rear_right; ///< B47:40   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_rear_left; ///< B55:48   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_rear;   ///< B47:40   Destination: MASTER
 
     // No dbc_mia_info_t for a message that we will send
 } SENSOR_ULTRASONIC_m1_t;
@@ -94,17 +92,9 @@ typedef struct {
 /// @} MUX'd message
 
 
-/// Message: SENSOR_SPEED from 'SENSOR', DLC: 1 byte(s), MID: 212
-typedef struct {
-    uint8_t SENSOR_SPEED_data;                ///< B7:0   Destination: MASTER,IO,BLE
-
-    // No dbc_mia_info_t for a message that we will send
-} SENSOR_SPEED_t;
-
-
 /// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 213
 typedef struct {
-    uint8_t SENSOR_BATT_stat;                 ///< B6:0  Min: 0 Max: 100   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_BATT_stat;                 ///< B6:0  Min: 0 Max: 100   Destination: MASTER,IO
 
     // No dbc_mia_info_t for a message that we will send
 } SENSOR_BATT_t;
@@ -128,8 +118,6 @@ extern const SYSTEM_CMD_t                         SYSTEM_CMD__MIA_MSG;
 /// Not generating code for dbc_encode_BLE_COMM_CMD() since the sender is BLE and we are SENSOR
 
 /// Not generating code for dbc_encode_SYSTEM_CMD() since the sender is MASTER and we are SENSOR
-
-/// Not generating code for dbc_encode_MASTER_HEARTBEAT() since the sender is MASTER and we are SENSOR
 
 /// Not generating code for dbc_encode_MOTOR_CMD() since the sender is MASTER and we are SENSOR
 
@@ -158,10 +146,8 @@ static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m0(uint8_t bytes[8], SE
     bytes[3] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B24
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_right)))) & 0xff;
     bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear_right)))) & 0xff;
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0xff;
     bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear_left)))) & 0xff;
-    bytes[6] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B48
 
     return SENSOR_ULTRASONIC_HDR;
 }
@@ -198,10 +184,8 @@ static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m1(uint8_t bytes[8], SE
     bytes[3] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B24
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_right)))) & 0xff;
     bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear_right)))) & 0xff;
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear)))) & 0xff;
     bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear_left)))) & 0xff;
-    bytes[6] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B48
 
     return SENSOR_ULTRASONIC_HDR;
 }
@@ -211,29 +195,6 @@ static inline bool dbc_encode_and_send_SENSOR_ULTRASONIC_m1(SENSOR_ULTRASONIC_m1
 {
     uint8_t bytes[8];
     const dbc_msg_hdr_t hdr = dbc_encode_SENSOR_ULTRASONIC_m1(bytes, from);
-    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
-}
-
-
-
-/// Encode SENSOR's 'SENSOR_SPEED' message
-/// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_SENSOR_SPEED(uint8_t bytes[8], SENSOR_SPEED_t *from)
-{
-    uint32_t raw;
-    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
-
-    raw = ((uint32_t)(((from->SENSOR_SPEED_data)))) & 0xff;
-    bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
-
-    return SENSOR_SPEED_HDR;
-}
-
-/// Encode and send for dbc_encode_SENSOR_SPEED() message
-static inline bool dbc_encode_and_send_SENSOR_SPEED(SENSOR_SPEED_t *from)
-{
-    uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_SENSOR_SPEED(bytes, from);
     return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
 }
 
@@ -294,8 +255,6 @@ static inline bool dbc_encode_and_send_SENSOR_HEARTBEAT(SENSOR_HEARTBEAT_t *from
 
 /// Not generating code for dbc_encode_BLE_CHCK_PT() since the sender is BLE and we are SENSOR
 
-/// Not generating code for dbc_encode_BLE_DEST_RCHD() since the sender is BLE and we are SENSOR
-
 /// Not generating code for dbc_encode_BLE_HEARTBEAT() since the sender is BLE and we are SENSOR
 
 /// Not generating code for dbc_encode_BLE_MAP_DATA() since the sender is BLE and we are SENSOR
@@ -304,11 +263,17 @@ static inline bool dbc_encode_and_send_SENSOR_HEARTBEAT(SENSOR_HEARTBEAT_t *from
 
 /// Not generating code for dbc_encode_GEO_ACCELEROMETER() since the sender is GEO and we are SENSOR
 
+/// Not generating code for dbc_encode_GEO_DEST_RCHD() since the sender is GEO and we are SENSOR
+
 /// Not generating code for dbc_encode_GEO_HEARTBEAT() since the sender is GEO and we are SENSOR
 
 /// Not generating code for dbc_encode_GEO_LOCATION() since the sender is GEO and we are SENSOR
 
+/// Not generating code for dbc_encode_GEO_LOCATION() since the sender is GEO and we are SENSOR
+
 /// Not generating code for dbc_encode_MOTOR_HEARTBEAT() since the sender is MOTOR and we are SENSOR
+
+/// Not generating code for dbc_encode_MOTOR_SPEED() since the sender is MOTOR and we are SENSOR
 
 /// Not generating code for dbc_encode_IO_HEARTBEAT() since the sender is IO and we are SENSOR
 
@@ -334,23 +299,17 @@ static inline bool dbc_decode_SYSTEM_CMD(SYSTEM_CMD_t *to, const uint8_t bytes[8
 }
 
 
-/// Not generating code for dbc_decode_MASTER_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
-
 /// Not generating code for dbc_decode_MOTOR_CMD() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_SYSTEM_STATUS() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_SENSOR_ULTRASONIC() since 'SENSOR' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_SENSOR_SPEED() since 'SENSOR' is not the recipient of any of the signals
-
 /// Not generating code for dbc_decode_SENSOR_BATT() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_SENSOR_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_BLE_CHCK_PT() since 'SENSOR' is not the recipient of any of the signals
-
-/// Not generating code for dbc_decode_BLE_DEST_RCHD() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_BLE_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
 
@@ -360,11 +319,17 @@ static inline bool dbc_decode_SYSTEM_CMD(SYSTEM_CMD_t *to, const uint8_t bytes[8
 
 /// Not generating code for dbc_decode_GEO_ACCELEROMETER() since 'SENSOR' is not the recipient of any of the signals
 
+/// Not generating code for dbc_decode_GEO_DEST_RCHD() since 'SENSOR' is not the recipient of any of the signals
+
 /// Not generating code for dbc_decode_GEO_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_LOCATION() since 'SENSOR' is not the recipient of any of the signals
 
+/// Not generating code for dbc_decode_GEO_LOCATION() since 'SENSOR' is not the recipient of any of the signals
+
 /// Not generating code for dbc_decode_MOTOR_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
+
+/// Not generating code for dbc_decode_MOTOR_SPEED() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_IO_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
 

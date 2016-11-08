@@ -68,6 +68,7 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 bool period_init(void)
 {
 	sensor_init();
+	can_init_sensor();
 	return true; // Must return true upon success
 }
 
@@ -87,21 +88,32 @@ bool period_reg_tlm(void)
 void period_1Hz(uint32_t count)
 {
 
-	sensor_measure();
+    ultrasonic_sensor_heartbeat_message();
 
-	LE.toggle(1);
+	//LE.toggle(1);
 }
 
 void period_10Hz(uint32_t count)
 {
+    static bool start=false;
 	/*sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
 	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
 	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);*/
 
 	//puts("sent");
 
+    if(received_sensor_can_msg()==1){
+        start=true;
+    }
+    else{
+        start=false;
+    }
+    if(start){
+        sensor_measure();
+    }
 
-	LE.toggle(2);
+    //decoded_can_sensor_message(1,0,0);
+	//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
