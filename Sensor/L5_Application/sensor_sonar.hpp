@@ -14,10 +14,10 @@
 
 typedef struct
 {
-        uint16_t middle_distance = 0 ;
-        uint16_t rear_distance = 0 ;
-        uint16_t right_distance  = 0;
-        uint16_t left_distance = 0 ;
+        uint8_t middle_distance = 0 ;
+        uint8_t rear_distance = 0 ;
+        uint8_t right_distance  = 0;
+        uint8_t left_distance = 0 ;
 }sensor_readings;
 
 void sensor_init();

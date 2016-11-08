@@ -96,7 +96,7 @@ void ultrasonic_sensor_heartbeat_message()
 
 void isr_middle1()
 {
-    //puts("inside isr_middle1 \n");
+   // puts("inside isr_middle1 \n");
     actual_time_middle = lpc_timer_get_value(lpc_timer0) - start_time_middle;
     obstacle.middle_distance = actual_time_middle / 147;
     portYIELD_FROM_ISR(0);
@@ -104,7 +104,7 @@ void isr_middle1()
 
 void isr_right1()
 {
-    //puts("inside isr_right1 \n");
+   // puts("inside isr_right1 \n");
     actual_time_right = lpc_timer_get_value(lpc_timer0) - start_time_right;
     obstacle.right_distance = actual_time_right / 147;
 
@@ -112,7 +112,7 @@ void isr_right1()
 }
 void isr_left1()
 {
-    //puts("inside isr_left1 \n");
+   // puts("inside isr_left1 \n");
     actual_time_left = lpc_timer_get_value(lpc_timer0) - start_time_left;
     obstacle.left_distance = actual_time_left / 147;
 
@@ -236,9 +236,9 @@ void sensor_init(){
 void compute()
 {
     uint8_t left,right,middle;
-    printf(" %d     %d      %d\n",obstacle.left_distance,obstacle.middle_distance,obstacle.right_distance);
+   // printf(" %d     %d      %d\n",obstacle.left_distance,obstacle.middle_distance,obstacle.right_distance);
 
-    if(obstacle.right_distance<=12){
+    if(obstacle.right_distance<=30){
         right=1;
         LE.toggle(1);
     }
@@ -252,7 +252,7 @@ void compute()
     else{
         middle=0;
     }
-    if(obstacle.left_distance<=12){
+    if(obstacle.left_distance<=30){
         left=1;
         LE.toggle(3);
     }
