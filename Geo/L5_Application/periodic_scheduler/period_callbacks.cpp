@@ -40,7 +40,6 @@
 
 Uart2& u2 = Uart2::getInstance();
 
-
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
@@ -103,11 +102,11 @@ void period_1Hz(uint32_t count)
 		printf("Geo Heartbeat Message sent: %d\n", geo_heartbeat.GEO_HEARTBEAT_tx_bytes);
 	}
 
+
 }
 
 void period_10Hz(uint32_t count)
 {
-
 
 		static int size = 255;
 
@@ -120,7 +119,6 @@ void period_10Hz(uint32_t count)
 			//printf("raw: %s\n",nmea);
 		}
 
-		//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
