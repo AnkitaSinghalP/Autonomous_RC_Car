@@ -37,12 +37,58 @@
 #include "string.h"
 #include "gps.hpp"
 #include <uart2.hpp>
+#include "tasks.hpp"
+#include "examples/examples.hpp"
+#include "Compass.hpp"
+#include "Compass_info.hpp"
+#include <math.h>
+#include "i2c2.hpp"
+#include "i2c_base.hpp"
+#include "i2c2_device.hpp"
+#include "utilities.h"
 
 Uart2& u2 = Uart2::getInstance();
+I2C2& i2c = I2C2::getInstance();
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+float resolution = 0.91;
+int Mag_Angle;
 
+char direction_command()
+    {
+    uint8_t xMHiByte = 0, xMLoByte = 0, yMHiByte =0, yMLoByte=0,zMHiByte=0, zMLoByte=0;
+    int16_t xMagData =0, yMagData =0, zMagData=0;
+    float xScaled, yScaled, resolution, headingRad;
+    float heading = 0.0;
+
+    i2c.writeReg(DEVICE_WRITE_ADDRESS,0x02,0x00);
+
+    xMHiByte = i2c.readReg(DEVICE_READ_ADDRESS, 0x03);
+    xMLoByte = i2c.readReg(DEVICE_READ_ADDRESS, 0x04);
+    yMHiByte = i2c.readReg(DEVICE_READ_ADDRESS, 0x07);
+    yMLoByte = i2c.readReg(DEVICE_READ_ADDRESS, 0x08);
+    zMHiByte = i2c.readReg(DEVICE_READ_ADDRESS, 0x05);
+    zMLoByte = i2c.readReg(DEVICE_READ_ADDRESS, 0x06);
+    xMagData = (xMHiByte << 8) | xMLoByte;
+    yMagData = (yMHiByte << 8) | yMLoByte;
+    zMagData = (zMHiByte << 8) | zMLoByte;
+
+    xScaled = xMagData * 0.91;
+    yScaled = yMagData * 0.91;
+
+    headingRad = (atan2(yScaled,xScaled));
+    headingRad = headingRad + 0.2361; // radinas 13.63 declination
+
+    heading = ((headingRad * 180)/Pi);
+    if(heading < 0)
+    {
+       heading = 360 + heading;
+    }
+    Mag_Angle = heading;
+    printf("Magnetomer_Angle:%d\n", Mag_Angle);
+    return Mag_Angle;
+    }
 /**
  * This is the stack size of the dispatcher task that triggers the period tasks to run.
  * Minimum 1500 bytes are needed in order to write a debug file if the period tasks overrun.
@@ -63,6 +109,7 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+    CompassInit();
     u2.init(9600,255,255);
 
     //char *str= (char*)SET_OUTPUT_ALLDATA;
@@ -93,7 +140,9 @@ void period_1Hz(uint32_t count)
 	CAN_is_bus_off(can1);
 	CAN_reset_bus(can1);
 	LE.toggle(1);
-
+	uint8_t slaveAddr = SLAVE_ADDRESS;
+	LPC_I2C2->I2ADR0 = slaveAddr;
+	direction_command();
 	GEO_HEARTBEAT_t geo_heartbeat = { 0 };
 	geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
