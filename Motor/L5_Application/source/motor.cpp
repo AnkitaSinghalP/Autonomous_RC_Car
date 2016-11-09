@@ -1,58 +1,87 @@
+/*
+
 #include <stdio.h>
 
 #include "motor.hpp"
 #include "lpc_pwm.hpp"
 
- uint16_t pickupspeeed;
- uint16_t avgspeed;
- uint16_t maxspeedfwd;
- uint16_t maxspeedbck;
 
- const uint16_t neutral = 15;
- float halfright;
- float halfleft;
+float avgspeed = 15.6;
 
- float left;
- float halfback;
- int DClevel;
+
+const uint16_t neutral = 15;
+float halfright;
+float halfleft;
+
+float left;
+float halfback;
+int DClevel;
 
 float speedfactor = 0;
 float turnfactor = 0;
-float actspeed;
 
+float actspeed;
+static PWM servomotor(PWM::pwm1, 100);
+static PWM dcmotor(PWM::pwm2, 100);
 
 
 void initcar()
 {
-	extern static PWM servomotor(PWM::pwm1, 100);
-	extern static PWM dcmotor(PWM::pwm2, 100);
+
 	servomotor.set(neutral);
 	dcmotor.set(neutral);
 
 }
-void moveForward( uint16_t desiredspeed )
+void sys_reset()
+{
+	servomotor.set(neutral);
+	dcmotor.set(neutral);
+}
+
+void stop()
+{
+	servomotor.set(neutral);
+	dcmotor.set(neutral);
+}
+
+void start()
+
+{
+	printf("Inside start fucntion\n");
+	servomotor.set(neutral);
+	dcmotor.set(avgspeed);
+}
+void brake()
+{
+	servomotor.set(neutral);
+	dcmotor.set(neutral);
+}*/
+/*void moveForward( uint16_t desiredspeed )
 {
 	actspeed = getactspeed();
 	if(desiredspeed > actspeed)
 		speedfactor = desiredspeed-actspeed;
 
-	if(actspeed > maxspeedfwd)
+	//if(actspeed > maxspeedfwd)
 		speedfactor= 0;
-}
+}*/
+/*
 void moveBack( uint16_t desiredspeed)
 {
-desiredspeed = avgspeed;
-halfback= 12.5;
+	desiredspeed = avgspeed;
+	halfback= 12.5;
 
 }
 void moveRight( uint16_t desiredspeed)
 {
-desiredspeed = avgspeed;
-turnfactor = halfright;
+	desiredspeed = avgspeed;
+	turnfactor = halfright;
 }
 void moveLeft( uint16_t desiredspeed)
 {
-desiredspeed = avgspeed;
-turnfactor = halfleft;
+	desiredspeed = avgspeed;
+	turnfactor = halfleft;
 
-}
+}*/
+
+

@@ -37,7 +37,9 @@ L5_Application/periodic_scheduler/period_callbacks.o: \
  C:\SJSU_Dev\projects\spartan_and_furious\Motor\L4_IO/temperature_sensor.hpp \
  ../L5_Application/periodic_scheduler/periodic_callback.h \
  C:\SJSU_Dev\projects\spartan_and_furious\Motor/_can_dbc/generated_can.h \
- C:\SJSU_Dev\projects\spartan_and_furious\Motor\L2_Drivers/can.h
+ C:\SJSU_Dev\projects\spartan_and_furious\Motor\L2_Drivers/can.h \
+ C:\SJSU_Dev\projects\spartan_and_furious\Motor\L5_Application/motor.hpp \
+ C:\SJSU_Dev\projects\spartan_and_furious\Motor\L2_Drivers/lpc_pwm.hpp
 
 C:\SJSU_Dev\projects\spartan_and_furious\Motor\L4_IO/io.hpp:
 
@@ -114,3 +116,7 @@ C:\SJSU_Dev\projects\spartan_and_furious\Motor\L4_IO/temperature_sensor.hpp:
 C:\SJSU_Dev\projects\spartan_and_furious\Motor/_can_dbc/generated_can.h:
 
 C:\SJSU_Dev\projects\spartan_and_furious\Motor\L2_Drivers/can.h:
+
+C:\SJSU_Dev\projects\spartan_and_furious\Motor\L5_Application/motor.hpp:
+
+C:\SJSU_Dev\projects\spartan_and_furious\Motor\L2_Drivers/lpc_pwm.hpp:
