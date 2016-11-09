@@ -35,6 +35,10 @@
 #include <stdio.h>
 #include "can.h"
 #include "string.h"
+#include "gps.hpp"
+#include <uart2.hpp>
+
+Uart2& u2 = Uart2::getInstance();
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -59,6 +63,13 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+    u2.init(9600,255,255);
+
+    //char *str= (char*)SET_OUTPUT_ALLDATA;
+    u2.put(SET_OUTPUT_RMC_GGA,0);
+    u2.put(UPDATE_RATE_10HZ,0);
+
+
     CAN_init(can1, 100, 20, 20, 0, 0);
     CAN_reset_bus(can1);
     return true; // Must return true upon success
@@ -82,18 +93,32 @@ void period_1Hz(uint32_t count)
 	CAN_is_bus_off(can1);
 	CAN_reset_bus(can1);
 	LE.toggle(1);
+
+	GEO_HEARTBEAT_t geo_heartbeat = { 0 };
+	geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
+
+	if (dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat))
+	{
+		printf("Geo Heartbeat Message sent: %d\n", geo_heartbeat.GEO_HEARTBEAT_tx_bytes);
+	}
+
+
 }
 
 void period_10Hz(uint32_t count)
 {
-		GEO_HEARTBEAT_t geo_heartbeat = { 0 };
-		geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
-		if (dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat))
+		static int size = 255;
+
+		static char *nmea = new char[size];
+
+		if(u2.gets(nmea,size,0))
 		{
-			printf("Geo Heartbeat Message sent: %d\n", geo_heartbeat.GEO_HEARTBEAT_tx_bytes);
+			if(gps(nmea))
+				printf("\n");
+			//printf("raw: %s\n",nmea);
 		}
-		LE.toggle(2);
+
 }
 
 void period_100Hz(uint32_t count)
