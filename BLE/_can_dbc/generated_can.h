@@ -23,7 +23,7 @@ typedef struct {
     uint8_t  dlc; ///< Data length of the message
 } dbc_msg_hdr_t; 
 
-static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {  010, 1 };
+static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {  110, 1 };
 static const dbc_msg_hdr_t SYSTEM_CMD_HDR =                       {  100, 1 };
 // static const dbc_msg_hdr_t MOTOR_CMD_HDR =                        {  151, 3 };
 // static const dbc_msg_hdr_t SYSTEM_STATUS_HDR =                    {  162, 2 };
@@ -46,21 +46,21 @@ static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
 /// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
 typedef enum {
     COMM_STOP = 0,
-    COMM_RESET = 2,
     COMM_START = 1,
+    COMM_RESET = 2,
 } BLE_COMM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+    SYSTEM_RESET = 2,
     SYSTEM_STOP = 0,
 } SYSTEM_CMD_enum_E ;
 
 
 
 
-/// Message: BLE_COMM_CMD from 'BLE', DLC: 1 byte(s), MID: 010
+/// Message: BLE_COMM_CMD from 'BLE', DLC: 1 byte(s), MID: 110
 typedef struct {
     BLE_COMM_CMD_enum_E BLE_COMM_CMD_enum;    ///< B7:0   Destination: MASTER
 
