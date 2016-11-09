@@ -46,8 +46,8 @@ static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_STOP = 0,
-    SYSTEM_START = 1,
     SYSTEM_RESET = 2,
+    SYSTEM_START = 1,
 } SYSTEM_CMD_enum_E ;
 
 
@@ -65,10 +65,11 @@ typedef struct {
 /// Struct for MUX: m0 (used for transmitting)
 typedef struct {
     uint16_t SENSOR_ULTRASONIC_err_count;     ///< B15:4   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_rear;           ///< B47:40   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_rear;   ///< B47:40   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_left;           ///< B23:16   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_middle;         ///< B31:24   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_right;          ///< B39:32   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_rear;           ///< B47:40   Destination: MASTER
 
     // No dbc_mia_info_t for a message that we will send
 } SENSOR_ULTRASONIC_m0_t;
@@ -76,10 +77,11 @@ typedef struct {
 /// Struct for MUX: m1 (used for transmitting)
 typedef struct {
     uint16_t SENSOR_ULTRASONIC_err_count;     ///< B15:4   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_rear;           ///< B47:40   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_no_filt_rear;   ///< B47:40   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_no_filt_left;   ///< B23:16   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_no_filt_middle; ///< B31:24   Destination: MASTER
     uint8_t SENSOR_ULTRASONIC_no_filt_right;  ///< B39:32   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_rear;   ///< B47:40   Destination: MASTER
 
     // No dbc_mia_info_t for a message that we will send
 } SENSOR_ULTRASONIC_m1_t;
@@ -138,6 +140,10 @@ static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m0(uint8_t bytes[8], SE
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_err_count)))) & 0xfff;
     bytes[0] |= (((uint8_t)(raw) & 0x0f) << 4); ///< 4 bit(s) starting from B4
     bytes[1] |= (((uint8_t)(raw >> 4) & 0xff)); ///< 8 bit(s) starting from B8
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0xff;
+    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear)))) & 0xff;
+    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
 
     // Set the rest of the signals within this MUX (m0)
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_left)))) & 0xff;
@@ -146,8 +152,6 @@ static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m0(uint8_t bytes[8], SE
     bytes[3] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B24
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_right)))) & 0xff;
     bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0xff;
-    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
 
     return SENSOR_ULTRASONIC_HDR;
 }
@@ -176,6 +180,10 @@ static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m1(uint8_t bytes[8], SE
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_err_count)))) & 0xfff;
     bytes[0] |= (((uint8_t)(raw) & 0x0f) << 4); ///< 4 bit(s) starting from B4
     bytes[1] |= (((uint8_t)(raw >> 4) & 0xff)); ///< 8 bit(s) starting from B8
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0xff;
+    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear)))) & 0xff;
+    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
 
     // Set the rest of the signals within this MUX (m1)
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_left)))) & 0xff;
@@ -184,8 +192,6 @@ static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m1(uint8_t bytes[8], SE
     bytes[3] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B24
     raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_right)))) & 0xff;
     bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear)))) & 0xff;
-    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
 
     return SENSOR_ULTRASONIC_HDR;
 }
