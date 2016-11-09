@@ -45,9 +45,9 @@ static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 8 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+    SYSTEM_RESET = 2,
+    SYSTEM_STOP = 0,
 } SYSTEM_CMD_enum_E ;
 
 
