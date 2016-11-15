@@ -307,23 +307,22 @@ uint8_t received_sensor_can_msg()
 	{
 		can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg_received.msg_id;
-
 		if(dbc_decode_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr)){
-
 		}
-
 	}
 
 	if(dbc_handle_mia_SYSTEM_CMD(&master_command, 10))
 	{
 
-		counter++;
 
 		if(counter == 99 )
-			counter =0;
 
+		{
+			counter =0;
+		}
+		counter++;
 	}
-	if(master_command.SYSTEM_CMD_enum==SYSTEM_START){
+	if(master_command.SYSTEM_CMD_enum == SYSTEM_START){
 		return 1;
 	}
 	else{
