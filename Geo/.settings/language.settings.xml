@@ -11,6 +11,7 @@
 			</provider>
 		</extension>
 	</configuration>
+	
 	<configuration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1987578660.1795069671" name="_build_mpu">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
@@ -22,6 +23,7 @@
 			</provider>
 		</extension>
 	</configuration>
+	
 	<configuration id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1987578660.200556452" name="_build_with_dbc">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>

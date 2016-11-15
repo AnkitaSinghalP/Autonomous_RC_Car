@@ -7,12 +7,14 @@
 
 #include <string.h>
 #include <cstdlib>
+#include <math.h>
 
 
 #ifndef L5_APPLICATION_GPS_HPP_
 #define L5_APPLICATION_GPS_HPP_
 
 
+/*
 #define SET_OUTPUT_RMC 		"$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29<CR><LF>"
 #define SET_OUTPUT_RMC_GGA 	"$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28<CR><LF>"
 #define SET_OUTPUT_ALLDATA 	"$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28<CR><LF>"
@@ -21,6 +23,7 @@
 #define UPDATE_RATE_10HZ 	"$PMTK220,100*2F<CR><LF>"
 
 #define BAUD_RATE_38400 	"$PMTK251,38400*27<CR><LF>"
+*/
 
 
 int32_t latitude_fixed, longitude_fixed;
@@ -136,6 +139,8 @@ bool parseData(char *nmea)
 
 	else if (RMC_str)
 	{
+
+		return false;
 		//printf("GPS_raw: %s\n",strstr(nmea, "$GPRMC"));
 
 		char *p = nmea;
@@ -196,6 +201,28 @@ bool parseData(char *nmea)
 	return true;
 }
 
+uint16_t calculateBearing()
+{
+    uint16_t bearing;
+    float x,y;
+
+    float lat1 = 37.335808;
+    float long1 = -121.882744;
+
+    float lat2 = 37.336227;//latitudeDegrees;
+    float long2 = -121.881882;//longitudeDegrees;
+
+
+    y = sin((long2 - long1) * (M_PI/180) )  *  cos(lat2  * (M_PI/180));
+
+
+    x = (cos(lat1 * (M_PI/180)) * sin(lat2 * (M_PI/180))) - (sin(lat1 * (M_PI/180)) * cos(lat2  * (M_PI/180)) * cos((long2 - long1) * (M_PI/180)));
+    bearing = (int)((180/M_PI) * (atan2(y,x))+360)%360;
+
+    printf("GPS: %f -%f\n",latitudeDegrees,longitudeDegrees);
+    printf("Bearing = %d\n",bearing);
+}
+
 bool gps(char *nmea)
 {
 
@@ -209,12 +236,15 @@ bool gps(char *nmea)
 
 	if(abs(latitudeDegrees) != static_lat || abs(longitudeDegrees) != static_long)
 	{
-		printf("Something wrong with raw data received...\n\n");
+		//printf("Wrong data\n");
+		//printf("%s \n\n", nmea);
+
 		return false;
 	}
 
 	static int count = 0;
-	printf("%d. GPS: %f -%f\n",count,latitudeDegrees,longitudeDegrees);
+	//
+	calculateBearing();
 	count ++;
 	//printf("Fix: %d\n",fix);
 

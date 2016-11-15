@@ -103,6 +103,7 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 	can_msg.msg_id = mid;
 	can_msg.frame_fields.data_len = dlc;
 	memcpy(can_msg.data.bytes, bytes, dlc);
+
 	return CAN_tx(can1, &can_msg, 0);
 }
 
@@ -110,11 +111,12 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 bool period_init(void)
 {
     CompassInit();
-    u2.init(9600,255,255);
+    //u2.init(9600,255,255);
+	u2.init(115200,255,255);
 
     //char *str= (char*)SET_OUTPUT_ALLDATA;
-    u2.put(SET_OUTPUT_RMC_GGA,0);
-    u2.put(UPDATE_RATE_10HZ,0);
+    //u2.put(SET_OUTPUT_RMC_GGA,0);
+    //u2.put(UPDATE_RATE_10HZ,0);
 
 
     CAN_init(can1, 100, 20, 20, 0, 0);
@@ -137,6 +139,7 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
+
 	CAN_is_bus_off(can1);
 	CAN_reset_bus(can1);
 	LE.toggle(1);
@@ -146,11 +149,27 @@ void period_1Hz(uint32_t count)
 	GEO_HEARTBEAT_t geo_heartbeat = { 0 };
 	geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
-	if (dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat))
+	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
+
+
+/*	static int size = 255;
+
+	static char *nmea = new char[size];
+
+	char ch = '0';
+	int index = 0;
+
+	while(ch != '$')
 	{
-		printf("Geo Heartbeat Message sent: %d\n", geo_heartbeat.GEO_HEARTBEAT_tx_bytes);
+		u2.getChar(&ch,0);
+		nmea[index] = ch;
+		index ++;
 	}
 
+	if(gps(nmea))
+		printf("\n");
+
+	printf("raw: %s\n",nmea);*/
 
 }
 
@@ -167,6 +186,7 @@ void period_10Hz(uint32_t count)
 				printf("\n");
 			//printf("raw: %s\n",nmea);
 		}
+
 
 }
 
