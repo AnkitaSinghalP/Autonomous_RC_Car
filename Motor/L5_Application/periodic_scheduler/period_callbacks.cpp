@@ -41,19 +41,19 @@
 
 static int countmia=0;
 can_msg_t msg_received;
-MOTOR_CMD_t motorcmd={0};
-SYSTEM_CMD_t systemcmd;
+MASTER_MOTOR_CMD_t motorcmd={0};
+MASTER_SYSTEM_CMD_t systemcmd;
 MOTOR_HEARTBEAT_t motorheartbeat;
 //MOTOR_SPEED_t motorspeed_actual;
 
 
 
-const uint32_t        SYSTEM_CMD__MIA_MS = 1000;
-const SYSTEM_CMD_t      SYSTEM_CMD__MIA_MSG  = {SYSTEM_STOP};
+const uint32_t        MASTER_SYSTEM_CMD__MIA_MS = 1000;
+const MASTER_SYSTEM_CMD_t      MASTER_SYSTEM_CMD__MIA_MSG  = {SYSTEM_STOP};
 const float scalefactor = 0.1;
 const int neutral= 15;
-const uint32_t          MOTOR_CMD__MIA_MS =1000 ;
-const MOTOR_CMD_t         MOTOR_CMD__MIA_MSG = {0};
+const uint32_t          MASTER_MOTOR_CMD__MIA_MS =1000 ;
+const MASTER_MOTOR_CMD_t         MASTER_MOTOR_CMD__MIA_MSG = {0};
 
 
 can_msg_t can_msg = { 0 };
@@ -141,10 +141,10 @@ void period_1Hz(uint32_t count)
 		dbc_msg_hdr_t can_msg_hdr;
 		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
 		can_msg_hdr.mid = msg_received.msg_id;
-		if(dbc_decode_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr))
+		if(dbc_decode_MASTER_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr))
 		{
 
-			printf("Received0 : %d \n",motorcmd.MOTOR_CMD_speed);
+			printf("Received0 : %d \n",motorcmd.MASTER_MOTOR_CMD_speed);
 
 		}
 	}
@@ -161,8 +161,9 @@ void period_10Hz(uint32_t count)
 	static int countmia=0;
 	CAN_bypass_filter_accept_all_msgs();
 
-	static PWM servomotor(PWM::pwm1, 100);
-	static PWM dcmotor(PWM::pwm2, 100);
+	/*static PWM servomotor(PWM::pwm1, 100);
+	static PWM dcmotor(PWM::pwm2, 100);*/
+
 
 	/*	if(SW.getSwitch(1)){
 		servomotor.set(20.0);
@@ -198,75 +199,87 @@ void period_10Hz(uint32_t count)
 		dbc_msg_hdr_t can_msg_hdr;
 		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
 		can_msg_hdr.mid = msg_received.msg_id;
-		dbc_decode_SYSTEM_CMD(&systemcmd,msg_received.data.bytes,&can_msg_hdr);
-		switch(systemcmd.SYSTEM_CMD_enum)
+		dbc_decode_MASTER_SYSTEM_CMD(&systemcmd,msg_received.data.bytes,&can_msg_hdr);
+		switch(systemcmd.MASTER_SYSTEM_CMD_enum)
 		{
 		case SYSTEM_STOP:
-			dcmotor.set(15.0);
-			servomotor.set(14.02);
+			//dcmotor.set(15.0);
+			//servomotor.set(14.02);
+			stop();
 			decodeflag=0;
 			LE.on(1);
 			break;
 		case SYSTEM_START:
 			LE.off(1);
 			decodeflag=1;
-			dbc_decode_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr);
+			dbc_decode_MASTER_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr);
 			break;
-		default :dcmotor.set(15.0);
-		servomotor.set(14.02);
+		default : stop();
+			//dcmotor.set(15.0);
+		//servomotor.set(14.02);
 		}
 		if(decodeflag)
 		{
-			switch(motorcmd.MOTOR_CMD_drive)
+			switch(motorcmd.MASTER_MOTOR_CMD_drive)
 			{
 			case STOP:
 				LE.off(3);
 				//stop();
 				steerflag=0;
-				dcmotor.set(15.0);
-				servomotor.set(14.02);
+				stop();
+				//dcmotor.set(15.0);
+				//servomotor.set(14.02);
 				LD.setNumber(8);
 				break;
 			case START:
 				LE.on(3);
 				LD.setNumber(0);
 				steerflag=1;
-				servomotor.set(14.02);
-				dcmotor.set(15.6);
+				//servomotor.set(14.02);
+				//dcmotor.set(15.6);
 
 				break;
 
-			default: dcmotor.set(15.0);
+			default: stop();
+				//dcmotor.set(15.0);
 			}
 
 			if(steerflag)
 			{
-			switch(motorcmd.MOTOR_CMD_steer)
+			switch(motorcmd.MASTER_MOTOR_CMD_steer)
 			{
+
+
 			case STEER_LEFT:
 				LE.on(2);
-				servomotor.set(10.0);
+				moveLeft();
+				//servomotor.set(10.0);
 				break;
 			case STEER_HALF_LEFT:
 				LE.on(2);
-				servomotor.set(12.22);
+				moveHalfLeft();
+				//servomotor.set(12.22);
 				break;
 
 			case STEER_RIGHT:
 				LE.off(2);
-				servomotor.set(20.0);
+				moveRight();
+				//servomotor.set(20.0);
 				break;
 			case STEER_HALF_RIGHT:
 				LE.off(2);
-				servomotor.set(15.82);
+				moveHalfRight();
+				//servomotor.set(15.82);
 				break;
 			case STEER_FORWARD :
-				dcmotor.set(15.6);
+				moveForward();
+				//dcmotor.set(15.6);
 				break;
 
 			default:
-				servomotor.set(14.02);
-				dcmotor.set(15.0);
+				stop();
+				//servomotor.set(14.02);
+				//dcmotor.set(15.0);
 			}
 			}
 
@@ -318,7 +331,7 @@ void period_10Hz(uint32_t count)
 	}*/
 
 
-	if(dbc_handle_mia_SYSTEM_CMD(&systemcmd, 10))
+	if(dbc_handle_mia_MASTER_SYSTEM_CMD(&systemcmd, 10))
 	{
 		LD.setNumber(countmia);
 		countmia++;
@@ -327,7 +340,7 @@ void period_10Hz(uint32_t count)
 			countmia=0;
 		}
 	}
-	if(dbc_handle_mia_MOTOR_CMD(&motorcmd,10))
+	if(dbc_handle_mia_MASTER_MOTOR_CMD(&motorcmd,10))
 	{
 		countmia++;
 

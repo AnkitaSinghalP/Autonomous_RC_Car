@@ -1,87 +1,106 @@
-/*
 
 #include <stdio.h>
-
-#include "motor.hpp"
 #include "lpc_pwm.hpp"
 
 
-float avgspeed = 15.6;
 
 
-const uint16_t neutral = 15;
-float halfright;
-float halfleft;
+const float avgspeed =15.6;
+const float servoneutral = 14.02;
+const float maxspeedfwd = 20.0;
+const float maxspeedbck=10.0;
 
+const float neutral = 15;
+const float halfright = 15.82;
+const float halfleft = 12.22;
+const float fullleft = 10.0;
+const float fullright = 20.0;
 float left;
-float halfback;
+float right;
+
+const float wheelcircum = 1.0;
+float back;
 int DClevel;
 
 float speedfactor = 0;
 float turnfactor = 0;
-
+float speedoffset = 0;
 float actspeed;
-static PWM servomotor(PWM::pwm1, 100);
-static PWM dcmotor(PWM::pwm2, 100);
+static  PWM servomotor(PWM::pwm1, 100);
+static  PWM dcmotor(PWM::pwm2, 100);
 
 
 void initcar()
 {
 
-	servomotor.set(neutral);
-	dcmotor.set(neutral);
+	//servomotor.set(neutral);
+	dcmotor.set(neutral+2);
 
 }
-void sys_reset()
-{
-	servomotor.set(neutral);
-	dcmotor.set(neutral);
-}
 
-void stop()
+void moveForward( )
 {
-	servomotor.set(neutral);
-	dcmotor.set(neutral);
-}
+	/*float front=15.0;
+	float speedoffset=0.0;
+	actspeed = getactspeed();*/
 
-void start()
-
-{
-	printf("Inside start fucntion\n");
-	servomotor.set(neutral);
 	dcmotor.set(avgspeed);
-}
-void brake()
-{
-	servomotor.set(neutral);
-	dcmotor.set(neutral);
-}*/
-/*void moveForward( uint16_t desiredspeed )
-{
-	actspeed = getactspeed();
-	if(desiredspeed > actspeed)
+	/*if(desiredspeed > actspeed)
+	{
 		speedfactor = desiredspeed-actspeed;
 
-	//if(actspeed > maxspeedfwd)
-		speedfactor= 0;
-}*/
-/*
-void moveBack( uint16_t desiredspeed)
-{
-	desiredspeed = avgspeed;
-	halfback= 12.5;
+		while((front+speedoffset)<desiredspeed)
+		{
+			speedoffset = speedfactor *0.2;
+
+			if(front<=desiredspeed)
+				dcmotor.set(front+speedoffset);
+			speedfactor++;
+		}
+	}
+	else if(actspeed > maxspeedfwd)
+		{
+			speedfactor= 0;
+			dcmotor.set(avgspeed);
+		}*/
 
 }
-void moveRight( uint16_t desiredspeed)
-{
-	desiredspeed = avgspeed;
-	turnfactor = halfright;
-}
-void moveLeft( uint16_t desiredspeed)
-{
-	desiredspeed = avgspeed;
-	turnfactor = halfleft;
 
-}*/
 
+	void moveBack( float desiredspeed)
+	{
+		desiredspeed = avgspeed;
+	}
+	void moveRight( )
+	{
+		/*dcmotor.set(avgspeed);
+
+		turnfactor = halfright;*/
+		servomotor.set(fullright);
+	}
+	void moveHalfRight( )
+		{
+			/*dcmotor.set(avgspeed);
+
+			turnfactor = halfright;*/
+			servomotor.set(halfright);
+		}
+	void moveLeft()
+	{
+		//desiredturn = avgspeed;
+		//turnfactor = halfleft;
+		servomotor.set(fullleft);
+	}
+	void moveHalfLeft()
+		{
+			//desiredturn = avgspeed;
+			//turnfactor = halfleft;
+			servomotor.set(halfleft);
+		}
+	void stop()
+	{
+		turnfactor = 0;
+		dcmotor.set(neutral);
+		servomotor.set(servoneutral);
+	}
 
