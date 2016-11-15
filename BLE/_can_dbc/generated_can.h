@@ -46,8 +46,13 @@ static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 5 };
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_STOP = 0,
+<<<<<<< HEAD
     SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+=======
+    SYSTEM_START = 1,
+    SYSTEM_RESET = 2,
+>>>>>>> 3025fe8d45da60679d18c12b1bcdc17b2119fbc6
 } SYSTEM_CMD_enum_E ;
 
 
