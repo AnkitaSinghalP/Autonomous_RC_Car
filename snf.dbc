@@ -81,11 +81,13 @@ BO_ 314 BLE_HEARTBEAT: 4 BLE
  SG_ BLE_HEARTBEAT_rx_bytes : 0|16@1+ (1,0) [0|0] "" MASTER
  SG_ BLE_HEARTBEAT_tx_bytes : 16|16@1+ (1,0) [0|0] "" MASTER
   
-BO_ 361 BLE_MAP_DATA: 8 BLE
- SG_ BLE_MAP_DATA_start_lat : 0|16@1+ (1,0) [0|0] "" IO
- SG_ BLE_MAP_DATA_start_long : 16|16@1+ (1,0) [0|0] "" IO
- SG_ BLE_MAP_DATA_dest_lat : 32|16@1+ (1,0) [0|0] "" IO
- SG_ BLE_MAP_DATA_dest_long : 48|16@1+ (1,0) [0|0] "" IO
+BO_ 361 BLE_MAP_START_DATA: 8 BLE
+ SG_ BLE_MAP_START_DATA_lat : 0|32@1+ (0.000001,0) [0|0] "degrees" IO
+ SG_ BLE_MAP_START_DATA_long : 32|32@1+ (0.000001,0) [0|0] "degrees" IO
+ 
+BO_ 362 BLE_MAP_DEST_DATA: 8 BLE
+ SG_ BLE_MAP_DEST_DATA_lat : 0|32@1+ (0.000001,0) [0|0] "degrees" IO
+ SG_ BLE_MAP_DEST_DATA_long : 32|32@1+ (0.000001,0) [0|0] "degrees" IO
  
 BO_ 411 GEO_DIRECTION: 1 GEO
  SG_ GEO_DIRECTION_data : 0|8@1+ (1,0) [0|0] "" MASTER
