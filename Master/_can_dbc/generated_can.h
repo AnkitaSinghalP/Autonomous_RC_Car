@@ -32,7 +32,8 @@ static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
 static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
-// static const dbc_msg_hdr_t BLE_MAP_DATA_HDR =                     {  361, 8 };
+// static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
+// static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
 static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
 static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
@@ -45,8 +46,8 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 /// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
 typedef enum {
     COMM_START = 1,
-    COMM_STOP = 0,
     COMM_RESET = 2,
+    COMM_STOP = 0,
 } BLE_COMM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
@@ -58,19 +59,19 @@ typedef enum {
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_FORWARD = 4,
     STEER_HALF_RIGHT = 3,
-    STEER_RIGHT = 2,
+    STEER_FORWARD = 4,
+    STEER_HALF_LEFT = 1,
     STEER_REVERSE = 5,
     STEER_LEFT = 0,
-    STEER_HALF_LEFT = 1,
+    STEER_RIGHT = 2,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
-    START = 1,
-    BRAKE = 2,
     STOP = 0,
+    START = 1,
     RESUME = 3,
+    BRAKE = 2,
 } MASTER_MOTOR_CMD_drive_E ;
 
 
@@ -329,7 +330,9 @@ static inline bool dbc_encode_and_send_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS
 
 /// Not generating code for dbc_encode_BLE_HEARTBEAT() since the sender is BLE and we are MASTER
 
-/// Not generating code for dbc_encode_BLE_MAP_DATA() since the sender is BLE and we are MASTER
+/// Not generating code for dbc_encode_BLE_MAP_START_DATA() since the sender is BLE and we are MASTER
+
+/// Not generating code for dbc_encode_BLE_MAP_DEST_DATA() since the sender is BLE and we are MASTER
 
 /// Not generating code for dbc_encode_GEO_DIRECTION() since the sender is GEO and we are MASTER
 
@@ -469,7 +472,9 @@ static inline bool dbc_decode_BLE_HEARTBEAT(BLE_HEARTBEAT_t *to, const uint8_t b
 }
 
 
-/// Not generating code for dbc_decode_BLE_MAP_DATA() since 'MASTER' is not the recipient of any of the signals
+/// Not generating code for dbc_decode_BLE_MAP_START_DATA() since 'MASTER' is not the recipient of any of the signals
+
+/// Not generating code for dbc_decode_BLE_MAP_DEST_DATA() since 'MASTER' is not the recipient of any of the signals
 
 /// Decode GEO's 'GEO_DIRECTION' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check

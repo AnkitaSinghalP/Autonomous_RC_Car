@@ -28,6 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
+#include <periodic_scheduler/heartbeat.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -39,17 +40,20 @@
 #include "string.h"
 #include "can_init.h"
 #include "free_run.hpp"
+#include "heartbeat.hpp"
 
-const uint32_t BLE_HEARTBEAT__MIA_MS = 3000;
+//Heart beat CAN Messages
+const uint32_t BLE_HEARTBEAT__MIA_MS = 500;
 const BLE_HEARTBEAT_t BLE_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            SENSOR_HEARTBEAT__MIA_MS = 3000;
+const uint32_t            SENSOR_HEARTBEAT__MIA_MS = 200;
 const SENSOR_HEARTBEAT_t      SENSOR_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            GEO_HEARTBEAT__MIA_MS = 3000;
+const uint32_t            GEO_HEARTBEAT__MIA_MS = 200;
 const GEO_HEARTBEAT_t      GEO_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            MOTOR_HEARTBEAT__MIA_MS = 3000;
+const uint32_t            MOTOR_HEARTBEAT__MIA_MS = 200;
 const MOTOR_HEARTBEAT_t      MOTOR_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            IO_HEARTBEAT__MIA_MS = 3000;
+const uint32_t            IO_HEARTBEAT__MIA_MS = 500;
 const IO_HEARTBEAT_t      IO_HEARTBEAT__MIA_MSG = { 0 };
+
 const uint32_t            BLE_COMM_CMD__MIA_MS = 1000;
 const BLE_COMM_CMD_t      BLE_COMM_CMD__MIA_MSG = {COMM_STOP};
 const uint32_t            SENSOR_ULTRASONIC__MIA_MS = 1000;
@@ -63,17 +67,18 @@ const GEO_DEST_RCHD_t          GEO_DEST_RCHD__MIA_MSG = { 0 };
 
 MASTER_SYSTEM_CMD_t system_cmd_message = {SYSTEM_STOP};
 MASTER_SYSTEM_STATUS_t system_status_message = {0};
-BLE_HEARTBEAT_t ble_heartbeat_cmd = { 0 };
-SENSOR_HEARTBEAT_t sensor_heartbeat_cmd = { 0 };
-GEO_HEARTBEAT_t geo_heartbeat_cmd = { 0 };
-MOTOR_HEARTBEAT_t motor_heartbeat_cmd = { 0 };
-IO_HEARTBEAT_t io_heartbeat_cmd = { 0 };
 BLE_COMM_CMD_t ble_comm_cmd = {COMM_STOP};
 SENSOR_BATT_t sensor_batt_status = { 0 };
 GEO_DIRECTION_t geo_direction_cmd = { 0 };
 GEO_DEST_RCHD_t geo_dest_rchd_cmd = { 0 };
 SENSOR_ULTRASONIC_t sensor_ultrasonic_cmd = { 0 };
 MASTER_MOTOR_CMD_t motor_cmd_message = {0};
+BLE_HEARTBEAT_t ble_heartbeat_cmd = { 0 };
+SENSOR_HEARTBEAT_t sensor_heartbeat_cmd = { 0 };
+GEO_HEARTBEAT_t geo_heartbeat_cmd = { 0 };
+MOTOR_HEARTBEAT_t motor_heartbeat_cmd = { 0 };
+IO_HEARTBEAT_t io_heartbeat_cmd = { 0 };
+
 
 can_msg_t can_msg;
 int mia_count;
@@ -127,43 +132,8 @@ void period_1Hz(uint32_t count)
 	 		CAN_reset_bus(can1);
 	 	}
 
-	 	while(CAN_rx(can1, &can_msg, 0))
-	 	{
-	 		dbc_msg_hdr_t can_msg_hdr;
-	 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-	 		can_msg_hdr.mid = can_msg.msg_id;
+	 	heartbeat_rx();
 
-	 		dbc_decode_BLE_HEARTBEAT(&ble_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
-	 		dbc_decode_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
-	 		dbc_decode_GEO_HEARTBEAT(&geo_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
-	 		dbc_decode_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
-	 		dbc_decode_IO_HEARTBEAT(&io_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr);
-	 	}
-
-	 	if(dbc_handle_mia_BLE_HEARTBEAT(&ble_heartbeat_cmd, 100))
-	 	{
-	 		mia_count++;
-	 	}
-	 	if(dbc_handle_mia_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, 100))
-	 	{
-	 		mia_count++;
-	 	}
-	 	if(dbc_handle_mia_GEO_HEARTBEAT(&geo_heartbeat_cmd, 100))
-	 	{
-	 		mia_count++;
-	 	}
-	 	if(dbc_handle_mia_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, 100))
-	 	{
-	 		mia_count++;
-	 	}
-	 	if(dbc_handle_mia_IO_HEARTBEAT(&io_heartbeat_cmd, 100))
-	 	{
-	 		mia_count++;
-	 	}
-	 	if(mia_count>99)
-	 	{
-	 		mia_count=0;
-	 	}
 }
 
 void period_10Hz(uint32_t count)

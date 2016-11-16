@@ -11,8 +11,16 @@
 #include "can.h"
 #include "_can_dbc/generated_can.h"
 
+extern BLE_HEARTBEAT_t ble_heartbeat_cmd;
+extern SENSOR_HEARTBEAT_t sensor_heartbeat_cmd;
+extern GEO_HEARTBEAT_t geo_heartbeat_cmd;
+extern MOTOR_HEARTBEAT_t motor_heartbeat_cmd;
+extern IO_HEARTBEAT_t io_heartbeat_cmd;
+
 extern MASTER_MOTOR_CMD_t motor_cmd_message;
 extern SENSOR_ULTRASONIC_t sensor_ultrasonic_cmd;
+extern MASTER_SYSTEM_STATUS_t system_status_message;
+
 extern can_msg_t can_msg;
 extern int mia_count;
 
