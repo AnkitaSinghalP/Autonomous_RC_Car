@@ -46,12 +46,18 @@
 #include "i2c_base.hpp"
 #include "i2c2_device.hpp"
 #include "utilities.h"
+#include "lpc_pwm.hpp"
 
-Uart2& u2 = Uart2::getInstance();
-I2C2& i2c = I2C2::getInstance();
+#include "navigation.h"
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
+
+
+Navigation nav;
+
+/*I2C2& i2c = I2C2::getInstance();
+
 float resolution = 0.91;
 int Mag_Angle;
 
@@ -88,7 +94,7 @@ char direction_command()
     Mag_Angle = heading;
     printf("Magnetomer_Angle:%d\n", Mag_Angle);
     return Mag_Angle;
-    }
+    }*/
 /**
  * This is the stack size of the dispatcher task that triggers the period tasks to run.
  * Minimum 1500 bytes are needed in order to write a debug file if the period tasks overrun.
@@ -110,9 +116,14 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-    CompassInit();
+	nav.gps_init();
+
+
+
+
+   // CompassInit();
     //u2.init(9600,255,255);
-	u2.init(115200,255,255);
+	//u2.init(115200,255,255);
 
     //char *str= (char*)SET_OUTPUT_ALLDATA;
     //u2.put(SET_OUTPUT_RMC_GGA,0);
@@ -145,12 +156,11 @@ void period_1Hz(uint32_t count)
 	LE.toggle(1);
 	uint8_t slaveAddr = SLAVE_ADDRESS;
 	LPC_I2C2->I2ADR0 = slaveAddr;
-	direction_command();
+	//direction_command();
 	GEO_HEARTBEAT_t geo_heartbeat = { 0 };
 	geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
 	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
-
 
 /*	static int size = 255;
 
@@ -176,7 +186,7 @@ void period_1Hz(uint32_t count)
 void period_10Hz(uint32_t count)
 {
 
-		static int size = 255;
+/*		static int size = 255;
 
 		static char *nmea = new char[size];
 
@@ -185,8 +195,10 @@ void period_10Hz(uint32_t count)
 			if(gps(nmea))
 				printf("\n");
 			//printf("raw: %s\n",nmea);
-		}
+		}*/
 
+	if(nav.geo())
+		printf("\n");
 
 }
 
