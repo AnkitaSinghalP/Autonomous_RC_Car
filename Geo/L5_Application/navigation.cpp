@@ -165,19 +165,21 @@ bool Navigation::gps_calculate_distance()
 {
     float a,c;
 
-    float lat1 = 37.330000;//37.335808;
-    float long1 = -121.905000;//-121.882744;
+    float lat1 = 37.336227;
+    float long1 = -121.881882;
 
-    float lat2 = coordinates.latitude;//37.336227;
-    float long2 = coordinates.longitude;//-121.881882;
+    float lat2 = coordinates.latitude;
+    float long2 = coordinates.longitude;
 
 
-    a = pow(sin((M_PI/180)*(lat2-lat1)/2),2) + (cos((M_PI/180)*lat1))*(cos((M_PI/180)*(lat2))*pow(sin((M_PI/180)*(lat2-lat1)/2),2));
+    a = pow(sin((M_PI/180)*(lat2-lat1)/2),2) + (cos((M_PI/180)*lat1))*(cos((M_PI/180)*(lat2))*pow(sin((M_PI/180)*(long2-long1)/2),2));
     c = 2 * atan2(sqrt(a),sqrt(1-a));
 
     gps_distance = (float)(RADIUS * c);
 
-    printf("Distance = %f\n", gps_distance);
+    //printf("Distance = %f(foot)\n", gps_distance);
+    /*We get Distance in Foot, since 1 Mile = 5280 Foot, we are dividing with 5280*/
+    printf("Distance = %f(miles)\n", (gps_distance/5280));
 
     return true;
 }
