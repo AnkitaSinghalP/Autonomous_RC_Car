@@ -2,7 +2,7 @@
  * navigation.cpp
  *
  *  Created on: Nov 15, 2016
- *      Author: shaur
+ *      Author: Shaurya Jain & Harsha Gorantla
  */
 #include "navigation.h"
 
@@ -32,8 +32,10 @@ void Navigation::gps_init()
 
 void Navigation::gps_get_raw_data()
 {
-	gps_raw_data = new char[GPS_DATA_SIZE];
 	u2.gets(gps_raw_data,GPS_DATA_SIZE,0);
+
+	//printf("GPS_raw: %s\n",gps_raw_data);
+
 }
 
 bool Navigation::is_gpgga()
@@ -113,8 +115,20 @@ bool Navigation::parse_gps_raw_data()
 	      longitudeDegrees += int(longitude/100);
 	    }
 
+	    /*
+	     * Checking if absolute values of coordinates are for San Jose or not.
+	     * Will remove this area specific checking at later stages of this project.
+	     */
 		if(abs(latitudeDegrees) != STATIC_LAT || abs(longitudeDegrees) != STATIC_LONG)
 			return false;
+
+		/*
+		 * Negating longitude for San Jose
+		 * Will remove this area specific assignment at later stages of this project.
+		 * Will consider the E/W values of the gps_raw_data
+		 */
+		longitudeDegrees = 0 - longitudeDegrees;
+
 
 	    coordinates.latitude 	= latitudeDegrees;
 	    coordinates.longitude 	= longitudeDegrees;
@@ -123,6 +137,49 @@ bool Navigation::parse_gps_raw_data()
 
 	return true;
 
+}
+
+bool Navigation::gps_calculate_bearing_angle()
+{
+    float x,y;
+
+    float lat1 = 37.335808;
+    float long1 = -121.882744;
+
+    float lat2 = coordinates.latitude;//37.336227;
+    float long2 = coordinates.longitude;//-121.881882;
+
+
+    y = sin((long2 - long1) * (M_PI/180) )  *  cos(lat2  * (M_PI/180));
+
+
+    x = (cos(lat1 * (M_PI/180)) * sin(lat2 * (M_PI/180))) - (sin(lat1 * (M_PI/180)) * cos(lat2  * (M_PI/180)) * cos((long2 - long1) * (M_PI/180)));
+    gps_bearing_angle = (int)((180/M_PI) * (atan2(y,x))+360)%360;
+
+    printf("Bearing = %d\n",gps_bearing_angle);
+
+    return true;
+}
+
+bool Navigation::gps_calculate_distance()
+{
+    float a,c;
+
+    float lat1 = 37.330000;//37.335808;
+    float long1 = -121.905000;//-121.882744;
+
+    float lat2 = coordinates.latitude;//37.336227;
+    float long2 = coordinates.longitude;//-121.881882;
+
+
+    a = pow(sin((M_PI/180)*(lat2-lat1)/2),2) + (cos((M_PI/180)*lat1))*(cos((M_PI/180)*(lat2))*pow(sin((M_PI/180)*(lat2-lat1)/2),2));
+    c = 2 * atan2(sqrt(a),sqrt(1-a));
+
+    gps_distance = (float)(RADIUS * c);
+
+    printf("Distance = %f\n", gps_distance);
+
+    return true;
 }
 
 bool Navigation::geo()
@@ -138,8 +195,13 @@ bool Navigation::geo()
 	if(!parse_gps_raw_data())
 		return false;
 
-    printf("GPS: %f -%f\n",coordinates.latitude,coordinates.longitude);
+    printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
 
+    if(!gps_calculate_bearing_angle())
+    	return false;
+
+    if(!gps_calculate_distance())
+            return false;
 
 	return true;
 }

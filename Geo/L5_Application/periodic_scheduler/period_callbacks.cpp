@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include "can.h"
 #include "string.h"
-#include "gps.hpp"
+//#include "gps.hpp"
 #include <uart2.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
@@ -105,25 +105,25 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 {
-	can_msg_t can_msg = { 0 };
-	can_msg.msg_id = mid;
-	can_msg.frame_fields.data_len = dlc;
-	memcpy(can_msg.data.bytes, bytes, dlc);
+    can_msg_t can_msg = { 0 };
+    can_msg.msg_id = mid;
+    can_msg.frame_fields.data_len = dlc;
+    memcpy(can_msg.data.bytes, bytes, dlc);
 
-	return CAN_tx(can1, &can_msg, 0);
+    return CAN_tx(can1, &can_msg, 0);
 }
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
-	nav.gps_init();
+    nav.gps_init();
 
 
 
 
    // CompassInit();
     //u2.init(9600,255,255);
-	//u2.init(115200,255,255);
+    //u2.init(115200,255,255);
 
     //char *str= (char*)SET_OUTPUT_ALLDATA;
     //u2.put(SET_OUTPUT_RMC_GGA,0);
@@ -151,54 +151,56 @@ bool period_reg_tlm(void)
 void period_1Hz(uint32_t count)
 {
 
-	CAN_is_bus_off(can1);
-	CAN_reset_bus(can1);
-	LE.toggle(1);
-	uint8_t slaveAddr = SLAVE_ADDRESS;
-	LPC_I2C2->I2ADR0 = slaveAddr;
-	//direction_command();
-	GEO_HEARTBEAT_t geo_heartbeat = { 0 };
-	geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
+    CAN_is_bus_off(can1);
+    CAN_reset_bus(can1);
+    LE.toggle(1);
+    uint8_t slaveAddr = SLAVE_ADDRESS;
+    LPC_I2C2->I2ADR0 = slaveAddr;
+    //direction_command();
+    GEO_HEARTBEAT_t geo_heartbeat = { 0 };
+    geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
-	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
+    dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
 
-/*	static int size = 255;
+/*  static int size = 255;
 
-	static char *nmea = new char[size];
+    static char *nmea = new char[size];
 
-	char ch = '0';
-	int index = 0;
+    char ch = '0';
+    int index = 0;
 
-	while(ch != '$')
-	{
-		u2.getChar(&ch,0);
-		nmea[index] = ch;
-		index ++;
-	}
+    while(ch != '$')
+    {
+        u2.getChar(&ch,0);
+        nmea[index] = ch;
+        index ++;
+    }
 
-	if(gps(nmea))
-		printf("\n");
+    if(gps(nmea))
+        printf("\n");
 
-	printf("raw: %s\n",nmea);*/
+    printf("raw: %s\n",nmea);*/
+/*  if(nav.geo())
+        printf("\n");*/
 
 }
 
 void period_10Hz(uint32_t count)
 {
 
-/*		static int size = 255;
+/*      static int size = 255;
 
-		static char *nmea = new char[size];
+        static char *nmea = new char[size];
 
-		if(u2.gets(nmea,size,0))
-		{
-			if(gps(nmea))
-				printf("\n");
-			//printf("raw: %s\n",nmea);
-		}*/
+        if(u2.gets(nmea,size,0))
+        {
+            if(gps(nmea))
+                printf("\n");
+            //printf("raw: %s\n",nmea);
+        }*/
 
-	if(nav.geo())
-		printf("\n");
+    if(nav.geo())
+        printf("\n");
 
 }
 
