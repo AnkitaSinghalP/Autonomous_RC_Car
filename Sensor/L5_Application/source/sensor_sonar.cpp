@@ -55,6 +55,11 @@ SENSOR_BATT_t battery_status = {0};
 
 dbc_msg_hdr_t can_msg_hdr;
 
+int front_data[3] = {0};
+int right_data[3] = {0};
+int left_data[3] = {0};
+int rear_data[3] = {0};
+
 static int counter = 0;
 
 void decoded_can_sensor_message(uint8_t middle,uint8_t left, uint8_t right)
@@ -156,39 +161,41 @@ void isr_rear()
 
 void sensor_sonar_middle_trigger()
 {
-	LPC_GPIO1->FIODIR |= (1 << 23);
-	LPC_GPIO1->FIOPIN &= ~(1 << 23);
-	LPC_GPIO1->FIOPIN |= (1 << 23);
+
+	LPC_GPIO1->FIOPIN |= (1 << 23 || 1 << 29);
+	//LPC_GPIO1->FIOPIN |= (1 << 29);
 	delay_us(SENSOR_DELAY);
-	LPC_GPIO1->FIOPIN &= ~(1 << 23);
+	LPC_GPIO1->FIOPIN &= ~(1 << 23 || 1 << 29);
+	//LPC_GPIO1->FIOPIN &= ~(1 << 29);
 
 }
 
 void sensor_sonar_right_trigger()
 {
-	LPC_GPIO1->FIODIR |= (1 << 22);
-	LPC_GPIO1->FIOPIN &= ~(1 << 22);
-	LPC_GPIO1->FIOPIN |= (1 << 22);
+	//LPC_GPIO1->FIOPIN |= (1 << 28);
+	LPC_GPIO1->FIOPIN |= (1 << 22 || 1 << 28);
 	delay_us(SENSOR_DELAY);
-	LPC_GPIO1->FIOPIN &= ~(1 << 22);
+	LPC_GPIO1->FIOPIN &= ~(1 << 22 || 1 << 28);
+//	LPC_GPIO1->FIOPIN &= ~(1 << 28);
 
 
 }
 
 void sensor_sonar_left_trigger()
-{LPC_GPIO1->FIODIR |= (1 << 28);
-LPC_GPIO1->FIOPIN &= ~(1 << 28);
-LPC_GPIO1->FIOPIN |= (1 << 28);
-delay_us(SENSOR_DELAY);
-LPC_GPIO1->FIOPIN &= ~(1 << 28);
+{
+
+
+	//delay_us(SENSOR_DELAY);
+
 }
 
 void sensor_sonar_rear_trigger()
-{LPC_GPIO1->FIODIR |= (1 << 29);
-LPC_GPIO1->FIOPIN &= ~(1 << 29);
-LPC_GPIO1->FIOPIN |= (1 << 29);
-delay_us(SENSOR_DELAY);
-LPC_GPIO1->FIOPIN &= ~(1 << 29);
+{
+	/*LPC_GPIO1->FIODIR |= (1 << 29);
+	LPC_GPIO1->FIOPIN &= ~(1 << 29);
+	LPC_GPIO1->FIOPIN |= (1 << 29);
+	delay_us(SENSOR_DELAY);
+	LPC_GPIO1->FIOPIN &= ~(1 << 29);*/
 }
 
 void interrupt_enable()
@@ -227,7 +234,6 @@ void can_init_sensor()
 void sensor_init(){
 
 	sensor_receiver_pins();
-
 	interrupt_enable();
 	lpc_timer_enable(lpc_timer0, TIMER_TICK);
 	interrupt_falling_edge_enable();
@@ -285,8 +291,8 @@ void sensor_measure()
 	//sensor_sonar_rear_trigger();
 	delay_ms(10);
 	sensor_sonar_right_trigger();
-	delay_ms(10);
-	sensor_sonar_left_trigger();
+	//delay_ms(10);
+	//sensor_sonar_left_trigger();
 	compute();
 
 }

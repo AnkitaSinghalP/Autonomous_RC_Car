@@ -32,7 +32,8 @@ static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 4 };
 // static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
-// static const dbc_msg_hdr_t BLE_MAP_DATA_HDR =                     {  361, 8 };
+// static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
+// static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
 // static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
 // static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 2 };
 // static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
@@ -46,8 +47,8 @@ static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_STOP = 0,
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+    SYSTEM_RESET = 2,
 } SYSTEM_CMD_enum_E ;
 
 
@@ -263,7 +264,9 @@ static inline bool dbc_encode_and_send_SENSOR_HEARTBEAT(SENSOR_HEARTBEAT_t *from
 
 /// Not generating code for dbc_encode_BLE_HEARTBEAT() since the sender is BLE and we are SENSOR
 
-/// Not generating code for dbc_encode_BLE_MAP_DATA() since the sender is BLE and we are SENSOR
+/// Not generating code for dbc_encode_BLE_MAP_START_DATA() since the sender is BLE and we are SENSOR
+
+/// Not generating code for dbc_encode_BLE_MAP_DEST_DATA() since the sender is BLE and we are SENSOR
 
 /// Not generating code for dbc_encode_GEO_DIRECTION() since the sender is GEO and we are SENSOR
 
@@ -319,7 +322,9 @@ static inline bool dbc_decode_SYSTEM_CMD(SYSTEM_CMD_t *to, const uint8_t bytes[8
 
 /// Not generating code for dbc_decode_BLE_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_BLE_MAP_DATA() since 'SENSOR' is not the recipient of any of the signals
+/// Not generating code for dbc_decode_BLE_MAP_START_DATA() since 'SENSOR' is not the recipient of any of the signals
+
+/// Not generating code for dbc_decode_BLE_MAP_DEST_DATA() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_DIRECTION() since 'SENSOR' is not the recipient of any of the signals
 
