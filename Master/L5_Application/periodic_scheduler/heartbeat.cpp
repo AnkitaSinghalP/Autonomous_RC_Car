@@ -1,10 +1,11 @@
-#include <periodic_scheduler/heartbeat.hpp>
+#include <heartbeat.hpp>
 
 void heartbeat_rx()
 {
 	dbc_encode_and_send_MASTER_SYSTEM_STATUS(&system_status_message);
 
 	uint16_t can_total_bytes = 0;
+	float bus_util_perc = 0;
 
 	while(CAN_rx(can1, &can_msg, 0))
 	{
@@ -44,7 +45,8 @@ void heartbeat_rx()
 			system_status_message.MASTER_SYSTEM_STATUS_io = 0;
 	}
 
-	system_status_message.MASTER_SYSTEM_STATUS_util = (can_total_bytes * 100)/(100000);
+	bus_util_perc = (can_total_bytes)/(1000);
+	system_status_message.MASTER_SYSTEM_STATUS_util = bus_util_perc;
 	//dbc_encode_and_send_MASTER_SYSTEM_STATUS(&system_status_message);
 
 }

@@ -5,8 +5,8 @@
  *      Author: ankita
  */
 
-#ifndef L5_APPLICATION_PERIODIC_SCHEDULER_HEARTBEAT_HPP_
-#define L5_APPLICATION_PERIODIC_SCHEDULER_HEARTBEAT_HPP_
+#ifndef L5_APPLICATION_HEARTBEAT_HPP_
+#define L5_APPLICATION_HEARTBEAT_HPP_
 
 #include <stdint.h>
 #include "io.hpp"
@@ -20,4 +20,4 @@
 
 void heartbeat_rx();
 
-#endif /* L5_APPLICATION_PERIODIC_SCHEDULER_HEARTBEAT_HPP_ */
+#endif /* L5_APPLICATION_HEARTBEAT_HPP_ */

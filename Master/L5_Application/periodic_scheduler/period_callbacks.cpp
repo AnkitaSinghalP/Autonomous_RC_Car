@@ -28,7 +28,8 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-#include <periodic_scheduler/heartbeat.hpp>
+#include <heartbeat.hpp>
+#include <heartbeat.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -40,7 +41,6 @@
 #include "string.h"
 #include "can_init.h"
 #include "free_run.hpp"
-#include "heartbeat.hpp"
 
 //Heart beat CAN Messages
 const uint32_t BLE_HEARTBEAT__MIA_MS = 500;
@@ -133,7 +133,6 @@ void period_1Hz(uint32_t count)
 	 	}
 
 	 	heartbeat_rx();
-
 }
 
 void period_10Hz(uint32_t count)
@@ -173,12 +172,6 @@ void period_10Hz(uint32_t count)
 
 	}
 
-	if(dbc_handle_mia_BLE_COMM_CMD(&ble_comm_cmd, 10))
-	{
-		mia_count++;
-	}
-
-	LD.setNumber(mia_count);
 }
 
 void period_100Hz(uint32_t count)
