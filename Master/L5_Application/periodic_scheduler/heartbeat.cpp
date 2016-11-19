@@ -1,6 +1,6 @@
 #include <heartbeat.hpp>
 
-void heartbeat_rx()
+void heartbeat_rx(void)
 {
 	dbc_encode_and_send_MASTER_SYSTEM_STATUS(&system_status_message);
 

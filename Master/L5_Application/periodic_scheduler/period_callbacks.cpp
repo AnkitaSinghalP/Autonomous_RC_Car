@@ -31,6 +31,7 @@
 #include <heartbeat.hpp>
 #include <heartbeat.hpp>
 #include <stdint.h>
+#include <system_cmd.hpp>
 #include "io.hpp"
 #include "periodic_callback.h"
 #include "stdio.h"
@@ -41,6 +42,7 @@
 #include "string.h"
 #include "can_init.h"
 #include "free_run.hpp"
+#include "system_cmd.hpp"
 
 //Heart beat CAN Messages
 const uint32_t BLE_HEARTBEAT__MIA_MS = 500;
@@ -106,9 +108,12 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
+	//Initializing the CAN bus
 	CAN_init(can1, 100, 200, 200,0,0);
 	CAN_bypass_filter_accept_all_msgs();
 	CAN_reset_bus(can1);
+
+	//Initializing the Motor Command to move forward
 	motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
 	motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_FORWARD;
 	return true; // Must return true upon success
@@ -127,50 +132,20 @@ bool period_reg_tlm(void)
  */
 void period_1Hz(uint32_t count)
 {
-	 	if(CAN_is_bus_off(can1))
+	//Reset bus in case of bus off
+	 if(CAN_is_bus_off(can1))
 	 	{
 	 		CAN_reset_bus(can1);
 	 	}
 
-	 	heartbeat_rx();
+	//Receive Heart beat messages and calculate % bus utilization
+	 heartbeat_rx();
 }
 
 void period_10Hz(uint32_t count)
 {
-	while(CAN_rx(can1, &can_msg, 0))
-	{
-		dbc_msg_hdr_t can_msg_hdr;
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;
-
-		dbc_decode_BLE_COMM_CMD(&ble_comm_cmd, can_msg.data.bytes, &can_msg_hdr);
-
-		// initial start/stop command from BLE, will wake all the modules.
-		switch (ble_comm_cmd.BLE_COMM_CMD_enum)
-		{
-			case(COMM_STOP):
-				system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_STOP;
-				dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
-				LD.setNumber(33);
-				break;
-
-			case(COMM_START):
-				system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_START;
-				dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
-				free_run_func();
-				break;
-
-			case(COMM_RESET):
-				system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_RESET;
-				break;
-
-			default:
-				system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_STOP;
-				dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
-				break;
-		}
-
-	}
+	//Recieve system command from BLE and send system commands accordingly
+	sys_cmd();
 
 }
 
