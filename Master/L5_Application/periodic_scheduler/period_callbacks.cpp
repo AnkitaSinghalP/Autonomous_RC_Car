@@ -28,10 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-#include <heartbeat.hpp>
-#include <heartbeat.hpp>
 #include <stdint.h>
-#include <system_cmd.hpp>
 #include "io.hpp"
 #include "periodic_callback.h"
 #include "stdio.h"
@@ -41,8 +38,9 @@
 #include "lpc_timers.h"
 #include "string.h"
 #include "can_init.h"
-#include "free_run.hpp"
-#include "system_cmd.hpp"
+#include <free_run.hpp>
+#include <system_cmd.hpp>
+#include <heartbeat.hpp>
 
 //Heart beat CAN Messages
 const uint32_t BLE_HEARTBEAT__MIA_MS = 500;

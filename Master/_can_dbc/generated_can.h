@@ -45,8 +45,8 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
 typedef enum {
-    COMM_RESET = 2,
     COMM_STOP = 0,
+    COMM_RESET = 2,
     COMM_START = 1,
 } BLE_COMM_CMD_enum_E ;
 
@@ -59,18 +59,18 @@ typedef enum {
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_HALF_LEFT = 1,
-    STEER_LEFT = 0,
-    STEER_RIGHT = 2,
     STEER_HALF_RIGHT = 3,
+    STEER_RIGHT = 2,
     STEER_REVERSE = 5,
     STEER_FORWARD = 4,
+    STEER_HALF_LEFT = 1,
+    STEER_LEFT = 0,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
+    STOP = 0,
     RESUME = 3,
     START = 1,
-    STOP = 0,
     BRAKE = 2,
 } MASTER_MOTOR_CMD_drive_E ;
 
