@@ -13,6 +13,10 @@
 #include <math.h>
 #include <cstdlib>
 #include <stdio.h>
+#include "i2c2.hpp"
+#include "i2c_base.hpp"
+#include "i2c2_device.hpp"
+
 
 /*
  * Configuration of GPS Module
@@ -49,7 +53,10 @@ class Navigation
 {
     public:
         void gps_init();
+        void compass_init();
         bool geo();
+        int compass_direction();
+
         Navigation(){
             coordinates = {0};
             gps_raw_data = new char[GPS_DATA_SIZE];

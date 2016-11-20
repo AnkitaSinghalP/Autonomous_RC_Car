@@ -7,6 +7,7 @@
 #include "navigation.h"
 
 Uart2& u2 = Uart2::getInstance();
+I2C2& i2c = I2C2::getInstance();
 
 uint8_t parse_hex(char c)
 {
@@ -23,6 +24,21 @@ uint8_t parse_hex(char c)
        return (c - 'A')+10;
 
     return 0;
+}
+
+void Navigation::compass_init()
+{
+	  LPC_GPIO1->FIODIR &= ~(1<<9);
+	  LPC_I2C2->I2MASK0 = 0x1F;
+	  LPC_I2C2->I2CONSET = 0x40;
+	  LPC_SC->PCONP |= (1<<25);
+
+	  //Peripheral clock select
+	  LPC_SC->PCLKSEL1 &= ~(3<<18);
+	  LPC_SC->PCLKSEL1 |= (1<<18);
+
+	  LPC_I2C2->I2ADR0 = 0x1E;
+
 }
 
 void Navigation::gps_init()
@@ -143,11 +159,11 @@ bool Navigation::gps_calculate_bearing_angle()
 {
     float x,y;
 
-    float lat1 = 37.335808;
-    float long1 = -121.882744;
+    float lat1 = 37.336174;
+    float long1 = -121.881905;
 
-    float lat2 = coordinates.latitude;//37.336227;
-    float long2 = coordinates.longitude;//-121.881882;
+    float lat2 = coordinates.latitude;
+    float long2 = coordinates.longitude;
 
 
     y = sin((long2 - long1) * (M_PI/180) )  *  cos(lat2  * (M_PI/180));
@@ -165,8 +181,8 @@ bool Navigation::gps_calculate_distance()
 {
     float a,c;
 
-    float lat1 = 37.336227;
-    float long1 = -121.881882;
+    float lat1 = 37.336006;
+    float long1 = -121.881950;
 
     float lat2 = coordinates.latitude;
     float long2 = coordinates.longitude;
@@ -177,9 +193,9 @@ bool Navigation::gps_calculate_distance()
 
     gps_distance = (float)(RADIUS * c);
 
-    //printf("Distance = %f(foot)\n", gps_distance);
+    printf("Distance = %f(foot)\n", gps_distance);
     /*We get Distance in Foot, since 1 Mile = 5280 Foot, we are dividing with 5280*/
-    printf("Distance = %f(miles)\n", (gps_distance/5280));
+    //printf("Distance = %f(miles)\n", (gps_distance/5280));
 
     return true;
 }
@@ -197,7 +213,7 @@ bool Navigation::geo()
 	if(!parse_gps_raw_data())
 		return false;
 
-    printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
+    //printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
 
     if(!gps_calculate_bearing_angle())
     	return false;
@@ -205,7 +221,39 @@ bool Navigation::geo()
     if(!gps_calculate_distance())
             return false;
 
+    printf("Compass= %d\n",compass_direction());
+
 	return true;
 }
 
+int Navigation::compass_direction()
+{
+	uint8_t xMHiByte = 0, xMLoByte = 0, yMHiByte =0, yMLoByte=0, zMHiByte=0, zMLoByte=0;
+	int16_t xMagData =0, yMagData =0, zMagData=0;
+	float heading = 0.0;
+
+	i2c.writeReg(0x3C,0x02,0x00);
+
+	xMHiByte = i2c.readReg(0x3D, 0x03);
+	xMLoByte = i2c.readReg(0x3D, 0x04);
+	yMHiByte = i2c.readReg(0x3D, 0x07);
+	yMLoByte = i2c.readReg(0x3D, 0x08);
+	zMHiByte = i2c.readReg(0x3D, 0x05);
+	zMLoByte = i2c.readReg(0x3D, 0x06);
+
+	xMagData = (xMHiByte << 8) | xMLoByte;
+	yMagData = (yMHiByte << 8) | yMLoByte;
+	zMagData = (zMHiByte << 8) | zMLoByte;
+
+
+	heading = (atan2(yMagData,xMagData)*180)/3.14159;
+
+	if(heading < 0)
+	{
+		heading = 360 + heading;
+	}
+
+	return (int)heading;
+
+}
 

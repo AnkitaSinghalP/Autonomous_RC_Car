@@ -22,7 +22,7 @@
 
 void CompassInit()
 {
-  LPC_GPIO1->FIODIR &= ~(1<<9);
+  //LPC_GPIO1->FIODIR &= ~(1<<9);
   LPC_I2C2->I2MASK0 = 0x1F;
   LPC_I2C2->I2CONSET = 0x40;
   LPC_SC->PCONP |= (1<<25);
