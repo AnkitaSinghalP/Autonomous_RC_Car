@@ -27,7 +27,7 @@ static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {   10, 1 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_CMD_HDR =                {  100, 1 };
 static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 3 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_STATUS_HDR =             {  162, 3 };
-static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 4 };
+static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
 static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
@@ -45,32 +45,32 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
 typedef enum {
-    COMM_STOP = 0,
     COMM_RESET = 2,
+    COMM_STOP = 0,
     COMM_START = 1,
 } BLE_COMM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
+    SYSTEM_STOP = 0,
     SYSTEM_RESET = 2,
     SYSTEM_START = 1,
-    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_HALF_RIGHT = 3,
     STEER_RIGHT = 2,
-    STEER_REVERSE = 5,
     STEER_FORWARD = 4,
-    STEER_HALF_LEFT = 1,
+    STEER_REVERSE = 5,
+    STEER_HALF_RIGHT = 3,
     STEER_LEFT = 0,
+    STEER_HALF_LEFT = 1,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
-    STOP = 0,
-    RESUME = 3,
     START = 1,
+    RESUME = 3,
+    STOP = 0,
     BRAKE = 2,
 } MASTER_MOTOR_CMD_drive_E ;
 
@@ -117,12 +117,13 @@ typedef struct {
 } MASTER_SYSTEM_STATUS_t;
 
 
-/// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 4 byte(s), MID: 211
+/// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 1 byte(s), MID: 211
 typedef struct {
-    uint8_t SENSOR_ULTRASONIC_left;           ///< B7:0   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_middle;         ///< B15:8   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_right;          ///< B23:16   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_rear;           ///< B31:24   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,
 
     dbc_mia_info_t mia_info;
 } SENSOR_ULTRASONIC_t;
@@ -388,14 +389,16 @@ static inline bool dbc_decode_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *to, const u
     }
 
     uint32_t raw;
-    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw  = ((uint32_t)((bytes[0]) & 0x01)); ///< 1 bit(s) from B0
     to->SENSOR_ULTRASONIC_left = ((raw));
-    raw  = ((uint32_t)((bytes[1]))); ///< 8 bit(s) from B8
+    raw  = ((uint32_t)((bytes[0] >> 1) & 0x01)); ///< 1 bit(s) from B1
     to->SENSOR_ULTRASONIC_middle = ((raw));
-    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw  = ((uint32_t)((bytes[0] >> 2) & 0x01)); ///< 1 bit(s) from B2
     to->SENSOR_ULTRASONIC_right = ((raw));
-    raw  = ((uint32_t)((bytes[3]))); ///< 8 bit(s) from B24
+    raw  = ((uint32_t)((bytes[0] >> 3) & 0x01)); ///< 1 bit(s) from B3
     to->SENSOR_ULTRASONIC_rear = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 4) & 0x01)); ///< 1 bit(s) from B4
+    to->SENSOR_ULTRASONIC_critical = ((raw));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
