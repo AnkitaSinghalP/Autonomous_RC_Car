@@ -106,7 +106,7 @@ void period_10Hz(uint32_t count)
         start=true;
     }
     else{
-        start=false;
+        start=true;
     }
     if(start){
         sensor_measure();

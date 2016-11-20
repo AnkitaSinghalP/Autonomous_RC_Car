@@ -27,7 +27,7 @@ typedef struct {
 static const dbc_msg_hdr_t SYSTEM_CMD_HDR =                       {  100, 1 };
 // static const dbc_msg_hdr_t MOTOR_CMD_HDR =                        {  151, 3 };
 // static const dbc_msg_hdr_t SYSTEM_STATUS_HDR =                    {  162, 2 };
-static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 6 };
+static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
 static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 4 };
@@ -35,20 +35,19 @@ static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
 // static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
 // static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
-// static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 2 };
+// static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 1 };
 // static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 // static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
-// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
-// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  461, 8 };
+// static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 5 };
 // static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
 // static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 // static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
 typedef enum {
+    SYSTEM_RESET = 2,
     SYSTEM_STOP = 0,
     SYSTEM_START = 1,
-    SYSTEM_RESET = 2,
 } SYSTEM_CMD_enum_E ;
 
 
@@ -61,38 +60,17 @@ typedef struct {
     dbc_mia_info_t mia_info;
 } SYSTEM_CMD_t;
 
-/// @{ MUX'd message: SENSOR_ULTRASONIC
 
-/// Struct for MUX: m0 (used for transmitting)
+/// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 1 byte(s), MID: 211
 typedef struct {
-    uint16_t SENSOR_ULTRASONIC_err_count;     ///< B15:4   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_rear;           ///< B47:40   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_rear;   ///< B47:40   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_left;           ///< B23:16   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_middle;         ///< B31:24   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_right;          ///< B39:32   Destination: MASTER
+    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,
 
     // No dbc_mia_info_t for a message that we will send
-} SENSOR_ULTRASONIC_m0_t;
-
-/// Struct for MUX: m1 (used for transmitting)
-typedef struct {
-    uint16_t SENSOR_ULTRASONIC_err_count;     ///< B15:4   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_rear;           ///< B47:40   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_rear;   ///< B47:40   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_left;   ///< B23:16   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_middle; ///< B31:24   Destination: MASTER
-    uint8_t SENSOR_ULTRASONIC_no_filt_right;  ///< B39:32   Destination: MASTER
-
-    // No dbc_mia_info_t for a message that we will send
-} SENSOR_ULTRASONIC_m1_t;
-
-/// Struct with all the child MUX'd signals (Used for receiving)
-typedef struct {
-    SENSOR_ULTRASONIC_m0_t m0; ///< MUX'd structure
-    SENSOR_ULTRASONIC_m1_t m1; ///< MUX'd structure
 } SENSOR_ULTRASONIC_t;
-/// @} MUX'd message
 
 
 /// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 213
@@ -126,82 +104,36 @@ extern const SYSTEM_CMD_t                         SYSTEM_CMD__MIA_MSG;
 
 /// Not generating code for dbc_encode_SYSTEM_STATUS() since the sender is MASTER and we are SENSOR
 
-/// Encode SENSOR's 'SENSOR_ULTRASONIC' MUX(m0) message
+/// Encode SENSOR's 'SENSOR_ULTRASONIC' message
 /// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m0(uint8_t bytes[8], SENSOR_ULTRASONIC_m0_t *from)
+static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC(uint8_t bytes[8], SENSOR_ULTRASONIC_t *from)
 {
     uint32_t raw;
     bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
-    // Set the MUX index value
-    raw = ((uint32_t)(((0)))) & 0x0f;
-    bytes[0] |= (((uint8_t)(raw) & 0x0f)); ///< 4 bit(s) starting from B0
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_left)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01)); ///< 1 bit(s) starting from B0
 
-    // Set non MUX'd signals that need to go out with this MUX'd message
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_err_count)))) & 0xfff;
-    bytes[0] |= (((uint8_t)(raw) & 0x0f) << 4); ///< 4 bit(s) starting from B4
-    bytes[1] |= (((uint8_t)(raw >> 4) & 0xff)); ///< 8 bit(s) starting from B8
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0xff;
-    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear)))) & 0xff;
-    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_middle)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 1); ///< 1 bit(s) starting from B1
 
-    // Set the rest of the signals within this MUX (m0)
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_left)))) & 0xff;
-    bytes[2] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B16
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_middle)))) & 0xff;
-    bytes[3] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B24
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_right)))) & 0xff;
-    bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_right)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 2); ///< 1 bit(s) starting from B2
+
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 3); ///< 1 bit(s) starting from B3
+
+    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_critical)))) & 0x01;
+    bytes[0] |= (((uint8_t)(raw) & 0x01) << 4); ///< 1 bit(s) starting from B4
 
     return SENSOR_ULTRASONIC_HDR;
 }
 
-/// Encode and send for dbc_encode_SENSOR_ULTRASONIC_m0() message
-static inline bool dbc_encode_and_send_SENSOR_ULTRASONIC_m0(SENSOR_ULTRASONIC_m0_t *from)
+/// Encode and send for dbc_encode_SENSOR_ULTRASONIC() message
+static inline bool dbc_encode_and_send_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *from)
 {
     uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_SENSOR_ULTRASONIC_m0(bytes, from);
-    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
-}
-
-
-/// Encode SENSOR's 'SENSOR_ULTRASONIC' MUX(m1) message
-/// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_SENSOR_ULTRASONIC_m1(uint8_t bytes[8], SENSOR_ULTRASONIC_m1_t *from)
-{
-    uint32_t raw;
-    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
-
-    // Set the MUX index value
-    raw = ((uint32_t)(((1)))) & 0x0f;
-    bytes[0] |= (((uint8_t)(raw) & 0x0f)); ///< 4 bit(s) starting from B0
-
-    // Set non MUX'd signals that need to go out with this MUX'd message
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_err_count)))) & 0xfff;
-    bytes[0] |= (((uint8_t)(raw) & 0x0f) << 4); ///< 4 bit(s) starting from B4
-    bytes[1] |= (((uint8_t)(raw >> 4) & 0xff)); ///< 8 bit(s) starting from B8
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_rear)))) & 0xff;
-    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_rear)))) & 0xff;
-    bytes[5] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B40
-
-    // Set the rest of the signals within this MUX (m1)
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_left)))) & 0xff;
-    bytes[2] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B16
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_middle)))) & 0xff;
-    bytes[3] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B24
-    raw = ((uint32_t)(((from->SENSOR_ULTRASONIC_no_filt_right)))) & 0xff;
-    bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-
-    return SENSOR_ULTRASONIC_HDR;
-}
-
-/// Encode and send for dbc_encode_SENSOR_ULTRASONIC_m1() message
-static inline bool dbc_encode_and_send_SENSOR_ULTRASONIC_m1(SENSOR_ULTRASONIC_m1_t *from)
-{
-    uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_SENSOR_ULTRASONIC_m1(bytes, from);
+    const dbc_msg_hdr_t hdr = dbc_encode_SENSOR_ULTRASONIC(bytes, from);
     return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
 }
 
@@ -278,8 +210,6 @@ static inline bool dbc_encode_and_send_SENSOR_HEARTBEAT(SENSOR_HEARTBEAT_t *from
 
 /// Not generating code for dbc_encode_GEO_LOCATION() since the sender is GEO and we are SENSOR
 
-/// Not generating code for dbc_encode_GEO_LOCATION() since the sender is GEO and we are SENSOR
-
 /// Not generating code for dbc_encode_MOTOR_HEARTBEAT() since the sender is MOTOR and we are SENSOR
 
 /// Not generating code for dbc_encode_MOTOR_SPEED() since the sender is MOTOR and we are SENSOR
@@ -333,8 +263,6 @@ static inline bool dbc_decode_SYSTEM_CMD(SYSTEM_CMD_t *to, const uint8_t bytes[8
 /// Not generating code for dbc_decode_GEO_DEST_RCHD() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_HEARTBEAT() since 'SENSOR' is not the recipient of any of the signals
-
-/// Not generating code for dbc_decode_GEO_LOCATION() since 'SENSOR' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_LOCATION() since 'SENSOR' is not the recipient of any of the signals
 
