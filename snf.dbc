@@ -54,11 +54,12 @@ BO_ 162 MASTER_SYSTEM_STATUS: 2 MASTER
  SG_ MASTER_SYSTEM_STATUS_sensor : 5|1@1+ (1,0) [0|0] "" IO
  SG_ MASTER_SYSTEM_STATUS_util : 8|8@1+ (1,0) [0|100] "%" IO
    
-BO_ 211 SENSOR_ULTRASONIC: 4 SENSOR
- SG_ SENSOR_ULTRASONIC_left : 0|8@1+ (1,0) [0|0] "" MASTER
- SG_ SENSOR_ULTRASONIC_middle : 8|8@1+ (1,0) [0|0] "" MASTER
- SG_ SENSOR_ULTRASONIC_right : 16|8@1+ (1,0) [0|0] "" MASTER
- SG_ SENSOR_ULTRASONIC_rear : 24|8@1+ (1,0) [0|0] "" MASTER
+BO_ 211 SENSOR_ULTRASONIC: 1 SENSOR
+ SG_ SENSOR_ULTRASONIC_left : 0|1@1+ (1,0) [0|0] "" MASTER, IO
+ SG_ SENSOR_ULTRASONIC_middle : 1|1@1+ (1,0) [0|0] "" MASTER, IO
+ SG_ SENSOR_ULTRASONIC_right : 2|1@1+ (1,0) [0|0] "" MASTER, IO
+ SG_ SENSOR_ULTRASONIC_rear : 3|1@1+ (1,0) [0|0] "" MASTER, IO
+ SG_ SENSOR_ULTRASONIC_critical : 4|1@1+ (1,0) [0|0] "" MASTER, IO
   
 BO_ 213 SENSOR_BATT: 1 SENSOR
  SG_ SENSOR_BATT_stat : 0|7@1+ (1,0) [0|100] "%" MASTER,IO
@@ -75,13 +76,6 @@ BO_ 314 BLE_HEARTBEAT: 4 BLE
  SG_ BLE_HEARTBEAT_rx_bytes : 0|16@1+ (1,0) [0|0] "bytes" MASTER
  SG_ BLE_HEARTBEAT_tx_bytes : 16|16@1+ (1,0) [0|0] "bytes" MASTER
   
-
-BO_ 361 BLE_MAP_DATA: 8 BLE
- SG_ BLE_MAP_DATA_start_lat : 0|16@1+ (1,0) [0|0] "degrees" IO
- SG_ BLE_MAP_DATA_start_long : 16|16@1+ (1,0) [0|0] "degrees" IO
- SG_ BLE_MAP_DATA_dest_lat : 32|16@1+ (1,0) [0|0] "degrees" IO
- SG_ BLE_MAP_DATA_dest_long : 48|16@1+ (1,0) [0|0] "degrees" IO
-
 BO_ 361 BLE_MAP_START_DATA: 8 BLE
  SG_ BLE_MAP_START_DATA_lat : 0|32@1+ (0.000001,0) [0|0] "degrees" IO
  SG_ BLE_MAP_START_DATA_long : 32|32@1+ (0.000001,0) [0|0] "degrees" IO
