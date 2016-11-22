@@ -23,19 +23,18 @@ typedef struct {
     uint8_t  dlc; ///< Data length of the message
 } dbc_msg_hdr_t; 
 
-// static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {  010, 1 };
-static const dbc_msg_hdr_t SYSTEM_CMD_HDR =                       {  100, 1 };
-// static const dbc_msg_hdr_t MOTOR_CMD_HDR =                        {  151, 3 };
-// static const dbc_msg_hdr_t SYSTEM_STATUS_HDR =                    {  162, 2 };
-// static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 6 };
+// static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {   10, 1 };
+static const dbc_msg_hdr_t MASTER_SYSTEM_CMD_HDR =                {  100, 1 };
+// static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 3 };
+// static const dbc_msg_hdr_t MASTER_SYSTEM_STATUS_HDR =             {  162, 3 };
+// static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
 // static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 // static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
-static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 4 };
+static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
 // static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
 // static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
 // static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
 static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
-static const dbc_msg_hdr_t GEO_ACCELEROMETER_HDR =                {  412, 2 };
 static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
 static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
@@ -44,28 +43,28 @@ static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 8 };
 // static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 // static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
-/// Enumeration(s) for Message: 'SYSTEM_CMD' from 'MASTER'
+/// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
+    SYSTEM_START = 1,
     SYSTEM_STOP = 0,
     SYSTEM_RESET = 2,
-    SYSTEM_START = 1,
-} SYSTEM_CMD_enum_E ;
+} MASTER_SYSTEM_CMD_enum_E ;
 
 
 
 
-/// Message: SYSTEM_CMD from 'MASTER', DLC: 1 byte(s), MID: 100
+/// Message: MASTER_SYSTEM_CMD from 'MASTER', DLC: 1 byte(s), MID: 100
 typedef struct {
-    SYSTEM_CMD_enum_E SYSTEM_CMD_enum;        ///< B7:0   Destination: BLE,GEO,IO,MOTOR,SENSOR
+    MASTER_SYSTEM_CMD_enum_E MASTER_SYSTEM_CMD_enum; ///< B7:0   Destination: BLE,GEO,IO,MOTOR,SENSOR
 
     dbc_mia_info_t mia_info;
-} SYSTEM_CMD_t;
+} MASTER_SYSTEM_CMD_t;
 
 
-/// Message: BLE_CHCK_PT from 'BLE', DLC: 4 byte(s), MID: 311
+/// Message: BLE_CHCK_PT from 'BLE', DLC: 8 byte(s), MID: 311
 typedef struct {
-    uint16_t BLE_CHCK_PT_lat;                 ///< B15:0   Destination: GEO
-    uint16_t BLE_CHCK_PT_long;                ///< B31:16   Destination: GEO
+    float BLE_CHCK_PT_lat;                    ///< B31:0   Destination: GEO
+    float BLE_CHCK_PT_long;                   ///< B63:32   Destination: GEO
 
     dbc_mia_info_t mia_info;
 } BLE_CHCK_PT_t;
@@ -77,14 +76,6 @@ typedef struct {
 
     // No dbc_mia_info_t for a message that we will send
 } GEO_DIRECTION_t;
-
-
-/// Message: GEO_ACCELEROMETER from 'GEO', DLC: 2 byte(s), MID: 412
-typedef struct {
-    int16_t GEO_ACCELEROMETER_tilt;           ///< B10:0   Destination: MASTER
-
-    // No dbc_mia_info_t for a message that we will send
-} GEO_ACCELEROMETER_t;
 
 
 /// Message: GEO_DEST_RCHD from 'GEO', DLC: 1 byte(s), MID: 413
@@ -115,15 +106,15 @@ typedef struct {
 
 /// Message: GEO_COMPASS from 'GEO', DLC: 8 byte(s), MID: 461
 typedef struct {
-    uint8_t GEO_COMPASS_mag;                  ///< B39:32   Destination: IO
+    uint8_t GEO_COMPASS_mag;                  ///< B7:0   Destination: IO
 
     // No dbc_mia_info_t for a message that we will send
 } GEO_COMPASS_t;
 
 
 /// @{ These 'externs' need to be defined in a source file of your project
-extern const uint32_t                             SYSTEM_CMD__MIA_MS;
-extern const SYSTEM_CMD_t                         SYSTEM_CMD__MIA_MSG;
+extern const uint32_t                             MASTER_SYSTEM_CMD__MIA_MS;
+extern const MASTER_SYSTEM_CMD_t                  MASTER_SYSTEM_CMD__MIA_MSG;
 extern const uint32_t                             BLE_CHCK_PT__MIA_MS;
 extern const BLE_CHCK_PT_t                        BLE_CHCK_PT__MIA_MSG;
 /// @}
@@ -131,11 +122,11 @@ extern const BLE_CHCK_PT_t                        BLE_CHCK_PT__MIA_MSG;
 
 /// Not generating code for dbc_encode_BLE_COMM_CMD() since the sender is BLE and we are GEO
 
-/// Not generating code for dbc_encode_SYSTEM_CMD() since the sender is MASTER and we are GEO
+/// Not generating code for dbc_encode_MASTER_SYSTEM_CMD() since the sender is MASTER and we are GEO
 
-/// Not generating code for dbc_encode_MOTOR_CMD() since the sender is MASTER and we are GEO
+/// Not generating code for dbc_encode_MASTER_MOTOR_CMD() since the sender is MASTER and we are GEO
 
-/// Not generating code for dbc_encode_SYSTEM_STATUS() since the sender is MASTER and we are GEO
+/// Not generating code for dbc_encode_MASTER_SYSTEM_STATUS() since the sender is MASTER and we are GEO
 
 /// Not generating code for dbc_encode_SENSOR_ULTRASONIC() since the sender is SENSOR and we are GEO
 
@@ -169,30 +160,6 @@ static inline bool dbc_encode_and_send_GEO_DIRECTION(GEO_DIRECTION_t *from)
 {
     uint8_t bytes[8];
     const dbc_msg_hdr_t hdr = dbc_encode_GEO_DIRECTION(bytes, from);
-    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
-}
-
-
-
-/// Encode GEO's 'GEO_ACCELEROMETER' message
-/// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_GEO_ACCELEROMETER(uint8_t bytes[8], GEO_ACCELEROMETER_t *from)
-{
-    uint32_t raw;
-    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
-
-    raw = ((uint32_t)(((from->GEO_ACCELEROMETER_tilt - (-1024))))) & 0x7ff;
-    bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
-    bytes[1] |= (((uint8_t)(raw >> 8) & 0x07)); ///< 3 bit(s) starting from B8
-
-    return GEO_ACCELEROMETER_HDR;
-}
-
-/// Encode and send for dbc_encode_GEO_ACCELEROMETER() message
-static inline bool dbc_encode_and_send_GEO_ACCELEROMETER(GEO_ACCELEROMETER_t *from)
-{
-    uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_GEO_ACCELEROMETER(bytes, from);
     return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
 }
 
@@ -291,7 +258,7 @@ static inline dbc_msg_hdr_t dbc_encode_GEO_COMPASS(uint8_t bytes[8], GEO_COMPASS
     bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
     raw = ((uint32_t)(((from->GEO_COMPASS_mag)))) & 0xff;
-    bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
+    bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
 
     return GEO_COMPASS_HDR;
 }
@@ -314,19 +281,19 @@ static inline bool dbc_encode_and_send_GEO_COMPASS(GEO_COMPASS_t *from)
 
 /// Not generating code for dbc_decode_BLE_COMM_CMD() since 'GEO' is not the recipient of any of the signals
 
-/// Decode MASTER's 'SYSTEM_CMD' message
+/// Decode MASTER's 'MASTER_SYSTEM_CMD' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
-static inline bool dbc_decode_SYSTEM_CMD(SYSTEM_CMD_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+static inline bool dbc_decode_MASTER_SYSTEM_CMD(MASTER_SYSTEM_CMD_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
 {
     const bool success = true;
     // If msg header is provided, check if the DLC and the MID match
-    if (NULL != hdr && (hdr->dlc != SYSTEM_CMD_HDR.dlc || hdr->mid != SYSTEM_CMD_HDR.mid)) {
+    if (NULL != hdr && (hdr->dlc != MASTER_SYSTEM_CMD_HDR.dlc || hdr->mid != MASTER_SYSTEM_CMD_HDR.mid)) {
         return !success;
     }
 
     uint32_t raw;
     raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
-    to->SYSTEM_CMD_enum = (SYSTEM_CMD_enum_E)((raw));
+    to->MASTER_SYSTEM_CMD_enum = (MASTER_SYSTEM_CMD_enum_E)((raw));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
@@ -334,9 +301,9 @@ static inline bool dbc_decode_SYSTEM_CMD(SYSTEM_CMD_t *to, const uint8_t bytes[8
 }
 
 
-/// Not generating code for dbc_decode_MOTOR_CMD() since 'GEO' is not the recipient of any of the signals
+/// Not generating code for dbc_decode_MASTER_MOTOR_CMD() since 'GEO' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_SYSTEM_STATUS() since 'GEO' is not the recipient of any of the signals
+/// Not generating code for dbc_decode_MASTER_SYSTEM_STATUS() since 'GEO' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_SENSOR_ULTRASONIC() since 'GEO' is not the recipient of any of the signals
 
@@ -357,10 +324,14 @@ static inline bool dbc_decode_BLE_CHCK_PT(BLE_CHCK_PT_t *to, const uint8_t bytes
     uint32_t raw;
     raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
     raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
-    to->BLE_CHCK_PT_lat = ((raw));
-    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
-    raw |= ((uint32_t)((bytes[3]))) << 8; ///< 8 bit(s) from B24
-    to->BLE_CHCK_PT_long = ((raw));
+    raw |= ((uint32_t)((bytes[2]))) << 16; ///< 8 bit(s) from B16
+    raw |= ((uint32_t)((bytes[3]))) << 24; ///< 8 bit(s) from B24
+    to->BLE_CHCK_PT_lat = ((raw * 1e-06));
+    raw  = ((uint32_t)((bytes[4]))); ///< 8 bit(s) from B32
+    raw |= ((uint32_t)((bytes[5]))) << 8; ///< 8 bit(s) from B40
+    raw |= ((uint32_t)((bytes[6]))) << 16; ///< 8 bit(s) from B48
+    raw |= ((uint32_t)((bytes[7]))) << 24; ///< 8 bit(s) from B56
+    to->BLE_CHCK_PT_long = ((raw * 1e-06));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
@@ -376,8 +347,6 @@ static inline bool dbc_decode_BLE_CHCK_PT(BLE_CHCK_PT_t *to, const uint8_t bytes
 
 /// Not generating code for dbc_decode_GEO_DIRECTION() since 'GEO' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_GEO_ACCELEROMETER() since 'GEO' is not the recipient of any of the signals
-
 /// Not generating code for dbc_decode_GEO_DEST_RCHD() since 'GEO' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_HEARTBEAT() since 'GEO' is not the recipient of any of the signals
@@ -392,23 +361,23 @@ static inline bool dbc_decode_BLE_CHCK_PT(BLE_CHCK_PT_t *to, const uint8_t bytes
 
 /// Not generating code for dbc_decode_IO_HEARTBEAT() since 'GEO' is not the recipient of any of the signals
 
-/// Handle the MIA for MASTER's SYSTEM_CMD message
+/// Handle the MIA for MASTER's MASTER_SYSTEM_CMD message
 /// @param   time_incr_ms  The time to increment the MIA counter with
 /// @returns true if the MIA just occurred
 /// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
-static inline bool dbc_handle_mia_SYSTEM_CMD(SYSTEM_CMD_t *msg, uint32_t time_incr_ms)
+static inline bool dbc_handle_mia_MASTER_SYSTEM_CMD(MASTER_SYSTEM_CMD_t *msg, uint32_t time_incr_ms)
 {
     bool mia_occurred = false;
     const dbc_mia_info_t old_mia = msg->mia_info;
-    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SYSTEM_CMD__MIA_MS);
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= MASTER_SYSTEM_CMD__MIA_MS);
 
     if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
         msg->mia_info.mia_counter_ms += time_incr_ms;
     }
     else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
-        *msg = SYSTEM_CMD__MIA_MSG;
-        msg->mia_info.mia_counter_ms = SYSTEM_CMD__MIA_MS;
+        *msg = MASTER_SYSTEM_CMD__MIA_MSG;
+        msg->mia_info.mia_counter_ms = MASTER_SYSTEM_CMD__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }
