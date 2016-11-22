@@ -221,6 +221,10 @@ void period_10Hz(uint32_t count)
 
 		 dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd);
 
+		 /**
+		  * todo: where is all the code? Everything below is commented out.
+		  */
+
 //    if((LPC_UART2->IIR & 0xE)==ravail)
 //	{
 //    	NVIC_EnableIRQ(UART2_IRQn);
@@ -268,7 +272,9 @@ void period_10Hz(uint32_t count)
 	  // dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
 
 	    //dbc_encode_and_send_BLE_MAP_DATA(&ble_map_data);
-
+/**
+ * todo: do not use while loops.
+ */
 
 //	while(CAN_rx(can1, &can_msg, 0)){
 //
