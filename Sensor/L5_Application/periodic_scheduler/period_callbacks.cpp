@@ -101,7 +101,9 @@ void period_10Hz(uint32_t count)
 	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);*/
 
 	//puts("sent");
-
+    /**
+     * todo what is the point of this if/else statement? You set start = true in both cases.
+     */
     if(received_sensor_can_msg()==1){
         start=true;
     }

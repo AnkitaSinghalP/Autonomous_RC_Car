@@ -218,6 +218,9 @@ void can_init_sensor()
 
 void sensor_init(){
 
+	/**
+	 * todo: remove this if it's not being used.
+	 */
     sensor_receiver_pins();
 
     interrupt_enable();
@@ -234,6 +237,9 @@ void compute()
     sum_mid=sum_mid+obstacle.middle_distance;
     count++;
 
+    /**
+     * todo: is waiting for three samples fast enough? That's a total of 300ms before you react.
+     */
     if(count==3){
         left_avg=sum_left/3;
         right_avg=sum_right/3;
@@ -292,8 +298,9 @@ void can_communication_sensor()
 
 uint8_t received_sensor_can_msg()
 {
-
-    while(CAN_rx(can1, &can_msg_received, 0))
+/**
+ * todo: do not use while loops.
+ */    while(CAN_rx(can1, &can_msg_received, 0))
     {
         can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
         can_msg_hdr.mid = can_msg_received.msg_id;
