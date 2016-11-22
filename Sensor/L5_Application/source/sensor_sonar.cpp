@@ -40,13 +40,13 @@ SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
 can_msg_t can_msg_received;
 can_msg_t can_msg = { 0 };
 
-const uint32_t SYSTEM_CMD__MIA_MS = 1000;
-const SYSTEM_CMD_t SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
+const uint32_t MASTER_SYSTEM_CMD__MIA_MS = 1000;
+const MASTER_SYSTEM_CMD_t MASTER_SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
 
 SENSOR_ULTRASONIC_t ultrasonic_sensor_data = {0};
 
 
- SYSTEM_CMD_t master_command;
+ MASTER_SYSTEM_CMD_t master_command;
 
 dbc_mia_info_t mia_handling = {0};
 
@@ -305,13 +305,13 @@ uint8_t received_sensor_can_msg()
         can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
         can_msg_hdr.mid = can_msg_received.msg_id;
 
-        if(dbc_decode_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr)){
+        if(dbc_decode_MASTER_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr)){
 
         }
 
     }
 
-    if(dbc_handle_mia_SYSTEM_CMD(&master_command, 10))
+    if(dbc_handle_mia_MASTER_SYSTEM_CMD(&master_command, 10))
     {
 
         counter++;
@@ -320,7 +320,7 @@ uint8_t received_sensor_can_msg()
             counter =0;
 
     }
-    if(master_command.SYSTEM_CMD_enum==SYSTEM_START){
+    if(master_command.MASTER_SYSTEM_CMD_enum==SYSTEM_START){
         return 1;
     }
     else{
