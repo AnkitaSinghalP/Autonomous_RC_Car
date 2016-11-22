@@ -6,7 +6,10 @@ void heartbeat_rx(void)
 
 	uint16_t can_total_bytes = 0;
 	float bus_util_perc = 0;
-
+	/**
+	 * todo: do not use a while loop. it is extremely undeterministic. If you need to receive multiple messages
+	 * 			or need to process them faster then move this receive function to a faster task.
+	 */
 	while(CAN_rx(can1, &can_msg, 0))
 	{
 		dbc_msg_hdr_t can_msg_hdr;
@@ -44,7 +47,11 @@ void heartbeat_rx(void)
 		else if(dbc_handle_mia_IO_HEARTBEAT(&io_heartbeat_cmd, 100))
 			system_status_message.MASTER_SYSTEM_STATUS_io = 0;
 	}
-
+	/**
+	 * todo: what is this supposed to represent? Total bus load? Why are you dividing by 1000?
+	 * 			If this is in bytes then at 100kbps you can get ~8KB/s of data. Use BusMaster to analyze
+	 * 			bus traffic instead
+	 */
 	bus_util_perc = (can_total_bytes)/(1000);
 	system_status_message.MASTER_SYSTEM_STATUS_util = bus_util_perc;
 	//dbc_encode_and_send_MASTER_SYSTEM_STATUS(&system_status_message);

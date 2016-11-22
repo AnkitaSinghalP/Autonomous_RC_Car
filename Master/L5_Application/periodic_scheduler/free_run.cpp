@@ -2,6 +2,9 @@
 
 void free_run_func()
 {
+	/**
+	 * todo: do not use a while loop
+	 */
 	while(CAN_rx(can1, &can_msg, 0))
 	{
 		dbc_msg_hdr_t can_msg_fr;
@@ -71,7 +74,9 @@ void free_run_func()
 			LD.setNumber(2);
 		}
 
-
+		/**
+		 * todo: you already have this case on line 62 above. why leave this as an additional if statement?
+		 */
 		if(!sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_left && !sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_middle && sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_right)
 		{
 			motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;

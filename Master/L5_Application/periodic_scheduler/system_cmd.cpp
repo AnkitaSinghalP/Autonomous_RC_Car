@@ -3,6 +3,9 @@
 
 void sys_cmd(void)
 {
+	/**
+	 * todo: do not use a while loop here.
+	 */
 	while(CAN_rx(can1, &can_msg, 0))
 	{
 		dbc_msg_hdr_t can_msg_hdr;
