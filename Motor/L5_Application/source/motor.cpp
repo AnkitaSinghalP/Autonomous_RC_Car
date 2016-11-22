@@ -1,10 +1,6 @@
 
 #include <stdio.h>
 #include "lpc_pwm.hpp"
-
-
-
-
 const float avgspeed =15.6;
 const float servoneutral = 14.02;
 const float maxspeedfwd = 20.0;
@@ -18,16 +14,17 @@ const float fullright = 20.0;
 float left;
 float right;
 
-const float wheelcircum = 1.0;
+
 float back;
 int DClevel;
 
 float speedfactor = 0;
 float turnfactor = 0;
-float speedoffset = 0;
-float actspeed;
-static  PWM servomotor(PWM::pwm1, 100);
-static  PWM dcmotor(PWM::pwm2, 100);
+float speedoffset = 15.6;
+float maxspeedoffset=17.6;
+
+PWM servomotor(PWM::pwm1, 100);
+PWM dcmotor(PWM::pwm2, 100);
 
 
 void initcar()
@@ -35,6 +32,24 @@ void initcar()
 
 	//servomotor.set(neutral);
 	dcmotor.set(neutral+2);
+
+}
+void increase_speed()
+{
+	//speedoffset = avgspeed +0.1;
+	while(speedoffset<=17.6){
+	dcmotor.set(speedoffset);
+	speedoffset = avgspeed +0.1;
+}
+}
+void decrease_speed()
+{
+
+	while(maxspeedoffset>=15.6)
+	{
+		dcmotor.set(maxspeedoffset);
+		maxspeedoffset = avgspeed -0.1;
+	}
 
 }
 
@@ -45,6 +60,7 @@ void moveForward( )
 	actspeed = getactspeed();*/
 
 	dcmotor.set(avgspeed);
+	servomotor.set(servoneutral);
 	/*if(desiredspeed > actspeed)
 	{
 		speedfactor = desiredspeed-actspeed;
