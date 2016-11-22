@@ -12,9 +12,9 @@
 #include "can.h"
 #include "string.h"
 
-SYSTEM_CMD_t system_cmd;
-MOTOR_CMD_t motor_cmd = {0};
-SYSTEM_STATUS_t system_status = {0};
+MASTER_SYSTEM_CMD_t system_cmd;
+MASTER_MOTOR_CMD_t motor_cmd = {0};
+MASTER_SYSTEM_STATUS_t system_status = {0};
 SENSOR_BATT_t battery_status = {0};
 BLE_MAP_START_DATA_t ble_map_start_data = {0};
 BLE_MAP_DEST_DATA_t ble_map_destination_data = {0};
@@ -26,11 +26,11 @@ dbc_msg_hdr_t can_msg_hdr;
 GEO_LOCATION_t geo_location = {0};
 
 const uint32_t             SYSTEM_CMD__MIA_MS = 1000;
-const SYSTEM_CMD_t         SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
+const MASTER_SYSTEM_CMD_t         SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
 const uint32_t             MOTOR_CMD__MIA_MS = 1000;
-const MOTOR_CMD_t          MOTOR_CMD__MIA_MSG = {};
+const MASTER_MOTOR_CMD_t          MOTOR_CMD__MIA_MSG = {};
 const uint32_t             SYSTEM_STATUS__MIA_MS = 1000;
-const SYSTEM_STATUS_t      SYSTEM_STATUS__MIA_MSG = {};
+const MASTER_SYSTEM_STATUS_t      SYSTEM_STATUS__MIA_MSG = {};
 const uint32_t             SENSOR_BATT__MIA_MS = 1000;
 const SENSOR_BATT_t        SENSOR_BATT__MIA_MSG = {};
 const uint32_t             BLE_MAP_START_DATA__MIA_MS = 1000;
@@ -43,6 +43,7 @@ const uint32_t             GEO_LOCATION__MIA_MS = 1000;
 const GEO_LOCATION_t       GEO_LOCATION__MIA_MSG = {};
 const uint32_t             MOTOR_SPEED__MIA_MS = 1000;
 const MOTOR_SPEED_t        MOTOR_SPEED__MIA_MSG = {};
+
 
 Uart3 &u3 = Uart3::getInstance();
 
@@ -87,12 +88,12 @@ void RECEIVED_SYSTEM_CMD()
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
-		dbc_decode_SYSTEM_CMD(&system_cmd, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_MASTER_SYSTEM_CMD(&system_cmd, can_msg.data.bytes, &can_msg_hdr);
 
 	}
 
 
-	if(dbc_handle_mia_SYSTEM_CMD(&system_cmd, 10))
+	if(dbc_handle_mia_MASTER_SYSTEM_CMD(&system_cmd, 10))
 	{
 
 	}
@@ -106,12 +107,12 @@ void RECEIVED_MOTOR_CMD()
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
-		dbc_decode_MOTOR_CMD(&motor_cmd, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_MASTER_MOTOR_CMD(&motor_cmd, can_msg.data.bytes, &can_msg_hdr);
 
 	}
 
 
-	if(dbc_handle_mia_MOTOR_CMD(&motor_cmd, 10))
+	if(dbc_handle_mia_MASTER_MOTOR_CMD(&motor_cmd, 10))
 	{
 
 	}
@@ -125,12 +126,12 @@ void RECEIVED_SYSTEM_STATUS()
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
-		dbc_decode_SYSTEM_STATUS(&system_status, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_MASTER_SYSTEM_STATUS(&system_status, can_msg.data.bytes, &can_msg_hdr);
 
 	}
 
 
-	if(dbc_handle_mia_SYSTEM_STATUS(&system_status, 10))
+	if(dbc_handle_mia_MASTER_SYSTEM_STATUS(&system_status, 10))
 	{
 
 	}
