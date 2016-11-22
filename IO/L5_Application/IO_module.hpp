@@ -1,0 +1,28 @@
+/*
+ * IO_module.hpp
+ *
+ *  Created on: Nov 19, 2016
+ *      Author: BHUSHAN
+ */
+
+#ifndef L5_APPLICATION_SOURCE_IO_MODULE_HPP_
+#define L5_APPLICATION_SOURCE_IO_MODULE_HPP_
+
+#include "stdio.h"
+
+void SEND_IO_HEARTBEAT();
+void can_init_IO();
+void IO_init();
+void RECEIVED_MOTOR_SPEED();
+void RECEIVED_GEO_LOCATION();
+void RECEIVED_GEO_DEST_RCHD();
+void RECEIVED_BLE_MAP_DESTINATION_DATA();
+void RECEIVED_BLE_MAP_START_DATA();
+void RECEIVED_SENSOR_BATTERY();
+void RECEIVED_SYSTEM_STATUS();
+void RECEIVED_MOTOR_CMD();
+void RECEIVED_SYSTEM_CMD();
+
+
+
+#endif /* L5_APPLICATION_SOURCE_IO_MODULE_HPP_ */
