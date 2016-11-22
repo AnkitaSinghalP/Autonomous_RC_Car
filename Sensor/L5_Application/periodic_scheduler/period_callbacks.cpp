@@ -47,15 +47,13 @@ SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
 //can_msg_t can_msg_sensor = { 0 };
 can_msg_t can_msg_received;
 can_msg_t can_msg = { 0 };
+MASTER_SYSTEM_CMD_t master_command;
 
-const uint32_t SYSTEM_CMD__MIA_MS = 1000;
-const SYSTEM_CMD_t SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
-
-SENSOR_ULTRASONIC_m0_t ultrasonic_sensor_data = {0};
+const uint32_t                             MASTER_SYSTEM_CMD__MIA_MS = 1000;
+const MASTER_SYSTEM_CMD_t                  MASTER_SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
+SENSOR_ULTRASONIC_t ultrasonic_sensor_data = {0};
 
 SENSOR_ULTRASONIC_t ultrasonic_sensor_receiver = {0};
-
-SYSTEM_CMD_t master_command;
 
 dbc_mia_info_t mia_handling = {0};
 
@@ -135,13 +133,13 @@ void period_1Hz(uint32_t count)
 void period_10Hz(uint32_t count)
 {
 
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = 25;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = 65;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = 35;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_right = 45;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear_left = 55;
+	/*ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = 0;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = ;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = ;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear = ;
+	ultrasonic_sensor_data.SENSOR_ULTRASONIC_critical = ;*/
 
-	dbc_encode_and_send_SENSOR_ULTRASONIC_m0(&ultrasonic_sensor_data);
+	dbc_encode_and_send_SENSOR_ULTRASONIC(&ultrasonic_sensor_data);
 
 	battery_status.SENSOR_BATT_stat = 75;
 	dbc_encode_and_send_SENSOR_BATT(&battery_status);
@@ -155,11 +153,11 @@ void period_10Hz(uint32_t count)
 		can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg_received.msg_id;
 
-		dbc_decode_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr);
+		dbc_decode_MASTER_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr);
 
 	}
 
-	if(dbc_handle_mia_SYSTEM_CMD(&master_command, 10))
+	if(dbc_handle_mia_MASTER_SYSTEM_CMD(&master_command, 10))
 	{
 		LD.setNumber(counter);
 		counter++;
