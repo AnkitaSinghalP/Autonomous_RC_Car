@@ -35,6 +35,8 @@
 #include<stdio.h>
 #include "_can_dbc/generated_can.h"
 #include <string.h>
+#include "uart3.hpp"
+#include "utilities.h"
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -49,17 +51,37 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 
+Uart3 &u3 = Uart3::getInstance();
+
+static void put_commn(char a,char b,char c, char d,char e) {
+	char comm[6]={a,b,c,d,e,0};
+	for(int i=0;i<5;i++) {
+		comm[5]^=comm[i];
+	}
+
+	for(int i=0;i<6;i++) {
+		u3.putChar(comm[i],10);
+	}
+	//u3.getChar(&ack,10);
+}
+
+
 bool period_init(void)
 {
+	u3.init(9600,10,10);
 
-    return true; // Must return true upon success
+	put_commn(0x01,0x0A,0X00,0X00,0X00);
+	delay_ms(1000);
+	put_commn(0x01,0x0A,0X01,0X00,0X00);
+
+	return true; // Must return true upon success
 }
 
 /// Register any telemetry variables
 bool period_reg_tlm(void)
 {
-    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-    return true; // Must return true upon success
+	// Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+	return true; // Must return true upon success
 }
 
 
@@ -70,27 +92,42 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-    if(CAN_is_bus_off(can1)){
+	/* if(CAN_is_bus_off(can1)){
               CAN_reset_bus(can1);
-          }
-    //LE.toggle(1);
+          }*/
+	if(count%2==0){
+
+		puts("if\n");
+	}
+	else{
+		u3.putChar(01,10);
+		u3.putChar(0x0A,10);
+		u3.putChar(00,10);
+		u3.putChar(00,10);
+		u3.putChar(00,10);
+		u3.putChar(0x0A,10);
+		puts("else\n");
+	}
+
+
+	//LE.toggle(1);
 }
 
 void period_10Hz(uint32_t count)
 {
 
 
-    //LE.toggle(2);
+	//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
 {
-    //LE.toggle(3);
+	//LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-    //LE.toggle(4);
+	//LE.toggle(4);
 }
