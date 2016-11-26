@@ -24,7 +24,7 @@ void sensor_init();
 void sensor_measure();
 void can_communication_sensor();
 //void received_sensor_can_msg();
-void decoded_can_sensor_message(uint8_t middle,uint8_t left, uint8_t right);
+void decoded_can_sensor_message(uint8_t middle,uint8_t left, uint8_t right, uint8_t rear);
 void can_init_sensor();
 void ultrasonic_sensor_heartbeat_message();
 uint8_t received_sensor_can_msg();
