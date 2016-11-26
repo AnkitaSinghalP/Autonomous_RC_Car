@@ -56,13 +56,13 @@ dbc_msg_hdr_t can_msg_hdr;
 
 static int counter = 0;
 
-void decoded_can_sensor_message(uint8_t middle,uint8_t left, uint8_t right)
+void decoded_can_sensor_message(uint8_t middle,uint8_t left, uint8_t right, uint8_t critical)
 {
 
     ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = middle;
     ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = left;
     ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = right;
-    ultrasonic_sensor_data.SENSOR_ULTRASONIC_critical=0;
+    ultrasonic_sensor_data.SENSOR_ULTRASONIC_critical=critical;
     dbc_encode_and_send_SENSOR_ULTRASONIC(&ultrasonic_sensor_data);
 
 
@@ -231,7 +231,7 @@ void sensor_init(){
 void compute()
 {
     uint8_t left,right,middle;
-    static uint8_t count,left_avg,right_avg,mid_avg,sum_left,sum_right,sum_mid;
+    static uint8_t count,left_avg,right_avg,mid_avg,sum_left,sum_right,sum_mid,critical;
     sum_left= sum_left+obstacle.left_distance;
     sum_right=sum_right+obstacle.right_distance;
     sum_mid=sum_mid+obstacle.middle_distance;
@@ -248,6 +248,7 @@ void compute()
         sum_right=0;
         sum_mid=0;
         count=0;
+
         if(right_avg<=30){
                 right=1;
                 LE.toggle(1);
@@ -269,8 +270,14 @@ void compute()
             else{
                 left=0;
             }
+            if((mid_avg<20)||(left_avg<12)||(right_avg<12)){
+                critical=1;
+            }
+            else{
+                critical=0;
+            }
             printf(" %d     %d      %d\n",left_avg,right_avg,mid_avg);
-            decoded_can_sensor_message(middle,left,right);
+            decoded_can_sensor_message(middle,left,right,critical);
     }
 
 }
