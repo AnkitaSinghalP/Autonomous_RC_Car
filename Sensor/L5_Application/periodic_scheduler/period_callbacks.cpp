@@ -102,13 +102,15 @@ void period_10Hz(uint32_t count)
 
 	//puts("sent");
     /**
-     * todo what is the point of this if/else statement? You set start = true in both cases.
+     * wait for system command from CAN before starting
+     * In case of testing without the Master board, change the start to true in
+     * the else section
      */
     if(received_sensor_can_msg()==1){
         start=true;
     }
     else{
-        start=true;
+        start=false;
     }
     if(start){
         sensor_measure();
