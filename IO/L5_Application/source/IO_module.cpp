@@ -14,7 +14,10 @@
 #include "io.hpp"
 #include "stdlib.h"
 #include "utilities.h"
-#include "uart2.hpp"
+#include "uart3.hpp"
+#include "gpio.hpp"
+#include "string.h"
+
 
 MASTER_SYSTEM_CMD_t system_cmd;
 MASTER_MOTOR_CMD_t motor_cmd = {0};
@@ -28,9 +31,14 @@ IO_HEARTBEAT_t io_heart_beat_msg;
 can_msg_t can_msg = { 0 };
 dbc_msg_hdr_t can_msg_hdr;
 GEO_LOCATION_t geo_location = {0};
+SENSOR_ULTRASONIC_t ultrasonic_sensor = {0};
 
-const uint32_t             SYSTEM_CMD__MIA_MS = 1000;
-const MASTER_SYSTEM_CMD_t         SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
+MASTER_SYSTEM_CMD_enum_E master_system_command;
+MASTER_MOTOR_CMD_steer_E master_motor_command_steer;
+MASTER_MOTOR_CMD_drive_E master_motor_command_drive;
+
+const uint32_t             MASTER_SYSTEM_CMD__MIA_MS = 1000;
+const MASTER_SYSTEM_CMD_t         MASTER_SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
 const uint32_t             MOTOR_CMD__MIA_MS = 1000;
 const MASTER_MOTOR_CMD_t          MOTOR_CMD__MIA_MSG = {};
 const uint32_t             SYSTEM_STATUS__MIA_MS = 1000;
@@ -64,34 +72,37 @@ float dc_turbo = 6.20;
 
 LCD_SCREENS lcdscreen = home_message;
 //Uart3 &u3 = Uart3::getInstance();
-Uart2 &U2 = Uart2::getInstance();
+Uart3 &U3 = Uart3::getInstance();
 
 
-char Bytes_to_send[6]={0};                 // 6 bytes received from the LCD
-char received_ack=0;                         // received_acknowledge byte from LCD
+static GPIO left_pin(P1_20);
+static GPIO right_pin(P1_19);
+static GPIO reverse_pin(P2_0);
+static GPIO start_pin(P0_29);
+static GPIO stop_pin(P0_29);
+static GPIO brake_pin(P0_30);
+static GPIO resume_pin(P0_30);
+static GPIO headlight_pin(P1_22);
+static GPIO system_start_pin(P1_23);
+static GPIO system_stop_pin(P1_28);
+static GPIO system_reset_pin(P1_29);
+
+static char received_ack=0;                         // received_acknowledge byte from LCD
 
 void flag_change(bool* flagp){
-    geo_flag = false;
-    home_flag = false;
-    sensor_flag = false;
-    motor_flag = false;
-    *flagp = true;
+	geo_flag = false;
+	home_flag = false;
+	sensor_flag = false;
+	motor_flag = false;
+	*flagp = true;
 }
 
 void flag_page_change(bool* flagp){
 	geo_page_flag = false;
 	home_page_flag = false;
 	sensors_page_flag = false;
-    motor_page_flag = false;
-    *flagp = true;
-}
-
-
-
-bool period_init(void)
-{
-	//u3.init(38400,100,100);
-    return true; // Must return true upon success
+	motor_page_flag = false;
+	*flagp = true;
 }
 
 
@@ -102,6 +113,17 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 	can_msg.frame_fields.data_len = dlc;
 	memcpy(can_msg.data.bytes, bytes, dlc);
 	return CAN_tx(can1, &can_msg, 0);
+}
+void SEND_MSG_LCD(char a,char b,char c, char d,char e) {
+	char comm[6]={a,b,c,d,e,0};
+	for(int i=0;i<5;i++) {
+		comm[5]^=comm[i];
+	}
+
+	for(int i=0;i<6;i++) {
+		U3.putChar(comm[i],10);
+	}
+	U3.getChar(&received_ack,10);
 }
 
 void can_init_IO()
@@ -120,14 +142,33 @@ void SEND_IO_HEARTBEAT()
 }
 
 
-void RECEIVED_SYSTEM_CMD()
+bool RECEIVED_SYSTEM_CMD()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
 		dbc_decode_MASTER_SYSTEM_CMD(&system_cmd, can_msg.data.bytes, &can_msg_hdr);
+
+		master_system_command = system_cmd.MASTER_SYSTEM_CMD_enum;
+
+		if(master_system_command == SYSTEM_START)
+
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x00,0x00,0x01);
+			system_start_pin.setLow();
+		}
+		else if(master_system_command == SYSTEM_STOP)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x00,0x00,0x00);
+			system_stop_pin.setLow();
+		}
+		else if(master_system_command == SYSTEM_RESET)
+		{
+			system_reset_pin.setLow();
+		}
+
 
 	}
 
@@ -136,18 +177,84 @@ void RECEIVED_SYSTEM_CMD()
 	{
 
 	}
-
+	return true;
 }
+void RECEIVED_SENSOR_ULTRASONIC()
+{
+	if(CAN_rx(can1, &can_msg, 0))
+	{
+		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
+		can_msg_hdr.mid = can_msg.msg_id;
+
+		dbc_decode_SENSOR_ULTRASONIC(&ultrasonic_sensor, can_msg.data.bytes, &can_msg_hdr);
+
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_left == 0)
+			SEND_MSG_LCD(0x01,0x0B,0x03,0x00,0x32);
+		else if(ultrasonic_sensor.SENSOR_ULTRASONIC_left == 1)
+			SEND_MSG_LCD(0x01,0x0B,0x03,0x00,0x5A);
+
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_right == 0)
+			SEND_MSG_LCD(0x01,0x0B,0x02,0x00,0x32);
+		else if(ultrasonic_sensor.SENSOR_ULTRASONIC_right == 1)
+			SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x5A);
+
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_middle == 0)
+			SEND_MSG_LCD(0x01,0x0B,0x01,0x00,0x32);
+		else if(ultrasonic_sensor.SENSOR_ULTRASONIC_middle == 1)
+			SEND_MSG_LCD(0x01,0x0E,0x01,0x00,0x5A);
+
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_rear == 0)
+			SEND_MSG_LCD(0x01,0x0B,0x00,0x00,0x32);
+		else if(ultrasonic_sensor.SENSOR_ULTRASONIC_rear == 1)
+			SEND_MSG_LCD(0x01,0x0E,0x00,0x00,0x5A);
+
+	}
+	if(dbc_handle_mia_SENSOR_ULTRASONIC(&ultrasonic_sensor, 10))
+	{
+
+	}
+}
+
 
 void RECEIVED_MOTOR_CMD()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
 		dbc_decode_MASTER_MOTOR_CMD(&motor_cmd, can_msg.data.bytes, &can_msg_hdr);
 
+		switch( motor_cmd.MASTER_MOTOR_CMD_steer){
+		case 0:
+			left_pin.setLow();
+			SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x01);
+			break;
+		case 1:
+
+			left_pin.setLow();
+			SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x01);
+			break;
+		case 2:
+			right_pin.setLow();
+			SEND_MSG_LCD(0x01,0x0E,0x01,0x00,0x01);
+			break;
+		case 3:
+			right_pin.setLow();
+			SEND_MSG_LCD(0x01,0x0E,0x01,0x00,0x01);
+			break;
+		case 5:
+			reverse_pin.setLow();
+			SEND_MSG_LCD(0x01,0x0E,0x03,0x00,0x01);
+			break;
+		default:
+			right_pin.setHigh();
+			left_pin.setHigh();
+			reverse_pin.setHigh();
+			SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x00);
+			SEND_MSG_LCD(0x01,0x0E,0x01,0x00,0x00);
+			SEND_MSG_LCD(0x01,0x0E,0x03,0x00,0x00);
+		}
 	}
 
 
@@ -160,13 +267,14 @@ void RECEIVED_MOTOR_CMD()
 
 void RECEIVED_SYSTEM_STATUS()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
 		dbc_decode_MASTER_SYSTEM_STATUS(&system_status, can_msg.data.bytes, &can_msg_hdr);
 
+		//printf("%f",system_status.MASTER_SYSTEM_STATUS_util);
 	}
 
 
@@ -180,7 +288,7 @@ void RECEIVED_SYSTEM_STATUS()
 
 void RECEIVED_SENSOR_BATTERY()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
@@ -199,7 +307,7 @@ void RECEIVED_SENSOR_BATTERY()
 
 void RECEIVED_BLE_MAP_START_DATA()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
@@ -218,7 +326,7 @@ void RECEIVED_BLE_MAP_START_DATA()
 
 void RECEIVED_BLE_MAP_DESTINATION_DATA()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
@@ -237,7 +345,7 @@ void RECEIVED_BLE_MAP_DESTINATION_DATA()
 
 void RECEIVED_GEO_DEST_RCHD()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
@@ -256,7 +364,7 @@ void RECEIVED_GEO_DEST_RCHD()
 
 void RECEIVED_GEO_LOCATION()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
@@ -275,13 +383,13 @@ void RECEIVED_GEO_LOCATION()
 
 void RECEIVED_MOTOR_SPEED()
 {
-	while(CAN_rx(can1, &can_msg, 0))
+	if(CAN_rx(can1, &can_msg, 0))
 	{
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
 		dbc_decode_MOTOR_SPEED(&motor_speed, can_msg.data.bytes, &can_msg_hdr);
-
+		SEND_MSG_LCD(0x01,0x08,0x00,0x00,motor_speed.MOTOR_SPEED_actual);
 	}
 
 
@@ -293,208 +401,57 @@ void RECEIVED_MOTOR_SPEED()
 }
 
 void LCD_init(void) {
-    U2.init(LCD_BAUD_RATE,LCD_RXQSIZE,LCD_TXQSIZE);
-    dc_slow = 6.35;
-    dc_normal = 6.28;
-    dc_turbo = 6.20;
+	U3.init(LCD_BAUD_RATE,LCD_RXQSIZE,LCD_TXQSIZE);
+	dc_slow = 6.35;
+	dc_normal = 6.28;
+	dc_turbo = 6.20;
+	SEND_MSG_LCD(0x01,0x0A,0x00,0x00,0x00);
+
 }
+void IO_init()
+{
+	left_pin.setAsOutput();
+	right_pin.setAsOutput();
+	reverse_pin.setAsOutput();
+	start_pin.setAsOutput();
+	stop_pin.setAsOutput();
+	brake_pin.setAsOutput();
+	resume_pin.setAsOutput();
+	headlight_pin.setAsOutput();
+	system_start_pin.setAsOutput();
+	system_stop_pin.setAsOutput();
+	system_reset_pin.setAsOutput();
 
-void SEND_MSG_LCD(char a,char b,char c, char d,char e) {
-    char comm[6]={a,b,c,d,e,0};
-    for(int i=0;i<5;i++) {
-        comm[5]^=comm[i];
-    }
 
-    for(int i=0;i<6;i++) {
-        U2.putChar(comm[i],10);
-    }
-    U2.getChar(&received_ack,10);
 }
 
 void put_string(char array[], uint8_t object_no, uint8_t num){
-    uint8_t checksum=0x02^object_no^num;
-    U2.putChar(0x02,10);
-    U2.putChar(object_no,10);
-    U2.putChar(num,10);
+	uint8_t checksum=0x02^object_no^num;
+	U3.putChar(0x02,10);
+	U3.putChar(object_no,10);
+	U3.putChar(num,10);
 
-    for(int i=0;i<num;i++){
-        U2.putChar(array[i],10);
-        checksum^=array[i];
-    }
+	for(int i=0;i<num;i++){
+		U3.putChar(array[i],10);
+		checksum^=array[i];
+	}
 
-    U2.putChar(checksum,10);
-   U2.getChar(&received_ack,10);
+	U3.putChar(checksum,10);
+	U3.getChar(&received_ack,10);
 }
 
 
-void lcd_print(){
-
-     static bool headlights_on = false;
-     bool flag_headlight = false;
-
-     //if((sensor_lcd.data.bytes[0]!=0)||(sensor_lcd.data.bytes[1]!=0)||(sensor_lcd.data.bytes[2]!=0)){
-     SEND_MSG_LCD(0x01,0x16,0x00,0x00,0x00);
 
 
-     if(Bytes_to_send[1]==0x06 && Bytes_to_send[2]==0x03) {
-         lcdscreen=home_message;
-         flag_change(&geo_flag);
-     }
-     else if(Bytes_to_send[1]==0x06 && Bytes_to_send[2]==0x00) {
-         lcdscreen=Sensors_message;
-         flag_change(&sensor_flag);
-     }
-     else if(Bytes_to_send[1]==0x06 && Bytes_to_send[2]==0x01) {
-          lcdscreen=Motor_message;
-          flag_change(&motor_flag);
-     }
-     else if(Bytes_to_send[1]==0x1e && (Bytes_to_send[2]==0x02 || Bytes_to_send[2]==0x04 || Bytes_to_send[2]==0x01)) {
-          lcdscreen=home_message;
-          flag_change(&home_flag);
-     }
-     if(geo_flag && !geo_page_flag) {
-         SEND_MSG_LCD(0x01,0x0a,0x02,0x00,0x00); // switch to form2
-         flag_page_change(&geo_page_flag);
-     }
-     else if(sensor_flag && !sensors_page_flag) {
-         SEND_MSG_LCD(0x01,0x0a,0x03,0x00,0x00); // switch to form3
-         flag_page_change(&sensors_page_flag);
-     }
-     else if(motor_flag && !motor_page_flag) {
-          SEND_MSG_LCD(0x01,0x0a,0x04,0x00,0x00); // switch to form4
-          flag_page_change(&motor_page_flag);
-      }
-     else if(home_flag && !home_page_flag) {
-          SEND_MSG_LCD(0x01,0x0a,0x00,0x00,0x00); // switch to form0
-          flag_page_change(&home_page_flag);
-      }
-/*
-     if(lcdscreen == Geo){
-         SEND_MSG_LCD(0x01, 0x07, 0x01, 0x00, geo_msg.GEO_ANGLE_heading_cmd);
-         static char string[30]={0};
-         sprintf(string,"%f", geo_loc_msg.GEO_LOC_LAT_cmd);
-         put_string(string, 0,(uint8_t)strlen(string));
-         sprintf(string,"%f", geo_loc_msg.GEO_LOC_LONG_cmd);
-         put_string(string, 1,(uint8_t)strlen(string));
-     }
-     else if(lcdscreen == Sensors){
-         printf("left:%d\n",sensor_msg.SENSOR_SONARS_front_left);
-         printf("right:%d\n",sensor_msg.SENSOR_SONARS_front_right);
-         printf("center:%d\n",sensor_msg.SENSOR_SONARS_front_center);
-         //printf("ds_center:%d\n",dist_sensor_can_msg.data.bytes[0]);
-         SEND_MSG_LCD(0x01, 0x0b, 0x00, 0x00, sensor_msg.SENSOR_SONARS_front_center);
-         SEND_MSG_LCD(0x01, 0x0b, 0x02, 0x00, sensor_msg.SENSOR_SONARS_front_left);
-         SEND_MSG_LCD(0x01, 0x0b, 0x01, 0x00, sensor_msg.SENSOR_SONARS_front_right);
-         SEND_MSG_LCD(0x01, 0x0b, 0x04, 0x00, sensor_msg.SENSOR_SONARS_left);
-         SEND_MSG_LCD(0x01, 0x0b, 0x03, 0x00, sensor_msg.SENSOR_SONARS_right);
-         SEND_MSG_LCD(0x01, 0x0b, 0x05, 0x00, sensor_msg.SENSOR_SONARS_breceived_ack);
-     }
-     else if(lcdscreen == home){
-         SEND_MSG_LCD(0x01, 0x1a, 0x00, 0x00, sensor_bat_msg.SENSOR_BAT_cmd); // setting the battery meter here
-         if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x00){
-             headlights_on = headlights_on? false:true;
-             if(headlights_on)
-                 SEND_MSG_LCD(0x01, 0x13, 0x00, 0x00, 0x01);
-             else
-                 SEND_MSG_LCD(0x01, 0x13, 0x00, 0x00, 0x00);
-             Bytes_to_send[1] = 0x00;
-         }
-     }
-     else if(lcdscreen == Motor){
-         //printf("speed:%d\n",motor_msg.MOTORIO_DIRECTION_speed_cmd);
-         //printf("turn:%d\n",motor_msg.MOTORIO_DIRECTION_turn_cmd);
-         SEND_MSG_LCD(0x01, 0x0b, 0x06, 0x00, motor_msg.MOTORIO_DIRECTION_speed_cmd);
-         SEND_MSG_LCD(0x01, 0x10, 0x00, 0x00, motor_msg.MOTORIO_DIRECTION_turn_cmd);
-         if(motor_msg.MOTORIO_DIRECTION_turn_cmd==breceived_ack)
-             SEND_MSG_LCD(0x01, 0x0b, 0x07, 0x00, motor_msg.MOTORIO_DIRECTION_turn_cmd);
-         else
-             SEND_MSG_LCD(0x01, 0x10, 0x00, 0x00, 0);
-     }*/
-     if(lcdscreen == Geo_message){
-
-          /*geo_loc* geo_loc_Ptr = (geo_loc*)(&geo_loc_lcd.data);
-          geo_spd_angle* gsaPtr = (geo_spd_angle*)(&geo_lcd.data);
-          //printf("lat:%f\n",(float)geo_loc_data->latitude);
-          //printf("long:%f\n",(float)geo_loc_data->longitude);
-          SEND_MSG_LCD(0x01, 0x07, 0x01, geo_lcd.data.bytes[2], geo_lcd.data.bytes[1]);
-          static char string[30]={0};
-
-          sprintf(string,"%f", (float)geo_loc_Ptr->latitude);
-          put_string(string, 0,(uint8_t)strlen(string));                //Print Latitude on LCD
-          sprintf(string,"%f", (float)geo_loc_Ptr->longitude);
-          put_string(string, 1,(uint8_t)strlen(string));                //Print Longitude on LCD
-          sprintf(string,"%i", gsaPtr->bearing);
-          put_string(string, 2,(uint8_t)strlen(string));                //Print desired Bearing of car on LCD
-          sprintf(string,"%f", (float)(gsaPtr->distance)/10000);
-          put_string(string, 3,(uint8_t)strlen(string));        */        //Print Car's Distance from next checkpoint on LCD
-      }
-      else if(lcdscreen == Sensors_message){
-          //printf("left:%d\n",sensor_lcd.data.bytes[0]);
-          //printf("right:%d\n",sensor_lcd.data.bytes[1]);
-          //printf("center:%d\n",sensor_lcd.data.bytes[2]);
-          //printf("ds_center:%d\n",dist_sensor_can_msg.data.bytes[0]);
-         /* SEND_MSG_LCD(0x01, 0x0b, 0x00, 0x00, sensor_lcd.data.bytes[2]);       //Print Front_Center sensor data on LCD
-          SEND_MSG_LCD(0x01, 0x0b, 0x02, 0x00, sensor_lcd.data.bytes[0]);       //Print Front_Left sensor data on LCD
-          SEND_MSG_LCD(0x01, 0x0b, 0x01, 0x00, sensor_lcd.data.bytes[1]);       //Print Front_Right sensor data on LCD
-          SEND_MSG_LCD(0x01, 0x0b, 0x04, 0x00, sensor_lcd.data.bytes[3]);       //Print Left sensor data on LCD
-          SEND_MSG_LCD(0x01, 0x0b, 0x03, 0x00, sensor_lcd.data.bytes[4]);       //Print Right sensor data on LCD
-          SEND_MSG_LCD(0x01, 0x0b, 0x05, 0x00, sensor_lcd.data.bytes[5]);       //Print Breceived_ack sensor data on LCD*/
-      }
-      else if(lcdscreen == home_message){
-         // SEND_MSG_LCD(0x01, 0x1a, 0x00, 0x00, sensor_bat_msg.SENSOR_BAT_cmd); // setting the battery meter here
-          if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x01){
-              headlights_on = headlights_on? false:true;
-              if(headlights_on)
-            	  SEND_MSG_LCD(0x01, 0x13, 0x01, 0x00, 0x01);
-              else
-            	  SEND_MSG_LCD(0x01, 0x13, 0x01, 0x00, 0x00);
-              Bytes_to_send[1] = 0x00;
-          }
-      }
-      else if(lcdscreen == Motor_message){
-          //printf("speed:%d\n",motor_msg.MOTORIO_DIRECTION_speed_cmd);
-          //printf("turn:%d\n",motor_msg.MOTORIO_DIRECTION_turn_cmd);
-          if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x00)
-              dc_slow = dc_slow-0.01;
-          else if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x04)
-              dc_slow = dc_slow+0.01;
-          else if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x02)
-              dc_normal =dc_normal-0.01;
-          else if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x05)
-              dc_normal = dc_normal+0.01;
-          else if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x03)
-              dc_turbo = dc_turbo-0.01;
-          else if(Bytes_to_send[1]==0x21 && Bytes_to_send[2]==0x06)
-              dc_turbo = dc_turbo+0.01;
-          Bytes_to_send[1] = 0x00; // resetting the value so that the if/else conditions r not entered again and again
-
-          static char string[30]={0};
-          sprintf(string,"%.2f", dc_slow);
-          put_string(string, 4,(uint8_t)strlen(string));                //Print Latitude on LCD
-          sprintf(string,"%.2f", dc_normal);
-          put_string(string, 5,(uint8_t)strlen(string));                //Print Longitude on LCD
-          sprintf(string,"%.2f", dc_turbo);
-          put_string(string, 6,(uint8_t)strlen(string));
-          /*
-          SEND_MSG_LCD(0x01, 0x0b, 0x06, 0x00, motor_lcd.data.bytes[0]);        //Print Motor Speed data on LCD
-          SEND_MSG_LCD(0x01, 0x10, 0x00, 0x00, motor_lcd.data.bytes[1]);        //Print Motor turn data on LCD
-         if(motor_msg.MOTORIO_DIRECTION_turn_cmd==breceived_ack)
-              SEND_MSG_LCD(0x01, 0x0b, 0x07, 0x00, motor_lcd.data.bytes[1]);
-          else
-              SEND_MSG_LCD(0x01, 0x10, 0x00, 0x00, 0);*/
-      }
-
-}
-
-
-void lcd_receive(){
-
-      U2.getChar(&lcd_cha,0);
-      if (lcd_cha == 0x07)
-      {
-          Bytes_to_send[0]=lcd_cha;
-          for(int i=1;i<6;i++) {
-              U2.getChar(Bytes_to_send+i,0);
-          }
-      }
+void start(){
+	SEND_IO_HEARTBEAT();
+	RECEIVED_MOTOR_SPEED();
+	RECEIVED_GEO_LOCATION();
+	RECEIVED_GEO_DEST_RCHD();
+	RECEIVED_BLE_MAP_DESTINATION_DATA();
+	RECEIVED_BLE_MAP_START_DATA();
+	RECEIVED_SENSOR_BATTERY();
+	RECEIVED_SYSTEM_STATUS();
+	RECEIVED_MOTOR_CMD();
+	RECEIVED_SENSOR_ULTRASONIC();
 }

@@ -27,7 +27,7 @@ typedef struct {
 static const dbc_msg_hdr_t MASTER_SYSTEM_CMD_HDR =                {  100, 1 };
 static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 3 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_STATUS_HDR =             {  162, 3 };
-// static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
+static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
 static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 // static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
@@ -52,19 +52,19 @@ typedef enum {
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_HALF_LEFT = 1,
+    STEER_LEFT = 0,
     STEER_FORWARD = 4,
     STEER_REVERSE = 5,
-    STEER_LEFT = 0,
     STEER_RIGHT = 2,
     STEER_HALF_RIGHT = 3,
+    STEER_HALF_LEFT = 1,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
-    RESUME = 3,
+    STOP = 0,
     BRAKE = 2,
     START = 1,
-    STOP = 0,
+    RESUME = 3,
 } MASTER_MOTOR_CMD_drive_E ;
 
 
@@ -100,6 +100,18 @@ typedef struct {
 
     dbc_mia_info_t mia_info;
 } MASTER_SYSTEM_STATUS_t;
+
+
+/// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 1 byte(s), MID: 211
+typedef struct {
+    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,IO
+
+    dbc_mia_info_t mia_info;
+} SENSOR_ULTRASONIC_t;
 
 
 /// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 213
@@ -177,6 +189,8 @@ extern const uint32_t                             MASTER_MOTOR_CMD__MIA_MS;
 extern const MASTER_MOTOR_CMD_t                   MASTER_MOTOR_CMD__MIA_MSG;
 extern const uint32_t                             MASTER_SYSTEM_STATUS__MIA_MS;
 extern const MASTER_SYSTEM_STATUS_t               MASTER_SYSTEM_STATUS__MIA_MSG;
+extern const uint32_t                             SENSOR_ULTRASONIC__MIA_MS;
+extern const SENSOR_ULTRASONIC_t                  SENSOR_ULTRASONIC__MIA_MSG;
 extern const uint32_t                             SENSOR_BATT__MIA_MS;
 extern const SENSOR_BATT_t                        SENSOR_BATT__MIA_MSG;
 extern const uint32_t                             BLE_MAP_START_DATA__MIA_MS;
@@ -337,7 +351,33 @@ static inline bool dbc_decode_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS_t *to, c
 }
 
 
-/// Not generating code for dbc_decode_SENSOR_ULTRASONIC() since 'IO' is not the recipient of any of the signals
+/// Decode SENSOR's 'SENSOR_ULTRASONIC' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != SENSOR_ULTRASONIC_HDR.dlc || hdr->mid != SENSOR_ULTRASONIC_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]) & 0x01)); ///< 1 bit(s) from B0
+    to->SENSOR_ULTRASONIC_left = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 1) & 0x01)); ///< 1 bit(s) from B1
+    to->SENSOR_ULTRASONIC_middle = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 2) & 0x01)); ///< 1 bit(s) from B2
+    to->SENSOR_ULTRASONIC_right = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 3) & 0x01)); ///< 1 bit(s) from B3
+    to->SENSOR_ULTRASONIC_rear = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 4) & 0x01)); ///< 1 bit(s) from B4
+    to->SENSOR_ULTRASONIC_critical = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
 
 /// Decode SENSOR's 'SENSOR_BATT' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
@@ -583,6 +623,30 @@ static inline bool dbc_handle_mia_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS_t *m
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
         *msg = MASTER_SYSTEM_STATUS__MIA_MSG;
         msg->mia_info.mia_counter_ms = MASTER_SYSTEM_STATUS__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for SENSOR's SENSOR_ULTRASONIC message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_ULTRASONIC__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = SENSOR_ULTRASONIC__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_ULTRASONIC__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }
