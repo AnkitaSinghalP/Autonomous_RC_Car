@@ -37,20 +37,39 @@
 #include "eint.h"
 #include "gpio.hpp"
 #include "string.h"
-#include "motor.hpp"
 #include "lpc_pwm.hpp"
+#include "file_logger.h"
 
-static int countmia=0;
+
+#define STEER_FULLLEFT 10.0
+#define STEER_HALFLEFT 12.42
+#define STEER_MIDDLE 14.02
+#define STEER_HALFRIGHT 15.62
+#define STEER_FULLRIGHT 20.0
+#define THROTTLE_NEUTRAL 15.2
+
+
+
+
 can_msg_t msg_received;
 MASTER_MOTOR_CMD_t motorcmd={0};
 MASTER_SYSTEM_CMD_t systemcmd;
 MOTOR_HEARTBEAT_t motorheartbeat;
+MOTOR_SPEED_t motorspeed;
+
+
 int rpmcount=0;
+int speed_counter=0;
 const float wheeldiam = 4.921;
 const float circum = 15.451;
 int prevcnt= 15.6;
 float rpm=0;
+int msg_systcount=0;
+int  msg_motorcount=0;
+int totaltx=0;
+int totalrx=0;
 GPIO *flag = NULL;
+
 
 int valflag=0;
 
@@ -62,11 +81,6 @@ const MASTER_SYSTEM_CMD_t      MASTER_SYSTEM_CMD__MIA_MSG  = {SYSTEM_STOP};
 const uint32_t          MASTER_MOTOR_CMD__MIA_MS =1000 ;
 const MASTER_MOTOR_CMD_t         MASTER_MOTOR_CMD__MIA_MSG = {0};
 
-
-can_msg_t can_msg = { 0 };
-/*can_msg_t msg_received;
-MOTOR_CMD_t motorcmd;
-MOTOR_HEARTBEAT_t motorheartbeat;*/
 
 
 
@@ -84,6 +98,8 @@ void speedcounter()
 {
 	//flag->setLow();
 	rpmcount++;
+	speed_counter++;
+	//printf("rpmcount %d",rpmcount);
 }
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -121,26 +137,33 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 	return CAN_tx(can1, &can_msg, 0);
 }
 
-float getspeed(float rpm)
+float getspeed(int rpm1)
 {
 	float speedmph;
-	speedmph = (rpm*circum*60)/63360;
-	rpmcount=0;
+	speedmph = (rpm1*circum*60)/63360;
 	return speedmph;
 }
 
 
 void period_1Hz(uint32_t count)
 {
-	if(count==3)
+	motorheartbeat.MOTOR_HEARTBEAT_rx_bytes = count;
+	dbc_encode_and_send_MOTOR_HEARTBEAT(&motorheartbeat);
+
+motorspeed.MOTOR_SPEED_actual = (float)speed_counter;
+dbc_encode_and_send_MOTOR_SPEED(&motorspeed);
+
+	/*if(count==3)
 	{
 	rpm = rpmcount *60;
 	printf("Motor RPM %f",rpm);
 rpmcount=0;
-	}
+	}*/
 
-	CAN_bypass_filter_accept_all_msgs();
-	if (CAN_rx(can1, &msg_received, 0))
+	/*totalrx= msg_systcount+msg_motorcount;
+	totaltx=*/
+	//CAN_bypass_filter_accept_all_msgs();
+	/*if (CAN_rx(can1, &msg_received, 0))
 	{
 		dbc_msg_hdr_t can_msg_hdr;
 		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
@@ -151,185 +174,168 @@ rpmcount=0;
 			printf("Received0 : %d \n",motorcmd.MASTER_MOTOR_CMD_speed);
 
 		}
-	}
+	}*/
 
-	LE.toggle(1);
+	//LE.toggle(4);
+speed_counter=0;
 
 
 }
 
+
 void period_10Hz(uint32_t count)
 {
 
-	/*valflag=1;
-	if(valflag)
-	flag->setHigh();*/
-	static int countmia=0;
-	//actspeed=getspeed(rpm);
 
-	CAN_bypass_filter_accept_all_msgs();
+	static  PWM  servomotor(PWM::pwm1, 100);
+	static PWM dcmotor(PWM::pwm2, 100);
+
+
+
+	static float throttle_forward = THROTTLE_NEUTRAL;
+	//float throttle_backward = 14.4;
+
+
+
+	static bool decodeflag=0;
+	static bool steerflag=0;
+
+
+	if(throttle_forward > 18)
+		throttle_forward = 18;
+	//printf("%f\n",throttle_forward - 0.2);
+
+		dcmotor.set(throttle_forward - 0.2);
+
 
 	while (CAN_rx(can1, &msg_received, 0))
 	{
-		static bool decodeflag=0;
-		static bool steerflag=0;
 		dbc_msg_hdr_t can_msg_hdr;
 		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
 		can_msg_hdr.mid = msg_received.msg_id;
 		dbc_decode_MASTER_SYSTEM_CMD(&systemcmd,msg_received.data.bytes,&can_msg_hdr);
+
+
 		switch(systemcmd.MASTER_SYSTEM_CMD_enum)
 		{
 		case SYSTEM_STOP:
-			//dcmotor.set(15.0);
-			//servomotor.set(14.02);
-			stop();
+			//dcmotor.set(throttle_neutral);
+			//servomotor.set(steer_middle);
+			throttle_forward = THROTTLE_NEUTRAL;
 			decodeflag=0;
-			LE.on(1);
+			LD.setNumber(1);
 			break;
 		case SYSTEM_START:
 			LE.off(1);
 			decodeflag=1;
+
 			dbc_decode_MASTER_MOTOR_CMD(&motorcmd,msg_received.data.bytes, &can_msg_hdr);
 			break;
-		default : stop();
-		//dcmotor.set(15.0);
-		//servomotor.set(14.02);
+		default :
+			//dcmotor.set(throttle_neutral);
+			servomotor.set(STEER_MIDDLE);
+
 		}
-		if(decodeflag)
+	}
+
+
+	if(decodeflag)
+	{
+
+		switch(motorcmd.MASTER_MOTOR_CMD_drive)
+		{
+		case STOP:
+			LD.setNumber(4);
+			steerflag=0;
+			throttle_forward = THROTTLE_NEUTRAL;
+			//dcmotor.set(throttle_neutral);
+			servomotor.set(STEER_MIDDLE);
+			break;
+		case START:
+			//dcmotor.set(17.0);
+
+			steerflag=1;
+			break;
+
+		//default:
+			//dcmotor.set(throttle_neutral);
+		}
+
+}
+
+
+	if(steerflag)
+	{
+
+		switch(motorcmd.MASTER_MOTOR_CMD_steer)
 		{
 
-			switch(motorcmd.MASTER_MOTOR_CMD_drive)
-			{
-			case STOP:
-				LE.off(3);
-				//stop();
-				steerflag=0;
-				stop();
-				//dcmotor.set(15.0);
-				//servomotor.set(14.02);
-				LD.setNumber(8);
-				break;
-			case START:
-				LE.on(3);
-				LD.setNumber(0);
-				steerflag=1;
-				moveForward();
-				//servomotor.set(14.02);
-				//dcmotor.set(15.6);
+		case STEER_LEFT:
+			LD.setNumber(3);
+			servomotor.set(STEER_FULLLEFT);
 
-				break;
+			break;
+		case STEER_HALF_LEFT:
+			LD.setNumber(3);
+			servomotor.set(STEER_HALFLEFT);
+			break;
 
-			default: stop();
-			//dcmotor.set(15.0);
-			}
+		case STEER_RIGHT:
+			LD.setNumber(1);
+			servomotor.set(STEER_FULLRIGHT);
 
-				// while(current_speed != prev_speed){
-			//keep increasing the speed}
-			 while(!(count%30)){
-				 if (rpm == prevcnt)
-				 {
-					 moveForward();
-				 }
-			if (rpm < prevcnt)
-				{
+			break;
 
-					increase_speed();
-				}
-				if (rpm > prevcnt)
-				{
+		case STEER_HALF_RIGHT:
+			LD.setNumber(1);
+			servomotor.set(STEER_HALFRIGHT);
 
-					decrease_speed();
-				}
-			 }
-			if(steerflag)
-			{
+			break;
 
-				switch(motorcmd.MASTER_MOTOR_CMD_steer)
-				{
+		case STEER_FORWARD :
+			LD.setNumber(2);
+			servomotor.set(STEER_MIDDLE);
 
+			break;
 
-				case STEER_LEFT:
-					LE.on(2);
-					moveLeft();
-					//servomotor.set(10.0);
-					break;
-				case STEER_HALF_LEFT:
-					LE.on(2);
-					moveHalfLeft();
-					//servomotor.set(12.22);
-					break;
-
-				case STEER_RIGHT:
-					LE.off(2);
-					moveRight();
-					//servomotor.set(20.0);
-					break;
-				case STEER_HALF_RIGHT:
-					LE.off(2);
-					moveHalfRight();
-					//servomotor.set(15.82);
-					break;
-				case STEER_FORWARD :
-					moveForward();
-					//dcmotor.set(15.6);
-					break;
-
-				default:
-					stop();
-					//servomotor.set(14.02);
-					//dcmotor.set(15.0);
-				}
-			}
-
+		default:
+			LD.setNumber(4);
+			servomotor.set(STEER_MIDDLE);
 		}
-	}
 
-
-	if(dbc_handle_mia_MASTER_SYSTEM_CMD(&systemcmd, 10))
-	{
-		LD.setNumber(countmia);
-		countmia++;
-		if(countmia ==99)
+		//dcmotor.set(20.0);
+/*		if(throttle_forward < 16.05)
 		{
-			countmia=0;
+
+			throttle_forward = throttle_forward + 0.05;
+
+		}*/
+
+
+
+		if(rpmcount < 1)
+		{
+			throttle_forward = throttle_forward + 0.03;
 		}
-	}
-	if(dbc_handle_mia_MASTER_MOTOR_CMD(&motorcmd,10))
-	{
-		countmia++;
-
-		if(countmia >99)
-			countmia=0;
-		LD.setNumber(countmia);
-
-
-		/*//dbc_msg_hdr_t msg_hdr = dbc_encode_and_send_MOTOR_HEARTBEAT(&motorheartbeat);
-	can_msg.msg_id = msg_hdr.mid;
-
-	printf("msg id %d\n", can_msg.msg_id);
-	can_msg.frame_fields.data_len = msg_hdr.dlc;
-	if(CAN_tx(can1, &can_msg, 0))
-	{
-		printf("sent 0 %d\n",can_msg.data.bytes[0]);
-		printf("sent 1 %f\n",can_msg.data.bytes[1]);
-		printf("sent 2 %f\n",can_msg.data.bytes[2]);
-
-	}
-		 */
-
-		LE.toggle(2);
+		else if(rpmcount > 1)
+		{
+			throttle_forward = throttle_forward - 0.03;
+		}
 
 
 	}
 
+	//printf("rpmcount %d",rpmcount);
+	//motorspeed.MOTOR_SPEED_actual=getspeed(rpmcount);
 
+	rpmcount=0;
 
 }
 
 void period_100Hz(uint32_t count)
 {
 
-	LE.toggle(3);
+	//LE.toggle(3);
 
 }
 
