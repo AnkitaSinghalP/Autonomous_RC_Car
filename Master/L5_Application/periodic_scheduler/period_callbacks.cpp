@@ -111,9 +111,6 @@ bool period_init(void)
 	CAN_bypass_filter_accept_all_msgs();
 	CAN_reset_bus(can1);
 
-	//Initializing the Motor Command to move forward
-	//motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-	//motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_FORWARD;
 	return true; // Must return true upon success
 }
 

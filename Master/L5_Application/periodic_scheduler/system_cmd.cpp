@@ -1,11 +1,9 @@
-#include <system_cmd.hpp>
+#include "system_cmd.hpp"
 #include "free_run.hpp"
 
 void sys_cmd(void)
 {
-	/**
-	 * todo: do not use a while loop here.
-	 */
+	static bool sys_start_flag = 0;
 	while(CAN_rx(can1, &can_msg, 0))
 	{
 		dbc_msg_hdr_t can_msg_hdr;
@@ -13,6 +11,7 @@ void sys_cmd(void)
 		can_msg_hdr.mid = can_msg.msg_id;
 
 		dbc_decode_BLE_COMM_CMD(&ble_comm_cmd, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_SENSOR_ULTRASONIC(&sensor_ultrasonic_cmd, can_msg.data.bytes, &can_msg_hdr);
 
 		// initial start/stop command from BLE, will wake all the modules.
 		switch (ble_comm_cmd.BLE_COMM_CMD_enum)
@@ -20,14 +19,16 @@ void sys_cmd(void)
 			case(COMM_STOP):
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_STOP;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
+					sys_start_flag = 0;
 					LD.setNumber(55);
 					break;
 
 			case(COMM_START):
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_START;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
+					sys_start_flag = 1;
 					LD.setNumber(44);
-					free_run_func();
+					//free_run_func();
 					break;
 
 			case(COMM_RESET):
@@ -40,4 +41,7 @@ void sys_cmd(void)
 					break;
 		}
 	}
+
+	if (sys_start_flag)
+		free_run_func();
 }
