@@ -22,54 +22,58 @@ void free_run_func()
 		 * 1 | 1 | 0	Left
 		 * 1 | 1 | 1	Stop
 		 */
-		if(!sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_critical) {
+		if(sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_critical == 1)
+		{
+			motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
+			LD.setNumber(88);
+		}
+		else
+		{
 			switch(obstacle_data)
 			{
-				case 0:
-				case 5:
-					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_FORWARD;
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-					LD.setNumber(2);
-					break;
+			case 0:
+			case 5:
+				motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_FORWARD;
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+				LD.setNumber(2);
+				break;
 
-				case 1:
-					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_HALF_RIGHT;
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-					LD.setNumber(1);
-					break;
+			case 1:
+				motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_HALF_RIGHT;
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+				LD.setNumber(1);
+				break;
 
-				case 2:
-				case 6:
-					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_LEFT;
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-					LD.setNumber(3);
-					break;
+			case 2:
+			case 6:
+				motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_LEFT;
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+				LD.setNumber(3);
+				break;
 
-				case 3:
-					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_RIGHT;
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-					LD.setNumber(1);
-					break;
+			case 3:
+				motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_RIGHT;
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+				LD.setNumber(1);
+				break;
 
-				case 4:
-					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_HALF_LEFT;
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-					LD.setNumber(3);
-					break;
+			case 4:
+				motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_HALF_LEFT;
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+				LD.setNumber(3);
+				break;
 
-				case 7:
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
-					LD.setNumber(4);
-					break;
+			case 7:
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
+				LD.setNumber(4);
+				break;
 
-				default:
-					motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
-					LD.setNumber(5);
-			}
-		} else {
+			default:
 				motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
 				LD.setNumber(77);
+
 			}
+		}
 		dbc_encode_and_send_MASTER_MOTOR_CMD(&motor_cmd_message);
 		}
 	}

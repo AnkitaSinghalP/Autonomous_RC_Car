@@ -20,11 +20,13 @@ void sys_cmd(void)
 			case(COMM_STOP):
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_STOP;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
+					LD.setNumber(55);
 					break;
 
 			case(COMM_START):
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_START;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
+					LD.setNumber(44);
 					free_run_func();
 					break;
 
