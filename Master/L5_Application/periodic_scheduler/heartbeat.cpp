@@ -52,8 +52,11 @@ void heartbeat_rx(void)
 	 * 			If this is in bytes then at 100kbps you can get ~8KB/s of data. Use BusMaster to analyze
 	 * 			bus traffic instead
 	 */
+	 /*
+	  * Calculate bus utilization per sec in percentage to be displayed on LCD. total_bytes * 100 / 100KB
+	  */
 	bus_util_perc = (can_total_bytes)/(1000);
 	system_status_message.MASTER_SYSTEM_STATUS_util = bus_util_perc;
-	//dbc_encode_and_send_MASTER_SYSTEM_STATUS(&system_status_message);
+	dbc_encode_and_send_MASTER_SYSTEM_STATUS(&system_status_message);
 
 }
