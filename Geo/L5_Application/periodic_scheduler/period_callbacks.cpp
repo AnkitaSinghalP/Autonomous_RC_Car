@@ -101,8 +101,8 @@ bool period_reg_tlm(void)
 void period_1Hz(uint32_t count)
 {
 
-    CAN_is_bus_off(can1);
-    CAN_reset_bus(can1);
+    CAN_is_bus_off(can1); // todo: this statement does nothing.
+    CAN_reset_bus(can1); // todo: you are resetting your can bus every second. Are you sure you want to do that?
     LE.toggle(1);
     uint8_t slaveAddr = SLAVE_ADDRESS;
     LPC_I2C2->I2ADR0 = slaveAddr;
@@ -111,6 +111,9 @@ void period_1Hz(uint32_t count)
 
     dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
 
+    /**
+     * todo: is 1Hz the appropriate task to be running this? Your gps should be faster than 1Hz.
+     */
     if(nav.geo())
         printf("\n");
 

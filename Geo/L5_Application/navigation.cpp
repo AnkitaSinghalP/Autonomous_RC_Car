@@ -99,6 +99,9 @@ bool Navigation::parse_gps_raw_data()
 	      strncpy(degreebuff, p, 2);
 	      p += 2;
 	      degreebuff[2] = '\0';
+	      /**
+	       * todo: too many magic numbers here.
+	       */
 	      degree = atol(degreebuff) * 10000000;
 	      strncpy(degreebuff, p, 2);
 	      p += 3;
@@ -155,6 +158,10 @@ bool Navigation::parse_gps_raw_data()
 
 }
 
+/**
+ * todo: why are you returning bool?
+ */
+
 bool Navigation::gps_calculate_bearing_angle()
 {
     float x,y;
@@ -177,6 +184,9 @@ bool Navigation::gps_calculate_bearing_angle()
     return true;
 }
 
+/**
+ * todo: what is the reason for returning bool here?
+ */
 bool Navigation::gps_calculate_distance()
 {
     float a,c;
@@ -232,6 +242,9 @@ int Navigation::compass_direction()
 	int16_t xMagData =0, yMagData =0, zMagData=0;
 	float heading = 0.0;
 
+	/**
+	 * todo: Don't use magic numbers. This code is unmaintanable.
+	 */
 	i2c.writeReg(0x3C,0x02,0x00);
 
 	xMHiByte = i2c.readReg(0x3D, 0x03);
