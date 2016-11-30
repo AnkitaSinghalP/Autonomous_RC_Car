@@ -12,6 +12,16 @@ void sys_cmd(void)
 
 		dbc_decode_BLE_COMM_CMD(&ble_comm_cmd, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_SENSOR_ULTRASONIC(&sensor_ultrasonic_cmd, can_msg.data.bytes, &can_msg_hdr);
+		if(dbc_decode_BLE_HEARTBEAT(&ble_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+			system_status_message.MASTER_SYSTEM_STATUS_ble = 1;
+		if(dbc_decode_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+			system_status_message.MASTER_SYSTEM_STATUS_sensor = 1;
+		if(dbc_decode_GEO_HEARTBEAT(&geo_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+			system_status_message.MASTER_SYSTEM_STATUS_geo = 1;
+		if (dbc_decode_IO_HEARTBEAT(&io_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+			system_status_message.MASTER_SYSTEM_STATUS_io = 1;
+		if(dbc_decode_MOTOR_HEARTBEAT(&motor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
+			system_status_message.MASTER_SYSTEM_STATUS_motor = 1;
 
 		// initial start/stop command from BLE, will wake all the modules.
 		switch (ble_comm_cmd.BLE_COMM_CMD_enum)
