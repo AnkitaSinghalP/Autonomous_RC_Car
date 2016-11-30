@@ -61,6 +61,8 @@ bool period_init(void)
 	can_init_IO();
 	IO_init();
 	LCD_init();
+
+
 	return true; // Must return true upon success
 }
 
@@ -80,15 +82,16 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
-	/* if(CAN_is_bus_off(can1)){
-              CAN_reset_bus(can1);
-          }*/
-
-	if(count == 3)
-	{
+	if(CAN_is_bus_off(can1)){
+		CAN_reset_bus(can1);
 	}
-	/*else if(count % 7 == 0){
-		SEND_MSG(0x01, 0x0A, 0x00, 0x00, 0x00);
+
+	// RECEIVED_SYSTEM_CMD();
+
+	//SEND_MSG_LCD(0x01,0x0A,0x01,0x00,0x00);
+	SEND_IO_HEARTBEAT();
+	/*if(count == 3){
+		SEND_MSG_LCD(0x01,0x0A,0x01,0x00,0x00);
 	}*/
 	//LE.toggle(1);
 }
@@ -97,11 +100,15 @@ void period_10Hz(uint32_t count)
 {
 
 
+
+	start();
+
 	//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
 {
+
 	//LE.toggle(3);
 }
 
@@ -109,10 +116,7 @@ void period_100Hz(uint32_t count)
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-	if(RECEIVED_SYSTEM_CMD())
-	{
 
-	}
 
 	//LE.toggle(4);
 }

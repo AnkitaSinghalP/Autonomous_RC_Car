@@ -45,26 +45,26 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+    SYSTEM_RESET = 2,
+    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
     STEER_LEFT = 0,
     STEER_FORWARD = 4,
-    STEER_REVERSE = 5,
     STEER_RIGHT = 2,
     STEER_HALF_RIGHT = 3,
+    STEER_REVERSE = 5,
     STEER_HALF_LEFT = 1,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
-    STOP = 0,
+    RESUME = 3,
     BRAKE = 2,
     START = 1,
-    RESUME = 3,
+    STOP = 0,
 } MASTER_MOTOR_CMD_drive_E ;
 
 
@@ -90,13 +90,13 @@ typedef struct {
 
 /// Message: MASTER_SYSTEM_STATUS from 'MASTER', DLC: 3 byte(s), MID: 162
 typedef struct {
-    uint8_t MASTER_SYSTEM_STATUS_ble : 1;     ///< B0:0   Destination: IO
-    uint8_t MASTER_SYSTEM_STATUS_geo : 1;     ///< B1:1   Destination: IO
-    uint8_t MASTER_SYSTEM_STATUS_io : 1;      ///< B2:2   Destination: IO
-    uint8_t MASTER_SYSTEM_STATUS_master : 1;  ///< B3:3   Destination: IO
-    uint8_t MASTER_SYSTEM_STATUS_motor : 1;   ///< B4:4   Destination: IO
-    uint8_t MASTER_SYSTEM_STATUS_sensor : 1;  ///< B5:5   Destination: IO
-    float MASTER_SYSTEM_STATUS_util;          ///< B23:8  Min: 0 Max: 100   Destination: IO
+    uint8_t MASTER_SYSTEM_STATUS_ble : 1;     ///< B0:0   Destination: IO,BLE
+    uint8_t MASTER_SYSTEM_STATUS_geo : 1;     ///< B1:1   Destination: IO,BLE
+    uint8_t MASTER_SYSTEM_STATUS_io : 1;      ///< B2:2   Destination: IO,BLE
+    uint8_t MASTER_SYSTEM_STATUS_master : 1;  ///< B3:3   Destination: IO,BLE
+    uint8_t MASTER_SYSTEM_STATUS_motor : 1;   ///< B4:4   Destination: IO,BLE
+    uint8_t MASTER_SYSTEM_STATUS_sensor : 1;  ///< B5:5   Destination: IO,BLE
+    float MASTER_SYSTEM_STATUS_util;          ///< B23:8  Min: 0 Max: 100   Destination: IO,BLE
 
     dbc_mia_info_t mia_info;
 } MASTER_SYSTEM_STATUS_t;
