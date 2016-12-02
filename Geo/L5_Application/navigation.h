@@ -55,7 +55,8 @@ class Navigation
         void gps_init();
         void compass_init();
         bool geo();
-        int compass_direction();
+        uint16_t compass_direction();
+        gps_data coordinates;
 
         Navigation(){
             coordinates = {0};
@@ -73,11 +74,10 @@ class Navigation
         bool is_gpgga();
         bool gps_raw_data_checkSum(); //To check integrity of the raw gps data received upon uart
         bool parse_gps_raw_data();
-        bool gps_calculate_bearing_angle();
-        bool gps_calculate_distance();
+        void gps_calculate_bearing_angle();
+        void gps_calculate_distance();
 
         char* gps_raw_data;
-        gps_data coordinates;
         uint16_t gps_bearing_angle;
         float gps_distance;
 

@@ -159,10 +159,11 @@ bool Navigation::parse_gps_raw_data()
 }
 
 /**
- * todo: why are you returning bool?
+ * CALVIN: why are you returning bool?
+ * SHAURYA: Yes, no need of returning anything. Changed the function to void.
  */
 
-bool Navigation::gps_calculate_bearing_angle()
+void Navigation::gps_calculate_bearing_angle()
 {
     float x,y;
 
@@ -179,15 +180,15 @@ bool Navigation::gps_calculate_bearing_angle()
     x = (cos(lat1 * (M_PI/180)) * sin(lat2 * (M_PI/180))) - (sin(lat1 * (M_PI/180)) * cos(lat2  * (M_PI/180)) * cos((long2 - long1) * (M_PI/180)));
     gps_bearing_angle = (int)((180/M_PI) * (atan2(y,x))+360)%360;
 
-    printf("Bearing = %d\n",gps_bearing_angle);
+   //printf("Bearing = %d\n",gps_bearing_angle);
 
-    return true;
 }
 
 /**
- * todo: what is the reason for returning bool here?
+ * CALVIN: what is the reason for returning bool here?
+ * SHAURYA: Yes, no need of returning anything. Changed the function to void.
  */
-bool Navigation::gps_calculate_distance()
+void Navigation::gps_calculate_distance()
 {
     float a,c;
 
@@ -203,47 +204,21 @@ bool Navigation::gps_calculate_distance()
 
     gps_distance = (float)(RADIUS * c);
 
-    printf("Distance = %f(foot)\n", gps_distance);
+    //printf("Distance = %f(foot)\n", gps_distance);
     /*We get Distance in Foot, since 1 Mile = 5280 Foot, we are dividing with 5280*/
     //printf("Distance = %f(miles)\n", (gps_distance/5280));
 
-    return true;
 }
 
-bool Navigation::geo()
+uint16_t Navigation::compass_direction()
 {
-	gps_get_raw_data();
-
-	if(!gps_raw_data_checkSum())
-		return false;
-
-	if(!is_gpgga())
-		return false;
-
-	if(!parse_gps_raw_data())
-		return false;
-
-    //printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
-
-    if(!gps_calculate_bearing_angle())
-    	return false;
-
-    if(!gps_calculate_distance())
-            return false;
-
-    printf("Compass= %d\n",compass_direction());
-
-	return true;
-}
-
-int Navigation::compass_direction()
-{
-	uint8_t xMHiByte = 0, xMLoByte = 0, yMHiByte =0, yMLoByte=0, zMHiByte=0, zMLoByte=0;
-	int16_t xMagData =0, yMagData =0, zMagData=0;
-	float heading = 0.0;
+	uint8_t xMHiByte, xMLoByte, yMHiByte, yMLoByte, zMHiByte, zMLoByte;
+	int16_t xMagData, yMagData, zMagData;
+	float heading;
 
 	/**
-	 * todo: Don't use magic numbers. This code is unmaintanable.
+	 * CALVIN: Don't use magic numbers. This code is unmaintanable.
+	 * SHAURYA: Yes, We'll change them to macros later
 	 */
 	i2c.writeReg(0x3C,0x02,0x00);
 
@@ -259,14 +234,39 @@ int Navigation::compass_direction()
 	zMagData = (zMHiByte << 8) | zMLoByte;
 
 
-	heading = (atan2(yMagData,xMagData)*180)/3.14159;
+	heading = (atan2(yMagData,xMagData)*180)/M_PI;
 
 	if(heading < 0)
 	{
 		heading = 360 + heading;
 	}
 
-	return (int)heading;
+	return (uint16_t)heading;
 
+}
+
+bool Navigation::geo()
+{
+	gps_get_raw_data();
+
+	if(!gps_raw_data_checkSum())
+		return false;
+
+	if(!is_gpgga())
+		return false;
+
+	if(!parse_gps_raw_data())
+		return false;
+
+    gps_calculate_bearing_angle();
+    gps_calculate_distance();
+
+    //printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
+	//printf("Bearing = %d\n",gps_bearing_angle);
+    //printf("Distance = %f(foot)\n", gps_distance);
+
+    //printf("Compass= %d\n",compass_direction());
+
+	return true;
 }
 

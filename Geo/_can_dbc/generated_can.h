@@ -46,8 +46,8 @@ static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 8 };
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_START = 1,
-    SYSTEM_STOP = 0,
     SYSTEM_RESET = 2,
+    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 
@@ -106,7 +106,7 @@ typedef struct {
 
 /// Message: GEO_COMPASS from 'GEO', DLC: 8 byte(s), MID: 461
 typedef struct {
-    uint8_t GEO_COMPASS_mag;                  ///< B7:0   Destination: IO
+    uint16_t GEO_COMPASS_mag;                 ///< B8:0   Destination: IO
 
     // No dbc_mia_info_t for a message that we will send
 } GEO_COMPASS_t;
@@ -257,8 +257,9 @@ static inline dbc_msg_hdr_t dbc_encode_GEO_COMPASS(uint8_t bytes[8], GEO_COMPASS
     uint32_t raw;
     bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
-    raw = ((uint32_t)(((from->GEO_COMPASS_mag)))) & 0xff;
+    raw = ((uint32_t)(((from->GEO_COMPASS_mag)))) & 0x1ff;
     bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
+    bytes[1] |= (((uint8_t)(raw >> 8) & 0x01)); ///< 1 bit(s) starting from B8
 
     return GEO_COMPASS_HDR;
 }

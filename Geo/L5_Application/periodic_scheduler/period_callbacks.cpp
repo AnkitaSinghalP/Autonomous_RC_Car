@@ -56,6 +56,7 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
 
 Navigation nav;
+bool sys_cmd_flag = false;
 
 /**
  * This is the stack size of the dispatcher task that triggers the period tasks to run.
@@ -101,28 +102,44 @@ bool period_reg_tlm(void)
 void period_1Hz(uint32_t count)
 {
 
-    CAN_is_bus_off(can1); // todo: this statement does nothing.
-    CAN_reset_bus(can1); // todo: you are resetting your can bus every second. Are you sure you want to do that?
-    LE.toggle(1);
-    uint8_t slaveAddr = SLAVE_ADDRESS;
-    LPC_I2C2->I2ADR0 = slaveAddr;
+    if(CAN_is_bus_off(can1))
+    	CAN_reset_bus(can1);
+
+/*    uint8_t slaveAddr = SLAVE_ADDRESS;
+    LPC_I2C2->I2ADR0 = slaveAddr;*/
+
     GEO_HEARTBEAT_t geo_heartbeat = { 0 };
     geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
+    GEO_LOCATION_t geo_location;
+    geo_location.GEO_LOCATION_lat  = nav.coordinates.latitude;
+    geo_location.GEO_LOCATION_long = nav.coordinates.longitude;
+
+    GEO_COMPASS_t geo_compass;
+    geo_compass.GEO_COMPASS_mag = nav.compass_direction();
+
     dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
 
+    if(sys_cmd_flag)
+    {
+    	dbc_encode_and_send_GEO_LOCATION(&geo_location);
+    	dbc_encode_and_send_GEO_COMPASS(&geo_compass);
+    }
+
     /**
-     * todo: is 1Hz the appropriate task to be running this? Your gps should be faster than 1Hz.
+     * Calvin: is 1Hz the appropriate task to be running this? Your gps should be faster than 1Hz.
+     * Shaurya: This was just for the testing.
      */
-    if(nav.geo())
-        printf("\n");
+   // if(nav.geo())
+    //    printf("\n");
 
 }
 
 void period_10Hz(uint32_t count)
 {
-/*    if(nav.geo())
-        printf("\n");*/
+    if(nav.geo())
+        printf("\n");
+
 }
 
 void period_100Hz(uint32_t count)
