@@ -43,12 +43,6 @@
 #include "uart2.hpp"
 #include "uart_dev.hpp"
 
-//#define UART2_POWER_ENABLE (0x01000000) /* UART 2 Power Enable */
-//#define UART2_WORD_LENGTH_8 (0x00000003) /* 8 bit World Length */
-//#define UART2_DLAB_ENABLE (0x00000080) /* DLAB Enable */
-//#define PCLK (48000000)
-//#define BAUDRATE (115200)
-
 volatile int receive_data = 0;
 
 bool flag1;
@@ -56,23 +50,35 @@ can_std_id_t id;
 bool flag_tx;
 can_msg_t abc;
 
-SYSTEM_CMD_t system_cmd = {SYSTEM_STOP};
+MASTER_SYSTEM_CMD_enum_E system_cmd = {SYSTEM_STOP};
 GEO_LOCATION_t geo_location = { 0 };
 can_msg_t can_msg = { 0 };
+MASTER_SYSTEM_STATUS_t master_system_status;
 
 BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
-BLE_CHCK_PT_t ble_chk_pt = { 0 };
+//BLE_CHCK_PT_t ble_chk_pt = { 0 };
 BLE_COMM_CMD_t ble_cmd = {COMM_STOP};
-BLE_MAP_DATA_t ble_map_data = { 0 };
+//BLE_MAP_START_DATA_t ble_map_data = { 0 };
 
 SemaphoreHandle_t receive_sem;
 
-//static int count1 = 0;
-//const uint16_t ravail=(2<<1);
-static char rx_data;
+char rx_data;
+char var1;
+char var2;
+char var3;
+char var4;
+char var5;
+char delimiter1 = '*';
+char delimiter = '#';
+char ble_limiter = 'b';
+char io_limiter = 'i';
+char sen_limiter = 's';
+char mas_limiter = 'm';
+char mot_limiter = 'l';
+uint j;
 
 const uint32_t SYSTEM_CMD__MIA_MS = 1000;
-const SYSTEM_CMD_t SYSTEM_CMD__MIA_MSG = { SYSTEM_STOP };
+const MASTER_SYSTEM_CMD_enum_E SYSTEM_CMD__MIA_MSG = { SYSTEM_STOP };
 
 /*const uint32_t GEO_LOCATION__MIA_MS = 1000;
 const GEO_LOCATION_t GEO_LOCATION__MIA_MSG = { 0 };*/
@@ -89,39 +95,12 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
-Uart2& u2 = Uart2 :: getInstance();
-//void UART2_int_handler(void)
-//	{
-//	receive_data=1;
-//		NVIC_DisableIRQ(UART2_IRQn);
-//
-//	}
 
-//void uart_init_interrupt(void)
-//	{
-//				LPC_PINCON->PINSEL4 &= ~(0xF << 16); // Clear values
-//			    LPC_PINCON->PINSEL4 |=  (0xA << 16); // Set values for UART2 Rx/Tx
-//
-//			    LPC_SC->PCONP |= UART2_POWER_ENABLE;
-//
-//			    LPC_SC->PCLKSEL1 &= ~(3 << 16);
-//			    LPC_SC->PCLKSEL1 |=  (1 << 16);
-//			    LPC_UART2->LCR = (1 << 7);  // Enable DLAB
-//			    LPC_UART2->DLM = 0;
-//			   // LPC_UART2->LCR = UART2_WORD_LENGTH_8 | UART2_DLAB_ENABLE;
-//			    LPC_UART2->DLL = (PCLK/16)/BAUDRATE;
-//			    LPC_UART2->LCR = UART2_WORD_LENGTH_8; // DLAB =
-//			    LPC_UART2->LCR &=~(1<<7);
-//			    LPC_UART2->IER |=(1<<0);
-//			    isr_register(UART2_IRQn,UART2_int_handler);
-//	}
+Uart2& u2 = Uart2 :: getInstance();
 
 bool period_init(void)
 {
-
-	//uart_init_interrupt();
 	u2.init(115200,100,100);
-	//vSemaphoreCreateBinary(receive_sem);
 	CAN_init(can1, 100, 20, 20, 0, 0);
 	CAN_bypass_filter_accept_all_msgs();
 	CAN_reset_bus(can1);
@@ -136,37 +115,51 @@ bool period_reg_tlm(void)
 	return true; // Must return true upon success
 }
 
-
 /**
  * Below are your periodic functions.
  * The argument 'count' is the number of times each periodic task is called.
  */
 
+int i = 0;
+char tx_data[7];
+int fac = 1;
+int temp,a;
+int point = 0;
 
+void to_digits(int num2){
 
-//unsigned long uart2_rx_interrupt(char *receive)
-//	{
-//	      while(!(LPC_UART2->LSR &(1<<0)));
-//
-//	      *receive = LPC_UART2->RBR;
-//
-//	      return 1;
-//	}
-//
-//	unsigned long uart2_tx_interrupt(char rx_data1)
-//	{
-//
-//		LPC_UART2->THR = rx_data1;
-//		while(!(LPC_UART2->LSR &(1<<5)));
-//		return 1;
-//	}
-//
-//
-//void receive_Handler(void){
-//
-//	xSemaphoreGiveFromISR(receive_sem,NULL);
-//
-//}
+	temp=num2;
+	while(temp){
+		temp=temp/10;
+		fac=fac*10;
+	}
+	while(fac>1){
+		fac=fac/10;
+		a = num2/fac;
+		i++;
+		tx_data[i] = a;
+		//i++;
+		num2 = num2%fac;
+	}
+}
+
+void converttostr(float b){
+	int num = b;
+	int num1 = (b-num)*1000000;
+	tx_data[i]= '*';
+
+	while(point<2){
+		point++;
+		to_digits(num);
+		}
+	if(point==2){
+		i++;
+		tx_data[i] = '.';
+		//i++;
+		to_digits(num1);
+		tx_data[i] = '#';
+	}
+}
 
 bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 {
@@ -180,26 +173,62 @@ void period_1Hz(uint32_t count)
 {
 
 	if(CAN_is_bus_off(can1)){
-			CAN_reset_bus(can1);
-		}
+	CAN_reset_bus(can1);
+	}
+
+//	while(CAN_rx(can1, &can_msg, 0)){
+//
+//	dbc_msg_hdr_t can_msg_hdr;
+//	can_msg_hdr.dlc = can_msg.frame_fields.data_len;
+//    can_msg_hdr.mid = can_msg.msg_id;
+//
+//	dbc_decode_MASTER_SYSTEM_STATUS(&master_system_status, can_msg.data.bytes, &can_msg_hdr);
+//	}
+//
+//	var1 = master_system_status.MASTER_SYSTEM_STATUS_ble;
+//	var2 = master_system_status.MASTER_SYSTEM_STATUS_io;
+//	var3 = master_system_status.MASTER_SYSTEM_STATUS_master;
+//	var4 = master_system_status.MASTER_SYSTEM_STATUS_motor;
+//	var5 = master_system_status.MASTER_SYSTEM_STATUS_sensor;
+//
+//	tx_data[0] = delimiter1;
+//	//tx_data[1] = ble_limiter;
+//	tx_data[1] = var1;
+//	//tx_data[3] = io_limiter;
+//	tx_data[2] = var2;
+//	//tx_data[5] = mas_limiter;
+//	tx_data[3] = var3;
+//	//tx_data[7] = mot_limiter;
+//	tx_data[4] = var4;
+//	//tx_data[9] = sen_limiter;
+//	tx_data[5] = var5;
+//	//tx_data[11] = delimiter;
+//
+//	for(j = 0;j<sizeof(tx_data)-1;j++){
+//	u2.putChar(tx_data[j],0);
+//		 		//printf("%c",tx_data[j]);
+//	}
+
+//	//j = 0;
 
 	ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
 	ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x7;
 
 	dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t);
-
-
 }
 
 void period_10Hz(uint32_t count)
 {
-
-	// eint3_enable_port2(2, eint_rising_edge, receive_Handler);
-
-	// if(xSemaphoreTake(receive_sem,100)){
-	//bool flag3=true;
-	//bool flag2=true;
-
+//	float latlng = 31.564234;
+//	sprintf(tx_data,"%f",latlng);
+//
+//	 u2.putChar(delimiter1,0);
+//	 for(uint j = 0;j<sizeof(tx_data)-1;j++){
+//	 		u2.putChar(tx_data[j],0);
+//	 		//printf("%c",tx_data[j]);
+//	 	}
+//     u2.putChar(delimiter,0);
+//
 		 u2.getChar(&rx_data,0);
 
 		 switch(rx_data){
@@ -207,52 +236,24 @@ void period_10Hz(uint32_t count)
 		 case '0':{
 			       //printf("hi \n");          //remove later
 			       ble_cmd.BLE_COMM_CMD_enum = {COMM_STOP};
-			       LD.setNumber(0);
+				   dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd);
+				   LD.setNumber(0);
 			 	   break;
 		          }
 		 case '1':{
 			      //printf("bye \n");			//remove later
 			      ble_cmd.BLE_COMM_CMD_enum = {COMM_START};
-			      LD.setNumber(1);
+				  dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd);
+				  LD.setNumber(1);
 		          break;
 	              }
 		 default: break;
 		 }
 
-		 dbc_encode_and_send_BLE_COMM_CMD(&ble_cmd);
-
-//    if((LPC_UART2->IIR & 0xE)==ravail)
-//	{
-//    	NVIC_EnableIRQ(UART2_IRQn);
-//	}
-//
-//    if(receive_data)
-//	{
-//	uart2_rx_interrupt(&rx_data);
-//	printf("%c \n", rx_data);
-//	receive_data = 0;
-//	}
-
-//    if(rx_data == '1'&& count_1<2){
-//	//LE.toggle(1);
-//
-//	count_1++;
-//	//break;
-//	}
-//
-//    if(rx_data == '0'&&count_2<2){
-//	//LE.toggle(2);
-//	printf("bye \n");
-//	ble_cmd.BLE_COMM_CMD_enum = {COMM_STOP};
-//	count_2++;
-//	//flag2=false;
-//	//break;
+        // LD.setNumber(2);
 
 
-
-
-
-		//ble_cmd.BLE_COMM_CMD_enum = {COMM_START};
+//		ble_cmd.BLE_COMM_CMD_enum = {COMM_START};
 //		ble_chk_pt.BLE_CHCK_PT_lat = 0x1234;
 //		ble_chk_pt.BLE_CHCK_PT_long = 0x5678;
 //		ble_map_data.BLE_MAP_DATA_dest_lat = 0x1111;
@@ -295,15 +296,10 @@ void period_10Hz(uint32_t count)
 
 }
 
-
-
 void period_100Hz(uint32_t count)
 {
 
-
-
-
-	//LE.toggle(3);
+	LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
@@ -312,3 +308,7 @@ void period_1000Hz(uint32_t count)
 {
 	LE.toggle(4);
 }
+
+
+
+
