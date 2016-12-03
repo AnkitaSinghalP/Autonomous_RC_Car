@@ -252,6 +252,21 @@ void period_10Hz(uint32_t count)
 
         // LD.setNumber(2);
 
+		 /**
+		  * todo: where is all the code? Everything below is commented out.
+		  */
+
+//    if((LPC_UART2->IIR & 0xE)==ravail)
+//	{
+//    	NVIC_EnableIRQ(UART2_IRQn);
+//	}
+//
+//    if(receive_data)
+//	{
+//	uart2_rx_interrupt(&rx_data);
+//	printf("%c \n", rx_data);
+//	receive_data = 0;
+//	}
 
 //		ble_cmd.BLE_COMM_CMD_enum = {COMM_START};
 //		ble_chk_pt.BLE_CHCK_PT_lat = 0x1234;
@@ -269,7 +284,9 @@ void period_10Hz(uint32_t count)
 	  // dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
 
 	    //dbc_encode_and_send_BLE_MAP_DATA(&ble_map_data);
-
+/**
+ * todo: do not use while loops.
+ */
 
 //	while(CAN_rx(can1, &can_msg, 0)){
 //
