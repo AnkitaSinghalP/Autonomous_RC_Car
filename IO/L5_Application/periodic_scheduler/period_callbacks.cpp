@@ -62,7 +62,7 @@ bool period_init(void)
 	IO_init();
 	LCD_init();
 
-
+	SEND_MSG_LCD(0x01,0x0a,0x00,0x00,0x00);
 	return true; // Must return true upon success
 }
 
@@ -82,11 +82,22 @@ bool period_reg_tlm(void)
 
 void period_1Hz(uint32_t count)
 {
+	static int screen_count;
 	if(CAN_is_bus_off(can1)){
 		CAN_reset_bus(can1);
 	}
 
 	// RECEIVED_SYSTEM_CMD();
+	if(screen_count==3){
+		SEND_MSG_LCD(0x01,0x0a,0x01,0x00,0x00);
+	}
+	if(screen_count==6){
+		SEND_MSG_LCD(0x01,0x0a,0x02,0x00,0x00);
+	}
+	if(screen_count==9){
+		SEND_MSG_LCD(0x01,0x0a,0x03,0x00,0x00);
+		screen_count=0;
+	}
 
 	//SEND_MSG_LCD(0x01,0x0A,0x01,0x00,0x00);
 	SEND_IO_HEARTBEAT();
@@ -94,6 +105,7 @@ void period_1Hz(uint32_t count)
 		SEND_MSG_LCD(0x01,0x0A,0x01,0x00,0x00);
 	}*/
 	//LE.toggle(1);
+	screen_count++;
 }
 
 void period_10Hz(uint32_t count)

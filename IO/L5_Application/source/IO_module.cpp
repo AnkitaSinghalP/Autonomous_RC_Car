@@ -174,6 +174,9 @@ void RECEIVED_SYSTEM_CMD()
 		SEND_MSG_LCD(0x01,0x0E,0x06,0x00,0x01);
 		headlight_pin.setHigh();
 		system_stop_pin.setLow();
+		right_pin.setHigh();
+		left_pin.setHigh();
+		reverse_pin.setHigh();
 		//return false;
 
 	}
@@ -250,6 +253,7 @@ void RECEIVED_MOTOR_CMD()
 	case 1:
 		left_pin.setLow();
 		right_pin.setHigh();
+		reverse_pin.setHigh();
 		SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x01); // direction left
 
 
@@ -263,6 +267,7 @@ void RECEIVED_MOTOR_CMD()
 	case 3:
 		right_pin.setLow();
 		left_pin.setHigh();
+		reverse_pin.setHigh();
 		SEND_MSG_LCD(0x01,0x0E,0x01,0x00,0x01);   // direction right
 
 		SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x00);
@@ -272,15 +277,18 @@ void RECEIVED_MOTOR_CMD()
 
 	case 4:
 		SEND_MSG_LCD(0x01,0x0E,0x04,0x00,0x01); // direction front
-
+		left_pin.setHigh();
+		right_pin.setHigh();
 		SEND_MSG_LCD(0x01,0x0E,0x02,0x00,0x00);
 		SEND_MSG_LCD(0x01,0x0E,0x01,0x00,0x00);
 		SEND_MSG_LCD(0x01,0x0E,0x03,0x00,0x00);
 		break;
-		/*case 5:
+	case 5:
 		reverse_pin.setLow();
+		right_pin.setHigh();
+		left_pin.setHigh();
 		SEND_MSG_LCD(0x01,0x0E,0x03,0x00,0x01);
-		break;*/
+		break;
 	default:
 		right_pin.setHigh();
 		left_pin.setHigh();
@@ -319,6 +327,7 @@ void RECEIVED_SYSTEM_STATUS()
 	if(system_status.MASTER_SYSTEM_STATUS_ble == 1)
 	{
 		SEND_MSG_LCD(0x01,0x0E,0x0C,0x00,0x01);
+
 	}
 	if(system_status.MASTER_SYSTEM_STATUS_geo == 1)
 	{
@@ -341,6 +350,36 @@ void RECEIVED_SYSTEM_STATUS()
 		SEND_MSG_LCD(0x01,0x0E,0x09,0x00,0x01);
 	}
 
+
+	if(system_status.MASTER_SYSTEM_STATUS_ble == 0)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x0C,0x00,0x00);
+
+		}
+		if(system_status.MASTER_SYSTEM_STATUS_geo == 0)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x0D,0x00,0x00);
+		}
+		if(system_status.MASTER_SYSTEM_STATUS_io == 0)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x0B,0x00,0x00);
+		}
+		if(system_status.MASTER_SYSTEM_STATUS_master == 0)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x05,0x00,0x00);
+		}
+		if(system_status.MASTER_SYSTEM_STATUS_motor == 0)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x0A,0x00,0x00);
+		}
+		if(system_status.MASTER_SYSTEM_STATUS_sensor == 0)
+		{
+			SEND_MSG_LCD(0x01,0x0E,0x09,0x00,0x00);
+		}
+
+
+
+
 	if(dbc_handle_mia_MASTER_SYSTEM_STATUS(&system_status, 10))
 	{
 
@@ -356,7 +395,7 @@ void RECEIVED_SENSOR_BATTERY()
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;*/
 	//}
-
+	SEND_MSG_LCD(0x01,0x0B,0x04,0x00,battery_status.SENSOR_BATT_stat);
 
 	if(dbc_handle_mia_SENSOR_BATT(&battery_status, 10))
 	{
