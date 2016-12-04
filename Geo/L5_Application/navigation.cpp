@@ -48,7 +48,7 @@ void Navigation::compass_direction()
 	float heading;
 
 	/**
-	 * CALVIN: Don't use magic numbers. This code is unmaintainable.
+	 * CALVIN: Don't use magic numbers. This code is unmaintanable.
 	 * SHAURYA: Yes, We'll change them to macros later
 	 */
 	i2c.writeReg(0x3C,0x02,0x00);
@@ -114,7 +114,7 @@ void Navigation::compass_calibrate()
 	if(compass_angle >= 0 && compass_angle <= 100)
 		compass_angle = compass_angle - 6;
 
-	if(compass_angle >= 240 && compass_angle <= 340)
+	if(compass_angle >= 240 && compass_angle <= 320)
 		compass_angle = compass_angle + 4;
 
 	if(compass_angle > 340 && compass_angle <= 360)
@@ -247,11 +247,11 @@ void Navigation::gps_calculate_bearing_angle()
 {
     float x,y;
 
-    float lat1 = 37.336174;
-    float long1 = -121.881905;
+    float lat2 = checkpoints.latitude;//37.334709;
+    float long2 = checkpoints.longitude;//-121.883331;
 
-    float lat2 = coordinates.latitude;
-    float long2 = coordinates.longitude;
+    float lat1 = coordinates.latitude;
+    float long1 = coordinates.longitude;
 
 
     y = sin((long2 - long1) * (M_PI/180) )  *  cos(lat2  * (M_PI/180));
@@ -272,11 +272,11 @@ void Navigation::gps_calculate_distance()
 {
     float a,c;
 
-    float lat1 = 37.336006;
-    float long1 = -121.881950;
+    float lat2 = checkpoints.latitude;//37.334709;
+    float long2 = checkpoints.longitude;//-121.883331;
 
-    float lat2 = coordinates.latitude;
-    float long2 = coordinates.longitude;
+    float lat1 = coordinates.latitude;
+    float long1 = coordinates.longitude;
 
 
     a = pow(sin((M_PI/180)*(lat2-lat1)/2),2) + (cos((M_PI/180)*lat1))*(cos((M_PI/180)*(lat2))*pow(sin((M_PI/180)*(long2-long1)/2),2));
@@ -285,9 +285,9 @@ void Navigation::gps_calculate_distance()
     gps_distance = (float)(RADIUS * c);
 
     if (gps_distance <= DISTANCE_OFFSET)
-    	destination_reached = true;
+    	next_checkpoint_reached = true;
     else
-    	destination_reached = false;
+    	next_checkpoint_reached = false;
 
 
     //printf("Distance = %f(foot)\n", gps_distance);
@@ -334,16 +334,38 @@ bool Navigation::geo()
 	if(!parse_gps_raw_data())
 		return false;
 
-    gps_calculate_bearing_angle();
-    gps_calculate_distance();
+	//if next checkpoint reached
+	if(last_checkpoint_received == true && destination_reached == false)
+	{
+		if(pop_next_checkpoint == true)
+		{
+			//if(queue is not empty)
+			//pop coordinates from the queue and save the value to checkpoints.latitude and checkpoints.longitude
 
-    steer_command();
+			//else
+			//destination_reached = true;
 
-    //printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
-	//printf("Bearing = %d\n",gps_bearing_angle);
-    //printf("Distance = %f(foot)\n", gps_distance);
+			pop_next_checkpoint = false;
+		}
 
-    //printf("Compass= %d\n",compass_angle);
+
+		gps_calculate_distance();
+
+		if(next_checkpoint_reached == true)
+		{
+			pop_next_checkpoint = true;
+		}
+		else
+		{
+			gps_calculate_bearing_angle();
+			steer_command();
+		}
+	}
+
+/*    printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
+	printf("Bearing = %d\n",gps_bearing_angle);
+    printf("Distance = %f(foot)\n", gps_distance);
+    printf("Compass= %d\n\n",compass_angle);*/
 
 	return true;
 }

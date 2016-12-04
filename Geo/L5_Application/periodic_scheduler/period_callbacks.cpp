@@ -38,8 +38,7 @@
 #include <uart2.hpp>
 #include "tasks.hpp"
 #include "examples/examples.hpp"
-#include "Compass.hpp"
-#include "Compass_info.hpp"
+
 #include <math.h>
 #include "i2c2.hpp"
 #include "i2c_base.hpp"
@@ -108,34 +107,21 @@ void period_1Hz(uint32_t count)
     GEO_HEARTBEAT_t geo_heartbeat = { 0 };
     geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
-    GEO_LOCATION_t geo_location;
-    geo_location.GEO_LOCATION_lat  = nav.coordinates.latitude;
-    geo_location.GEO_LOCATION_long = nav.coordinates.longitude;
-
-    GEO_COMPASS_t geo_compass;
-    geo_compass.GEO_COMPASS_mag = nav.compass_angle;
-
-    dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
-
-    if(sys_cmd_flag)
-    {
-    	/*
-    	 * We want to send vehicle's current location and heading angle at every one second for IO module to display at the LCD
-    	 */
-    	dbc_encode_and_send_GEO_LOCATION(&geo_location);
-    	dbc_encode_and_send_GEO_COMPASS(&geo_compass);
-    }
+	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
 
     /**
      * Calvin: is 1Hz the appropriate task to be running this? Your gps should be faster than 1Hz.
-     * This was just for the testing.
+     * Shaurya: This was just for the initial testing.
      */
    // if(nav.geo())
     //    printf("\n");
 
-    //printf("angle = %d\n",nav.compass_angle);
     //nav.geo();
-    printf("angle = %d\n",nav.compass_angle);
+
+
+
+    //printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
+	//printf("Compass= %d\n\n",nav.compass_angle);
 
 }
 
@@ -143,23 +129,83 @@ void period_10Hz(uint32_t count)
 {
 
 	//decode all received messages here
+	can_msg_t msg_received;
+	static MASTER_SYSTEM_CMD_t systemcmd = {SYSTEM_STOP};
+	BLE_CHCK_PT_t ble_chck_pt = {1,1};
+
+	while (CAN_rx(can1, &msg_received, 0))
+	{
+		dbc_msg_hdr_t can_msg_hdr;
+		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
+		can_msg_hdr.mid = msg_received.msg_id;
+		dbc_decode_MASTER_SYSTEM_CMD(&systemcmd,msg_received.data.bytes,&can_msg_hdr);
+
+		dbc_decode_BLE_CHCK_PT(&ble_chck_pt,msg_received.data.bytes,&can_msg_hdr);
+	}
+
+	switch(systemcmd.MASTER_SYSTEM_CMD_enum)
+	{
+		case SYSTEM_STOP:
+			sys_cmd_flag = false;
+			nav.destination_reached = false;
+			nav.last_checkpoint_received = false;
+			//empty the queue
+
+			break;
+		case SYSTEM_START:
+			sys_cmd_flag = true;
+			break;
+		default :
+			sys_cmd_flag = false;
+
+	}
+
+	if((abs(ble_chck_pt.BLE_CHCK_PT_lat) != 0) && (abs(ble_chck_pt.BLE_CHCK_PT_long) != 0))
+	{
+		if((abs(ble_chck_pt.BLE_CHCK_PT_lat) != 1) && (abs(ble_chck_pt.BLE_CHCK_PT_long) != 1))
+		{
+			//push to queue
+
+
+		}
+		nav.last_checkpoint_received = false;
+	}
+	else
+	{
+		nav.last_checkpoint_received = true;
+	}
 
 	nav.geo();
 
-	GEO_DIRECTION_t geo_direction;
-	geo_direction.GEO_DIRECTION_data = nav.steer;
 
-	GEO_DEST_RCHD_t geo_dest_rchd;
-	geo_dest_rchd.GEO_DEST_RCHD_stat = nav.destination_reached;
 
     if(sys_cmd_flag)
     {
 
-    	dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
-    	dbc_encode_and_send_GEO_DEST_RCHD(&geo_dest_rchd);
+		GEO_LOCATION_t geo_location;
+		geo_location.GEO_LOCATION_lat  = nav.coordinates.latitude;
+		geo_location.GEO_LOCATION_long = nav.coordinates.longitude;
+
+		GEO_COMPASS_t geo_compass;
+		geo_compass.GEO_COMPASS_mag = nav.compass_angle;
+
+
+    	dbc_encode_and_send_GEO_LOCATION(&geo_location);
+    	dbc_encode_and_send_GEO_COMPASS(&geo_compass);
+
+    	if(nav.last_checkpoint_received)
+    	{
+
+    		GEO_DIRECTION_t geo_direction;
+			geo_direction.GEO_DIRECTION_data = nav.steer;
+
+			GEO_DEST_RCHD_t geo_dest_rchd;
+			geo_dest_rchd.GEO_DEST_RCHD_stat = nav.destination_reached;
+
+			dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
+			dbc_encode_and_send_GEO_DEST_RCHD(&geo_dest_rchd);
+    	}
     }
-/*    if(nav.geo())
-        printf("\n");*/
 
 }
 

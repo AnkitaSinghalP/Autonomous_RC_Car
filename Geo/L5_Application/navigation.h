@@ -51,7 +51,7 @@
 typedef struct {
         float latitude;
         float longitude;
-}gps_data;
+}gps_data,app_data;
 
 enum direction {
 	straight,
@@ -67,20 +67,25 @@ class Navigation
         void gps_init();
         void compass_init();
         bool geo();
-        uint16_t get_compass_angle();
         gps_data coordinates;
+        app_data checkpoints;
         uint16_t compass_angle;
         bool destination_reached;
         direction steer;
+        bool last_checkpoint_received;
 
         Navigation(){
             coordinates = {0};
+            checkpoints = {0};
             gps_raw_data = new char[GPS_DATA_SIZE];
             gps_bearing_angle = -1;
             gps_distance = -1;
             compass_angle = -1;
             destination_reached = false;
             steer = straight;
+            last_checkpoint_received = false;
+            pop_next_checkpoint = true;
+            next_checkpoint_reached = false;
         }
 
         ~Navigation(){
@@ -101,6 +106,8 @@ class Navigation
         char* gps_raw_data;
         uint16_t gps_bearing_angle;
         float gps_distance;
+        bool pop_next_checkpoint;
+        bool next_checkpoint_reached;
 
 };
 
