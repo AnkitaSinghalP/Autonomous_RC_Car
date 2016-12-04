@@ -139,7 +139,7 @@ void period_1Hz(uint32_t count)
 
 void period_10Hz(uint32_t count)
 {
-	//Recieve system command from BLE and send system commands accordingly
+	//Recieve system command from BLE and send system command to all modules to either start or stop
 	sys_cmd();
 
 }

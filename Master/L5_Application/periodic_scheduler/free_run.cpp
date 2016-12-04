@@ -10,14 +10,14 @@ void free_run_func()
 	/*
 	 * The below switch case is based on the lookup table of the obstacle detection sensors
 	 * R | M | L
-	 * 0 | 0 | 0	Forward
-	 * 0 | 0 | 1	Half Right
-	 * 0 | 1 | 0	Left
-	 * 0 | 1 | 1	Right
-	 * 1 | 0 | 0	Half Left
-	 * 1 | 0 | 1	Forward
-	 * 1 | 1 | 0	Left
-	 * 1 | 1 | 1	Stop
+	 * 0 | 0 | 0	0: Forward
+	 * 0 | 0 | 1	1: Half Right
+	 * 0 | 1 | 0	2: Left
+	 * 0 | 1 | 1	3: Right
+	 * 1 | 0 | 0	4: Half Left
+	 * 1 | 0 | 1	5: Forward
+	 * 1 | 1 | 0	6: Left
+	 * 1 | 1 | 1	7: Stop
 	 */
 
 	if(!sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_critical)

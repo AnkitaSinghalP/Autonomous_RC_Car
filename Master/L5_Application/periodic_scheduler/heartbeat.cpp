@@ -19,7 +19,7 @@ void heartbeat_rx(void)
 
 	system_status_message.MASTER_SYSTEM_STATUS_master = 1;
 	 /*
-	  * Calculate bus utilization per sec in percentage to be displayed on LCD. total_bytes * 100 / 100KB
+	  * Calculate bus utilization per seconds in percentage to be displayed on LCD. total_bytes * 100 / 100KB
 	  */
 
 //	bus_util_perc = (can_total_bytes)/(1000);
