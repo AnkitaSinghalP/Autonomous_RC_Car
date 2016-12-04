@@ -35,6 +35,11 @@
 #include<stdio.h>
 #include "_can_dbc/generated_can.h"
 #include <string.h>
+#include "uart3.hpp"
+#include "utilities.h"
+#include "gpio.hpp"
+#include "IO_module.hpp"
+
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
@@ -47,61 +52,25 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
  */
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
-const uint32_t                             SYSTEM_CMD__MIA_MS = 1000;
-const SYSTEM_CMD_t                         SYSTEM_CMD__MIA_MSG= {SYSTEM_STOP};
-const uint32_t                             MOTOR_CMD__MIA_MS= 1000;
-const MOTOR_CMD_t                          MOTOR_CMD__MIA_MSG = {0};
-const uint32_t                             SYSTEM_STATUS__MIA_MS= 1000;
-const SYSTEM_STATUS_t                      SYSTEM_STATUS__MIA_MSG= {0,0,0,0,0,0,0,0};
-const uint32_t                             SENSOR_BATT__MIA_MS = 1000;
-const SENSOR_BATT_t                        SENSOR_BATT__MIA_MSG= {0};
-const uint32_t                             BLE_MAP_DATA__MIA_MS = 1000;
-const BLE_MAP_DATA_t                       BLE_MAP_DATA__MIA_MSG ={0,0,0,0};
-const uint32_t                             GEO_DEST_RCHD__MIA_MS = 1000;
-const GEO_DEST_RCHD_t                      GEO_DEST_RCHD__MIA_MSG={0};
-const uint32_t                             GEO_LOCATION__MIA_MS = 1000;
-const GEO_LOCATION_t                       GEO_LOCATION__MIA_MSG={0.0, 0.0,0};
-const uint32_t                             MOTOR_SPEED__MIA_MS = 1000;
-const MOTOR_SPEED_t                        MOTOR_SPEED__MIA_MSG= {0.0};
-
-static int mia_count=0;
-can_msg_t rx_msg = { 0 };
-
-dbc_msg_hdr_t rx_msg_hdr;
- SYSTEM_CMD_t     system_cmd_rx;
- MOTOR_CMD_t      motor_cmd_rx;
- SYSTEM_STATUS_t  system_status_rx;
- SENSOR_BATT_t    sensor_batt_rx;
- BLE_MAP_DATA_t   ble_map_data_rx;
- GEO_DEST_RCHD_t  geo_dest_rchd_rx;
- GEO_LOCATION_t   geo_location_rx;
- MOTOR_SPEED_t    motor_speed_rx;
-bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
-{
-    can_msg_t can_msg = { 0 };
-    can_msg.msg_id                = mid;
-    can_msg.frame_fields.data_len = dlc;
-    memcpy(can_msg.data.bytes, bytes, dlc);
-
-    return CAN_tx(can1, &can_msg, 0);
-}
 /// Called once before the RTOS is started, this is a good place to initialize things once
+
+
+
 bool period_init(void)
 {
-    LD.setNumber(0);
-    CAN_init(can1, 100,20,20,NULL,NULL);
-    CAN_bypass_filter_accept_all_msgs();
-    CAN_reset_bus(can1);
+	can_init_IO();
+	IO_init();
+	LCD_init();
 
-
-    return true; // Must return true upon success
+	SEND_MSG_LCD(0x01,0x0a,0x00,0x00,0x00);
+	return true; // Must return true upon success
 }
 
 /// Register any telemetry variables
 bool period_reg_tlm(void)
 {
-    // Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
-    return true; // Must return true upon success
+	// Make sure "SYS_CFG_ENABLE_TLM" is enabled at sys_config.h to use Telemetry
+	return true; // Must return true upon success
 }
 
 
@@ -110,69 +79,57 @@ bool period_reg_tlm(void)
  * The argument 'count' is the number of times each periodic task is called.
  */
 
+
 void period_1Hz(uint32_t count)
 {
-    if(CAN_is_bus_off(can1)){
-        CAN_reset_bus(can1);
-    }
-    /*******************************sending heartbeat********************************/
-        IO_HEARTBEAT_t hbeat={0};
-        hbeat.IO_HEARTBEAT_rx_bytes= 6;
-        hbeat.IO_HEARTBEAT_tx_bytes= count;
-        dbc_encode_and_send_IO_HEARTBEAT(&hbeat);
-    /*******************************sending heartbeat********************************/
-    //LE.toggle(1);
+
+	static int screen_count;
+	if(CAN_is_bus_off(can1)){
+		CAN_reset_bus(can1);
+	}
+
+	// RECEIVED_SYSTEM_CMD();
+	if(screen_count==3){
+		SEND_MSG_LCD(0x01,0x0a,0x01,0x00,0x00);
+	}
+	if(screen_count==6){
+		SEND_MSG_LCD(0x01,0x0a,0x02,0x00,0x00);
+	}
+	if(screen_count==9){
+		SEND_MSG_LCD(0x01,0x0a,0x03,0x00,0x00);
+		screen_count=0;
+	}
+
+	//SEND_MSG_LCD(0x01,0x0A,0x01,0x00,0x00);
+	SEND_IO_HEARTBEAT();
+	/*if(count == 3){
+		SEND_MSG_LCD(0x01,0x0A,0x01,0x00,0x00);
+	}*/
+	//LE.toggle(1);
+	screen_count++;
 }
 
 void period_10Hz(uint32_t count)
 {
 
 
-    /*******************************read messages********************************/
-    while(CAN_rx(can1,&rx_msg, 0 )){
 
-        rx_msg_hdr.dlc=rx_msg.frame_fields.data_len;
-        rx_msg_hdr.mid=rx_msg.msg_id;
-        dbc_decode_SYSTEM_CMD(&system_cmd_rx,rx_msg.data.bytes,&rx_msg_hdr);
-     /*   dbc_decode_MOTOR_CMD(&motor_cmd_rx,rx_msg.data.bytes,&rx_msg_hdr);
-        dbc_decode_SYSTEM_STATUS(&system_status_rx,rx_msg.data.bytes,&rx_msg_hdr);
-        dbc_decode_SENSOR_BATT(&sensor_batt_rx,rx_msg.data.bytes,&rx_msg_hdr);
-        dbc_decode_BLE_MAP_DATA(&ble_map_data_rx,rx_msg.data.bytes,&rx_msg_hdr);
-        dbc_decode_GEO_DEST_RCHD(&geo_dest_rchd_rx,rx_msg.data.bytes,&rx_msg_hdr);
-        LE.toggle(3);
-        dbc_decode_GEO_LOCATION(&geo_location_rx,rx_msg.data.bytes,&rx_msg_hdr);
-        dbc_decode_MOTOR_SPEED(&motor_speed_rx,rx_msg.data.bytes,&rx_msg_hdr);*/
-    }
+	start();
 
-    /*******************************read messages********************************/
-   if(dbc_handle_mia_SYSTEM_CMD(&system_cmd_rx,10) ){
-       LD.setNumber(mia_count);
-       mia_count++;
-       //LE.toggle(2);
-       if(mia_count==99){
-           mia_count=0;
-       }
-   }
-//    dbc_handle_mia_SENSOR_BATT(&sensor_batt_rx,10);
-//    dbc_handle_mia_BLE_MAP_DATA(&ble_map_data_rx,10);
-//    dbc_handle_mia_GEO_DEST_RCHD(&geo_dest_rchd_rx,10);
-//    dbc_handle_mia_GEO_LOCATION(&geo_location_rx,10);
-//    dbc_handle_mia_MOTOR_CMD(&motor_cmd_rx,10);
-//    dbc_handle_mia_MOTOR_SPEED(&motor_speed_rx,10);
-//    dbc_handle_mia_SYSTEM_STATUS(&system_status_rx,10);
-
-
-    //LE.toggle(2);
+	//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
 {
-    //LE.toggle(3);
+
+	//LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-    //LE.toggle(4);
+
+
+	//LE.toggle(4);
 }
