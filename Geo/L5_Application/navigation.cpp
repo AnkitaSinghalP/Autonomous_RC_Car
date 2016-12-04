@@ -41,17 +41,99 @@ void Navigation::compass_init()
 
 }
 
+void Navigation::compass_direction()
+{
+	uint8_t xMHiByte, xMLoByte, yMHiByte, yMLoByte, zMHiByte, zMLoByte;
+	int16_t xMagData, yMagData, zMagData;
+	float heading;
+
+	/**
+	 * CALVIN: Don't use magic numbers. This code is unmaintainable.
+	 * SHAURYA: Yes, We'll change them to macros later
+	 */
+	i2c.writeReg(0x3C,0x02,0x00);
+
+	xMHiByte = i2c.readReg(0x3D, 0x03);
+	xMLoByte = i2c.readReg(0x3D, 0x04);
+	yMHiByte = i2c.readReg(0x3D, 0x07);
+	yMLoByte = i2c.readReg(0x3D, 0x08);
+	zMHiByte = i2c.readReg(0x3D, 0x05);
+	zMLoByte = i2c.readReg(0x3D, 0x06);
+
+	xMagData = (xMHiByte << 8) | xMLoByte;
+	yMagData = (yMHiByte << 8) | yMLoByte;
+	zMagData = (zMHiByte << 8) | zMLoByte;
+
+
+	heading = (atan2(yMagData,xMagData)*180)/M_PI;
+
+	if(heading < 0)
+	{
+		heading = MAX_ANGLE + heading;
+	}
+
+	//printf("angle = %d\n",(int)heading);
+
+
+
+/*	if(heading >= 0 && heading <= 135)
+		heading = ((heading + 45) * 2) / 3;
+
+	else if(heading > 135 && heading <= 320)
+		heading = ((heading - 40) * 9) / 7;
+
+	else if(heading > 320 && heading <= 360)
+		heading = (((heading - 320) * 3) / 4 );*/
+
+
+	compass_angle = (uint16_t)heading;
+
+}
+
+void Navigation::compass_calibrate()
+{
+	/*
+	 * This function is to calibrate the compass values.
+	 * Store the value back to compass_angle variable after the calibration.
+	 * Compass module values should match the compass on a mobile phone.
+	 */
+
+	if(compass_angle >= 0 && compass_angle <= 135)
+		compass_angle = ((compass_angle + 45) * 2) / 3;
+
+	else if(compass_angle > 135 && compass_angle <= 320)
+		compass_angle = ((compass_angle - 40) * 9) / 7;
+
+	else if(compass_angle > 320 && compass_angle <= 360)
+		compass_angle = (((compass_angle - 320) * 3) / 4 );
+
+
+	/*
+	 * More precision...as observed while testing
+	 */
+	if(compass_angle >= 0 && compass_angle <= 100)
+		compass_angle = compass_angle - 6;
+
+	if(compass_angle >= 240 && compass_angle <= 340)
+		compass_angle = compass_angle + 4;
+
+	if(compass_angle > 340 && compass_angle <= 360)
+		compass_angle = compass_angle - 5;
+
+}
+
 void Navigation::gps_init()
 {
 	u2.init(GPS_BAUDRATE,RX_Q_SIZE,TX_Q_SIZE);
 }
 
-void Navigation::gps_get_raw_data()
+bool Navigation::gps_get_raw_data()
 {
-	u2.gets(gps_raw_data,GPS_DATA_SIZE,0);
+	if(!u2.gets(gps_raw_data,GPS_DATA_SIZE,0))
+		return false;
 
 	//printf("GPS_raw: %s\n",gps_raw_data);
-
+	return true;
 }
 
 bool Navigation::is_gpgga()
@@ -82,7 +164,6 @@ bool Navigation::parse_gps_raw_data()
 {
 	char degreebuff[10];
 	int32_t degree;
-	//int32_t latitude_fixed, longitude_fixed;
 	long minutes;
 	float latitude, longitude;
 	float latitudeDegrees, longitudeDegrees;
@@ -100,7 +181,8 @@ bool Navigation::parse_gps_raw_data()
 	      p += 2;
 	      degreebuff[2] = '\0';
 	      /**
-	       * todo: too many magic numbers here.
+	       * Calvin: too many magic numbers here.
+	       * Shaurya: We agree. Will change all the required values to #define macros
 	       */
 	      degree = atol(degreebuff) * 10000000;
 	      strncpy(degreebuff, p, 2);
@@ -108,7 +190,6 @@ bool Navigation::parse_gps_raw_data()
 	      strncpy(degreebuff + 2, p, 4);
 	      degreebuff[6] = '\0';
 	      minutes = 50 * atol(degreebuff) / 3;
-	      //latitude_fixed = degree + minutes;
 	      latitude = degree / 100000 + minutes * 0.000006F;
 	      latitudeDegrees = (latitude-100*int(latitude/100))/60.0;
 	      latitudeDegrees += int(latitude/100);
@@ -128,7 +209,6 @@ bool Navigation::parse_gps_raw_data()
 	      strncpy(degreebuff + 2, p, 4);
 	      degreebuff[6] = '\0';
 	      minutes = 50 * atol(degreebuff) / 3;
-	      //longitude_fixed = degree + minutes;
 	      longitude = degree / 100000 + minutes * 0.000006F;
 	      longitudeDegrees = (longitude-100*int(longitude/100))/60.0;
 	      longitudeDegrees += int(longitude/100);
@@ -204,50 +284,46 @@ void Navigation::gps_calculate_distance()
 
     gps_distance = (float)(RADIUS * c);
 
+    if (gps_distance <= DISTANCE_OFFSET)
+    	destination_reached = true;
+    else
+    	destination_reached = false;
+
+
     //printf("Distance = %f(foot)\n", gps_distance);
     /*We get Distance in Foot, since 1 Mile = 5280 Foot, we are dividing with 5280*/
     //printf("Distance = %f(miles)\n", (gps_distance/5280));
 
 }
 
-uint16_t Navigation::compass_direction()
+void Navigation::steer_command()
 {
-	uint8_t xMHiByte, xMLoByte, yMHiByte, yMLoByte, zMHiByte, zMLoByte;
-	int16_t xMagData, yMagData, zMagData;
-	float heading;
-
-	/**
-	 * CALVIN: Don't use magic numbers. This code is unmaintanable.
-	 * SHAURYA: Yes, We'll change them to macros later
+	/*
+	 * Here we compare the GPS Bearing angle with the Compass true heading..
 	 */
-	i2c.writeReg(0x3C,0x02,0x00);
 
-	xMHiByte = i2c.readReg(0x3D, 0x03);
-	xMLoByte = i2c.readReg(0x3D, 0x04);
-	yMHiByte = i2c.readReg(0x3D, 0x07);
-	yMLoByte = i2c.readReg(0x3D, 0x08);
-	zMHiByte = i2c.readReg(0x3D, 0x05);
-	zMLoByte = i2c.readReg(0x3D, 0x06);
+	int angle_diflection = gps_bearing_angle - compass_angle;
 
-	xMagData = (xMHiByte << 8) | xMLoByte;
-	yMagData = (yMHiByte << 8) | yMLoByte;
-	zMagData = (zMHiByte << 8) | zMLoByte;
+	if((abs(angle_diflection) < STEER_OFFSET)
+			||	(abs(angle_diflection) > (MAX_ANGLE - STEER_OFFSET)))
+		steer = straight;
 
+	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 2)))
+			||	((angle_diflection > MIN_ANGLE)	&& (abs(angle_diflection) > (MAX_ANGLE / 2))))
+		steer = full_left;
 
-	heading = (atan2(yMagData,xMagData)*180)/M_PI;
-
-	if(heading < 0)
-	{
-		heading = 360 + heading;
-	}
-
-	return (uint16_t)heading;
-
+	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 2)))
+			||	((angle_diflection > MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 2))))
+		steer = full_right;
 }
 
 bool Navigation::geo()
 {
-	gps_get_raw_data();
+    compass_direction();
+    compass_calibrate();
+
+	if(!gps_get_raw_data())
+		return false;
 
 	if(!gps_raw_data_checkSum())
 		return false;
@@ -261,11 +337,13 @@ bool Navigation::geo()
     gps_calculate_bearing_angle();
     gps_calculate_distance();
 
+    steer_command();
+
     //printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
 	//printf("Bearing = %d\n",gps_bearing_angle);
     //printf("Distance = %f(foot)\n", gps_distance);
 
-    //printf("Compass= %d\n",compass_direction());
+    //printf("Compass= %d\n",compass_angle);
 
 	return true;
 }

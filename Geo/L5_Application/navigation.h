@@ -43,11 +43,23 @@
 #define STATIC_LONG     121
 #define RADIUS          20902231.64
 
+#define MIN_ANGLE       0
+#define MAX_ANGLE       360
+#define DISTANCE_OFFSET 10
+#define STEER_OFFSET    25
+
 typedef struct {
         float latitude;
         float longitude;
 }gps_data;
 
+enum direction {
+	straight,
+	half_left,
+	full_left,
+	half_right,
+	full_right
+};
 
 class Navigation
 {
@@ -55,14 +67,20 @@ class Navigation
         void gps_init();
         void compass_init();
         bool geo();
-        uint16_t compass_direction();
+        uint16_t get_compass_angle();
         gps_data coordinates;
+        uint16_t compass_angle;
+        bool destination_reached;
+        direction steer;
 
         Navigation(){
             coordinates = {0};
             gps_raw_data = new char[GPS_DATA_SIZE];
-            gps_bearing_angle = 361;
+            gps_bearing_angle = -1;
             gps_distance = -1;
+            compass_angle = -1;
+            destination_reached = false;
+            steer = straight;
         }
 
         ~Navigation(){
@@ -70,12 +88,15 @@ class Navigation
         }
 
     private:
-        void gps_get_raw_data();
+        bool gps_get_raw_data();
         bool is_gpgga();
         bool gps_raw_data_checkSum(); //To check integrity of the raw gps data received upon uart
         bool parse_gps_raw_data();
         void gps_calculate_bearing_angle();
         void gps_calculate_distance();
+        void compass_direction();
+        void steer_command();
+        void compass_calibrate();
 
         char* gps_raw_data;
         uint16_t gps_bearing_angle;

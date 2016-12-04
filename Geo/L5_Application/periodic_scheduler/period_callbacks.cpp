@@ -105,9 +105,6 @@ void period_1Hz(uint32_t count)
     if(CAN_is_bus_off(can1))
     	CAN_reset_bus(can1);
 
-/*    uint8_t slaveAddr = SLAVE_ADDRESS;
-    LPC_I2C2->I2ADR0 = slaveAddr;*/
-
     GEO_HEARTBEAT_t geo_heartbeat = { 0 };
     geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
@@ -116,29 +113,53 @@ void period_1Hz(uint32_t count)
     geo_location.GEO_LOCATION_long = nav.coordinates.longitude;
 
     GEO_COMPASS_t geo_compass;
-    geo_compass.GEO_COMPASS_mag = nav.compass_direction();
+    geo_compass.GEO_COMPASS_mag = nav.compass_angle;
 
     dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
 
     if(sys_cmd_flag)
     {
+    	/*
+    	 * We want to send vehicle's current location and heading angle at every one second for IO module to display at the LCD
+    	 */
     	dbc_encode_and_send_GEO_LOCATION(&geo_location);
     	dbc_encode_and_send_GEO_COMPASS(&geo_compass);
     }
 
     /**
      * Calvin: is 1Hz the appropriate task to be running this? Your gps should be faster than 1Hz.
-     * Shaurya: This was just for the testing.
+     * This was just for the testing.
      */
    // if(nav.geo())
     //    printf("\n");
+
+    //printf("angle = %d\n",nav.compass_angle);
+    //nav.geo();
+    printf("angle = %d\n",nav.compass_angle);
 
 }
 
 void period_10Hz(uint32_t count)
 {
-    if(nav.geo())
-        printf("\n");
+
+	//decode all received messages here
+
+	nav.geo();
+
+	GEO_DIRECTION_t geo_direction;
+	geo_direction.GEO_DIRECTION_data = nav.steer;
+
+	GEO_DEST_RCHD_t geo_dest_rchd;
+	geo_dest_rchd.GEO_DEST_RCHD_stat = nav.destination_reached;
+
+    if(sys_cmd_flag)
+    {
+
+    	dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
+    	dbc_encode_and_send_GEO_DEST_RCHD(&geo_dest_rchd);
+    }
+/*    if(nav.geo())
+        printf("\n");*/
 
 }
 
