@@ -53,7 +53,6 @@ GPIO *flag = NULL;
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
 const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 
-
 Navigation nav;
 bool sys_cmd_flag = false;
 
@@ -75,6 +74,16 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
     return CAN_tx(can1, &can_msg, 0);
 }
 
+/*
+ * test code starts here
+ */
+
+BLE_CHCK_PT_t p1,p2,p3,p4,p5,last;
+
+vector<BLE_CHCK_PT_t> dummy_checkpoints;
+
+/*****test code ends here*****/
+
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
 {
@@ -83,6 +92,40 @@ bool period_init(void)
 
     CAN_init(can1, 100, 20, 20, 0, 0);
     CAN_reset_bus(can1);
+
+/*
+ * test code starts here
+ */
+    p1.BLE_CHCK_PT_lat  = 37.335361;
+    p1.BLE_CHCK_PT_long = -121.881363;
+
+    p2.BLE_CHCK_PT_lat  = 37.335510;
+    p2.BLE_CHCK_PT_long = -121.881462;
+
+    p3.BLE_CHCK_PT_lat  = 37.335758;
+    p3.BLE_CHCK_PT_long = -121.881638;
+
+    p4.BLE_CHCK_PT_lat  = 37.336025;
+    p4.BLE_CHCK_PT_long = -121.881660;
+
+    p5.BLE_CHCK_PT_lat  = 37.336189;
+    p5.BLE_CHCK_PT_long = -121.881790;
+
+    last.BLE_CHCK_PT_lat = 0;
+    last.BLE_CHCK_PT_long = 0;
+
+    dummy_checkpoints.push_back(p1);
+    dummy_checkpoints.push_back(p2);
+    dummy_checkpoints.push_back(p3);
+    dummy_checkpoints.push_back(p4);
+    dummy_checkpoints.push_back(p5);
+
+    dummy_checkpoints.push_back(last);
+
+/*
+ * test code ends here
+ */
+
     return true; // Must return true upon success
 }
 
@@ -121,7 +164,13 @@ void period_1Hz(uint32_t count)
 
 
     //printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
+    //printf("Distance = %f(feet)\n\n", nav.gps_distance);
 	//printf("Compass= %d\n\n",nav.compass_angle);
+
+
+/*	nav.next_checkpoint = {37,121};
+	nav.all_checkpoints.push_back(nav.next_checkpoint);
+	printf("size = %d\n",nav.all_checkpoints.size());*/
 
 }
 
@@ -131,7 +180,7 @@ void period_10Hz(uint32_t count)
 	//decode all received messages here
 	can_msg_t msg_received;
 	static MASTER_SYSTEM_CMD_t systemcmd = {SYSTEM_STOP};
-	BLE_CHCK_PT_t ble_chck_pt = {1,1};
+	static BLE_CHCK_PT_t ble_chck_pt = {1,1};
 
 	while (CAN_rx(can1, &msg_received, 0))
 	{
@@ -147,9 +196,15 @@ void period_10Hz(uint32_t count)
 	{
 		case SYSTEM_STOP:
 			sys_cmd_flag = false;
-			nav.destination_reached = false;
+
+/* commenting this section just for the testing
+ *
+ 			nav.destination_reached = false;
+
 			nav.last_checkpoint_received = false;
-			//empty the queue
+ 			if(!nav.all_checkpoints.empty())
+				nav.all_checkpoints.clear();
+			*/
 
 			break;
 		case SYSTEM_START:
@@ -157,15 +212,29 @@ void period_10Hz(uint32_t count)
 			break;
 		default :
 			sys_cmd_flag = false;
+			break;
 
 	}
 
-	if((abs(ble_chck_pt.BLE_CHCK_PT_lat) != 0) && (abs(ble_chck_pt.BLE_CHCK_PT_long) != 0))
-	{
-		if((abs(ble_chck_pt.BLE_CHCK_PT_lat) != 1) && (abs(ble_chck_pt.BLE_CHCK_PT_long) != 1))
-		{
-			//push to queue
+/*test code starts here*/
+	sys_cmd_flag = true;
 
+	if(!dummy_checkpoints.empty())
+	{
+		ble_chck_pt = dummy_checkpoints[0];
+		dummy_checkpoints.erase(dummy_checkpoints.begin());
+	}
+
+
+/*test code ends here*/
+
+	if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 0) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 0))
+	{
+		if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 1) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 1))
+		{
+			nav.next_checkpoint = {ble_chck_pt.BLE_CHCK_PT_lat,ble_chck_pt.BLE_CHCK_PT_long};
+			//push to vectors
+			nav.all_checkpoints.push_back(nav.next_checkpoint);
 
 		}
 		nav.last_checkpoint_received = false;
@@ -173,6 +242,8 @@ void period_10Hz(uint32_t count)
 	else
 	{
 		nav.last_checkpoint_received = true;
+
+		//printf("size = %d\n",nav.all_checkpoints.size());
 	}
 
 	nav.geo();
@@ -195,6 +266,12 @@ void period_10Hz(uint32_t count)
 
     	if(nav.last_checkpoint_received)
     	{
+/*    		if(nav.steer == 0)
+    			printf("Go straight\n");
+    		if(nav.steer == 2)
+    			printf("Turn left\n");
+    		if(nav.steer == 4)
+    			printf("Turn right\n");*/
 
     		GEO_DIRECTION_t geo_direction;
 			geo_direction.GEO_DIRECTION_data = nav.steer;

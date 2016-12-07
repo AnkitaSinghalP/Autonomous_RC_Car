@@ -98,6 +98,10 @@ void Navigation::compass_calibrate()
 	 * Compass module values should match the compass on a mobile phone.
 	 */
 
+	/*
+	 * We calculated these numbers after observing linear relationship between compass values and actual values.
+	 * We know they seems to be magic numbers.
+	 */
 	if(compass_angle >= 0 && compass_angle <= 135)
 		compass_angle = ((compass_angle + 45) * 2) / 3;
 
@@ -218,7 +222,7 @@ bool Navigation::parse_gps_raw_data()
 	     * Checking if absolute values of coordinates are for San Jose or not.
 	     * Will remove this area specific checking at later stages of this project.
 	     */
-		if(abs(latitudeDegrees) != STATIC_LAT || abs(longitudeDegrees) != STATIC_LONG)
+		if((int)latitudeDegrees != STATIC_LAT || (int)longitudeDegrees != STATIC_LONG)
 			return false;
 
 		/*
@@ -247,8 +251,8 @@ void Navigation::gps_calculate_bearing_angle()
 {
     float x,y;
 
-    float lat2 = checkpoints.latitude;//37.334709;
-    float long2 = checkpoints.longitude;//-121.883331;
+    float lat2 = next_checkpoint.latitude;//37.334709;
+    float long2 = next_checkpoint.longitude;//-121.883331;
 
     float lat1 = coordinates.latitude;
     float long1 = coordinates.longitude;
@@ -272,11 +276,14 @@ void Navigation::gps_calculate_distance()
 {
     float a,c;
 
-    float lat2 = checkpoints.latitude;//37.334709;
-    float long2 = checkpoints.longitude;//-121.883331;
+    float lat2 = next_checkpoint.latitude;//37.334709;
+    float long2 = next_checkpoint.longitude;//-121.883331;
 
     float lat1 = coordinates.latitude;
     float long1 = coordinates.longitude;
+
+  //  printf("GPS: %f  %f\n",lat1,long1);
+    //printf("GPS: %f  %f\n",lat2,long2);
 
 
     a = pow(sin((M_PI/180)*(lat2-lat1)/2),2) + (cos((M_PI/180)*lat1))*(cos((M_PI/180)*(lat2))*pow(sin((M_PI/180)*(long2-long1)/2),2));
@@ -334,6 +341,9 @@ bool Navigation::geo()
 	if(!parse_gps_raw_data())
 		return false;
 
+
+	//printf("%d %d\n",last_checkpoint_received,destination_reached);
+
 	//if next checkpoint reached
 	if(last_checkpoint_received == true && destination_reached == false)
 	{
@@ -344,6 +354,20 @@ bool Navigation::geo()
 
 			//else
 			//destination_reached = true;
+
+			if(all_checkpoints.empty())
+			{
+				destination_reached = true;
+				printf("Final destination reached\n");
+
+			}
+			else
+			{
+				next_checkpoint = all_checkpoints[0];
+				all_checkpoints.erase(all_checkpoints.begin());
+
+				printf("popping next point\n");
+			}
 
 			pop_next_checkpoint = false;
 		}
@@ -362,10 +386,10 @@ bool Navigation::geo()
 		}
 	}
 
-/*    printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
-	printf("Bearing = %d\n",gps_bearing_angle);
-    printf("Distance = %f(foot)\n", gps_distance);
-    printf("Compass= %d\n\n",compass_angle);*/
+//    printf("GPS: %f  %f\n",coordinates.latitude,coordinates.longitude);
+//	  printf("Bearing = %d\n",gps_bearing_angle);
+//    printf("Distance = %f(foot)\n", gps_distance);
+//    printf("Compass= %d\n\n",compass_angle);
 
 	return true;
 }

@@ -13,26 +13,12 @@
 #include <math.h>
 #include <cstdlib>
 #include <stdio.h>
+#include <vector>
 #include "i2c2.hpp"
 #include "i2c_base.hpp"
 #include "i2c2_device.hpp"
 
-
-/*
- * Configuration of GPS Module
- * Adafruit Ultimate GPS breakout board
- *
- */
-/*
-#define SET_OUTPUT_RMC      "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29<CR><LF>"
-#define SET_OUTPUT_RMC_GGA  "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28<CR><LF>"
-#define SET_OUTPUT_ALLDATA  "$PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0*28<CR><LF>"
-#define SET_OUTPUT_OFF      "$PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28<CR><LF>"
-
-#define UPDATE_RATE_10HZ    "$PMTK220,100*2F<CR><LF>"
-
-#define BAUD_RATE_38400     "$PMTK251,38400*27<CR><LF>"
-*/
+using namespace std;
 
 #define GPS_BAUDRATE    115200
 #define GPS_DATA_SIZE   255
@@ -45,13 +31,13 @@
 
 #define MIN_ANGLE       0
 #define MAX_ANGLE       360
-#define DISTANCE_OFFSET 10
+#define DISTANCE_OFFSET 45
 #define STEER_OFFSET    25
 
 typedef struct {
         float latitude;
         float longitude;
-}gps_data,app_data;
+}gps_data;
 
 enum direction {
 	straight,
@@ -67,16 +53,21 @@ class Navigation
         void gps_init();
         void compass_init();
         bool geo();
+
         gps_data coordinates;
-        app_data checkpoints;
+        gps_data next_checkpoint;
         uint16_t compass_angle;
         bool destination_reached;
         direction steer;
         bool last_checkpoint_received;
+        vector<gps_data> all_checkpoints;
+
+        float gps_distance;		//can be changed to a private variable after testing phase of the project
+
 
         Navigation(){
             coordinates = {0};
-            checkpoints = {0};
+            next_checkpoint = {0};
             gps_raw_data = new char[GPS_DATA_SIZE];
             gps_bearing_angle = -1;
             gps_distance = -1;
@@ -105,7 +96,6 @@ class Navigation
 
         char* gps_raw_data;
         uint16_t gps_bearing_angle;
-        float gps_distance;
         bool pop_next_checkpoint;
         bool next_checkpoint_reached;
 
