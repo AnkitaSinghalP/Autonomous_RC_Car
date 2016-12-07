@@ -42,7 +42,7 @@
 #include "lpc_timers.h"
 #include "string.h"
 #include "eint.h"
-
+#include "tasks.hpp"
 SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
 //can_msg_t can_msg_sensor = { 0 };
 can_msg_t can_msg_received;
@@ -97,6 +97,8 @@ bool period_init(void)
 	CAN_reset_bus(can1);
 	CAN_bypass_filter_accept_all_msgs();
 	LD.setNumber(0);
+
+	// scheduler_add_task(new I2C_hapTask(PRIORITY_MEDIUM));
 	return true; // Must return true upon success
 }
 

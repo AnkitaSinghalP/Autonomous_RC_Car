@@ -28,10 +28,10 @@
 #include "command_handler.hpp"
 #include "wireless.h"
 #include "char_dev.hpp"
-
+#include "i2c2.hpp"
 #include "FreeRTOS.h"
 #include "semphr.h"
-
+#include "i2c_base.hpp"
 
 
 /**
@@ -40,6 +40,9 @@
  * are automatically saved and restored across power-cycles to help us preserve
  * any non-volatile information.
  */
+
+
+
 class terminalTask : public scheduler_task
 {
     public:
