@@ -14,14 +14,20 @@
 
 typedef struct
 {
-        uint8_t middle_distance ;
-        uint8_t rear_distance  ;
-        uint8_t right_distance ;
-        uint8_t left_distance  ;
+        uint8_t middle_distance = 0 ;
+        uint8_t rear_distance = 0 ;
+        uint8_t right_distance  = 0;
+        uint8_t left_distance = 0 ;
 }sensor_readings;
 
-bool sensor_init();
-bool sensor_measure();
+void sensor_init();
+void sensor_measure();
+void can_communication_sensor();
+//void received_sensor_can_msg();
+void decoded_can_sensor_message(uint8_t middle,uint8_t left, uint8_t right, uint8_t rear);
+void can_init_sensor();
+void ultrasonic_sensor_heartbeat_message();
+uint8_t received_sensor_can_msg();
 
 
 

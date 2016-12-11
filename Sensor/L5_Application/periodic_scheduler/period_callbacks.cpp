@@ -59,6 +59,7 @@ dbc_mia_info_t mia_handling = {0};
 
 SENSOR_BATT_t battery_status = {0};
 
+
 dbc_msg_hdr_t can_msg_hdr;
 
 static int counter = 0;
@@ -81,6 +82,7 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
 /// Called once before the RTOS is started, this is a good place to initialize things once
 
+
 bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 {
 
@@ -99,6 +101,9 @@ bool period_init(void)
 	LD.setNumber(0);
 
 	// scheduler_add_task(new I2C_hapTask(PRIORITY_MEDIUM));
+sensor_init();
+	can_init_sensor();
+
 	return true; // Must return true upon success
 }
 
@@ -118,6 +123,7 @@ bool period_reg_tlm(void)
 void period_1Hz(uint32_t count)
 {
 
+
 	if(CAN_is_bus_off(can1))
 	{
 		CAN_reset_bus(can1);
@@ -130,10 +136,20 @@ void period_1Hz(uint32_t count)
 	//sensor_measure();
 	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);
 	LE.toggle(1);
+
+
+    ultrasonic_sensor_heartbeat_message();
+
+
 }
 
 void period_10Hz(uint32_t count)
 {
+    static bool start=false;
+	/*sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
+	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
+	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);*/
+
 
 	/*ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = 0;
 	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = ;
@@ -146,9 +162,6 @@ void period_10Hz(uint32_t count)
 	battery_status.SENSOR_BATT_stat = 75;
 	dbc_encode_and_send_SENSOR_BATT(&battery_status);
 	//puts("sent");
-
-
-	LE.toggle(2);
 
 	while(CAN_rx(can1, &can_msg_received, 0))
 	{
@@ -169,6 +182,23 @@ void period_10Hz(uint32_t count)
 
 	}
 
+    /**
+     * wait for system command from CAN before starting
+     * In case of testing without the Master board, change the start to true in
+     * the else section
+     */
+    if(received_sensor_can_msg()==1){
+        start=true;
+    }
+    else{
+        start=false;
+    }
+    if(start){
+        sensor_measure();
+    }
+
+    //decoded_can_sensor_message(1,0,0);
+	//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)
