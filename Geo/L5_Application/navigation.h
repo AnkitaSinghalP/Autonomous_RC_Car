@@ -17,6 +17,9 @@
 #include "i2c2.hpp"
 #include "i2c_base.hpp"
 #include "i2c2_device.hpp"
+#include "_can_dbc/generated_can.h"
+
+extern GEO_DIRECTION_t geo_direction;
 
 using namespace std;
 
@@ -32,20 +35,27 @@ using namespace std;
 #define MIN_ANGLE       0
 #define MAX_ANGLE       360
 #define DISTANCE_OFFSET 45
-#define STEER_OFFSET    25
+#define STEER_OFFSET    10
 
 typedef struct {
         float latitude;
         float longitude;
 }gps_data;
 
-enum direction {
+/*enum direction {
 	straight,
 	half_left,
 	full_left,
 	half_right,
 	full_right
-};
+
+    DIR_LEFT,
+    DIR_HALF_LEFT,
+    DIR_RIGHT,
+    DIR_HALF_RIGHT,
+    DIR_FORWARD
+
+};*/
 
 class Navigation
 {
@@ -58,7 +68,9 @@ class Navigation
         gps_data next_checkpoint;
         uint16_t compass_angle;
         bool destination_reached;
-        direction steer;
+        bool gps_fix;
+        //direction steer;
+        //GEO_DIRECTION_t steer;
         bool last_checkpoint_received;
         vector<gps_data> all_checkpoints;
 
@@ -66,6 +78,7 @@ class Navigation
 
 
         Navigation(){
+        	gps_fix = false;
             coordinates = {0};
             next_checkpoint = {0};
             gps_raw_data = new char[GPS_DATA_SIZE];
@@ -73,7 +86,7 @@ class Navigation
             gps_distance = -1;
             compass_angle = -1;
             destination_reached = false;
-            steer = straight;
+            //steer = DIR_FORWARD;
             last_checkpoint_received = false;
             pop_next_checkpoint = true;
             next_checkpoint_reached = false;

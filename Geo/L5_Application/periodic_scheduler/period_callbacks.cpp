@@ -31,7 +31,7 @@
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
-#include "_can_dbc//generated_can.h"
+//#include "_can_dbc//generated_can.h"
 #include <stdio.h>
 #include "can.h"
 #include "string.h"
@@ -48,6 +48,9 @@
 #include "gpio.hpp"
 #include "eint.h"
 #include "navigation.h"
+
+GEO_DIRECTION_t geo_direction;
+
 
 GPIO *flag = NULL;
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
@@ -251,7 +254,7 @@ void period_10Hz(uint32_t count)
 
 
 
-    if(sys_cmd_flag)
+    if(sys_cmd_flag && nav.gps_fix)
     {
 
 		GEO_LOCATION_t geo_location;
@@ -267,7 +270,19 @@ void period_10Hz(uint32_t count)
 
     	if(nav.last_checkpoint_received)
     	{
-    		if(nav.steer == 0)
+
+    		if(geo_direction.GEO_DIRECTION_enum == DIR_FORWARD)
+    			printf("Go straight\n");
+    		if(geo_direction.GEO_DIRECTION_enum == DIR_HALF_LEFT)
+    			printf("Half left\n");
+    		if(geo_direction.GEO_DIRECTION_enum == DIR_LEFT)
+    			printf("Full left\n");
+    		if(geo_direction.GEO_DIRECTION_enum == DIR_HALF_RIGHT)
+    			printf("Half right\n");
+    		if(geo_direction.GEO_DIRECTION_enum == DIR_RIGHT)
+    			printf("Full right\n");
+
+/*    		if(nav.steer == 0)
     			printf("Go straight\n");
     		if(nav.steer == 1)
     			printf("Half left\n");
@@ -276,10 +291,9 @@ void period_10Hz(uint32_t count)
     		if(nav.steer == 3)
     			printf("Half right\n");
     		if(nav.steer == 4)
-    			printf("Full right\n");
+    			printf("Full right\n");*/
 
-    		GEO_DIRECTION_t geo_direction;
-			geo_direction.GEO_DIRECTION_data = nav.steer;
+			//geo_direction.GEO_DIRECTION_enum = nav.steer;
 
 			GEO_DEST_RCHD_t geo_dest_rchd;
 			geo_dest_rchd.GEO_DEST_RCHD_stat = nav.destination_reached;
@@ -288,6 +302,11 @@ void period_10Hz(uint32_t count)
 			dbc_encode_and_send_GEO_DEST_RCHD(&geo_dest_rchd);
     	}
     }
+	else
+	{
+		if(!nav.gps_fix)
+			printf("No Fix\n");
+	}
 
 }
 

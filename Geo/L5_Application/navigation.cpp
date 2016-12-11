@@ -38,7 +38,6 @@ void Navigation::compass_init()
 	  LPC_SC->PCLKSEL1 |= (1<<18);
 
 	  LPC_I2C2->I2ADR0 = 0x1E;
-
 }
 
 void Navigation::compass_direction()
@@ -300,7 +299,8 @@ void Navigation::steer_command()
 
 	if((abs(angle_diflection) < STEER_OFFSET)
 			||	(abs(angle_diflection) > (MAX_ANGLE - STEER_OFFSET)))
-		steer = straight;
+		//steer = DIR_FORWARD;
+		geo_direction.GEO_DIRECTION_enum = DIR_FORWARD;
 
 /*	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 4)))
 			||	((angle_diflection > MIN_ANGLE)	&& (abs(angle_diflection) > (MAX_ANGLE / 4))))
@@ -312,10 +312,12 @@ void Navigation::steer_command()
 		if(abs(angle_diflection) > MAX_ANGLE / 2)
 			angle_diflection = MAX_ANGLE - abs(angle_diflection);
 
-		if(abs(angle_diflection) < (MAX_ANGLE / 4))
-			steer = half_left;
+		if(abs(angle_diflection) < (MAX_ANGLE / 6))
+			//steer = DIR_HALF_LEFT;
+			geo_direction.GEO_DIRECTION_enum = DIR_HALF_LEFT;
 		else
-			steer = full_left;
+			//steer = DIR_LEFT;
+			geo_direction.GEO_DIRECTION_enum = DIR_LEFT;
 	}
 
 /*
@@ -330,10 +332,12 @@ void Navigation::steer_command()
 		if(abs(angle_diflection) > MAX_ANGLE / 2)
 			angle_diflection = MAX_ANGLE - abs(angle_diflection);
 
-		if(abs(angle_diflection) < (MAX_ANGLE / 4))
-			steer = half_right;
+		if(abs(angle_diflection) < (MAX_ANGLE / 6))
+			//steer = DIR_HALF_RIGHT;
+			geo_direction.GEO_DIRECTION_enum = DIR_HALF_RIGHT;
 		else
-			steer = full_right;
+			//steer = DIR_RIGHT;
+			geo_direction.GEO_DIRECTION_enum = DIR_RIGHT;
 	}
 }
 
@@ -353,6 +357,8 @@ bool Navigation::geo()
 
 	if(!parse_gps_raw_data())
 		return false;
+
+	gps_fix = true;
 
 
 	//printf("%d %d\n",last_checkpoint_received,destination_reached);
