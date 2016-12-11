@@ -102,27 +102,14 @@ void Navigation::compass_calibrate()
 	 * We calculated these numbers after observing linear relationship between compass values and actual values.
 	 * We know they seems to be magic numbers.
 	 */
-	if(compass_angle >= 0 && compass_angle <= 135)
-		compass_angle = ((compass_angle + 45) * 2) / 3;
+    if(compass_angle >= 0 && compass_angle <= 185)
+        compass_angle = (compass_angle * 0.8378) + 25;
 
-	else if(compass_angle > 135 && compass_angle <= 320)
-		compass_angle = ((compass_angle - 40) * 9) / 7;
+    else if(compass_angle > 185 && compass_angle <= 340)
+        compass_angle = (compass_angle * 1.1612) - 34.8387;
 
-	else if(compass_angle > 320 && compass_angle <= 360)
-		compass_angle = (((compass_angle - 320) * 3) / 4 );
-
-
-	/*
-	 * More precision...as observed while testing
-	 */
-	if(compass_angle >= 0 && compass_angle <= 100)
-		compass_angle = compass_angle - 6;
-
-	if(compass_angle >= 240 && compass_angle <= 320)
-		compass_angle = compass_angle + 4;
-
-	if(compass_angle > 340 && compass_angle <= 360)
-		compass_angle = compass_angle - 5;
+    else if(compass_angle > 340 && compass_angle <= 360)
+        compass_angle = (compass_angle * 1.25) - 425;
 
 }
 
@@ -315,13 +302,39 @@ void Navigation::steer_command()
 			||	(abs(angle_diflection) > (MAX_ANGLE - STEER_OFFSET)))
 		steer = straight;
 
-	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 2)))
-			||	((angle_diflection > MIN_ANGLE)	&& (abs(angle_diflection) > (MAX_ANGLE / 2))))
-		steer = full_left;
+/*	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 4)))
+			||	((angle_diflection > MIN_ANGLE)	&& (abs(angle_diflection) > (MAX_ANGLE / 4))))
+		steer = half_left;*/
 
 	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 2)))
-			||	((angle_diflection > MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 2))))
-		steer = full_right;
+			||	((angle_diflection > MIN_ANGLE)	&& (abs(angle_diflection) > (MAX_ANGLE / 2))))
+	{
+		if(abs(angle_diflection) > MAX_ANGLE / 2)
+			angle_diflection = MAX_ANGLE - abs(angle_diflection);
+
+		if(abs(angle_diflection) < (MAX_ANGLE / 4))
+			steer = half_left;
+		else
+			steer = full_left;
+	}
+
+/*
+	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) > (MAX_ANGLE / 4)))
+			||	((angle_diflection > MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 4))))
+		steer = half_right;
+*/
+
+	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) >= (MAX_ANGLE / 2)))
+			||	((angle_diflection > MIN_ANGLE) && (abs(angle_diflection) <= (MAX_ANGLE / 2))))
+	{
+		if(abs(angle_diflection) > MAX_ANGLE / 2)
+			angle_diflection = MAX_ANGLE - abs(angle_diflection);
+
+		if(abs(angle_diflection) < (MAX_ANGLE / 4))
+			steer = half_right;
+		else
+			steer = full_right;
+	}
 }
 
 bool Navigation::geo()

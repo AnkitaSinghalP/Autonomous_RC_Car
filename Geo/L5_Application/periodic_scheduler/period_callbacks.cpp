@@ -95,6 +95,7 @@ bool period_init(void)
 
 /*
  * test code starts here
+ * this is for testing purpose only
  */
     p1.BLE_CHCK_PT_lat  = 37.335361;
     p1.BLE_CHCK_PT_long = -121.881363;
@@ -266,12 +267,16 @@ void period_10Hz(uint32_t count)
 
     	if(nav.last_checkpoint_received)
     	{
-/*    		if(nav.steer == 0)
+    		if(nav.steer == 0)
     			printf("Go straight\n");
+    		if(nav.steer == 1)
+    			printf("Half left\n");
     		if(nav.steer == 2)
-    			printf("Turn left\n");
+    			printf("Full left\n");
+    		if(nav.steer == 3)
+    			printf("Half right\n");
     		if(nav.steer == 4)
-    			printf("Turn right\n");*/
+    			printf("Full right\n");
 
     		GEO_DIRECTION_t geo_direction;
 			geo_direction.GEO_DIRECTION_data = nav.steer;
