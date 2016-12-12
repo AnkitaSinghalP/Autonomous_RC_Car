@@ -301,7 +301,7 @@ void Navigation::steer_command()
 	if((abs(angle_diflection) < STEER_OFFSET)
 			||	(abs(angle_diflection) > (MAX_ANGLE - STEER_OFFSET)))
 		//steer = DIR_FORWARD;
-		geo_direction.GEO_DIRECTION_enum = DIR_FORWARD;
+		geo_direction.GEO_DIRECTION_enum = DIR_STRAIGHT;
 
 /*	else if(((angle_diflection < MIN_ANGLE) && (abs(angle_diflection) < (MAX_ANGLE / 4)))
 			||	((angle_diflection > MIN_ANGLE)	&& (abs(angle_diflection) > (MAX_ANGLE / 4))))

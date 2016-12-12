@@ -25,19 +25,17 @@ typedef struct {
 
 // static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {   10, 1 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_CMD_HDR =                {  100, 1 };
-// static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 3 };
+// static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 2 };
 // static const dbc_msg_hdr_t MASTER_SYSTEM_STATUS_HDR =             {  162, 3 };
 // static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
-// static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 // static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
-static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
+// static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  263, 1 };
 // static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
-// static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
-// static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
+static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  341, 8 };
 static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
 static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
-static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
+static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  431, 8 };
 static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 2 };
 // static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
 // static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
@@ -45,19 +43,18 @@ static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 2 };
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'GEO_DIRECTION' from 'GEO'
 typedef enum {
+    DIR_STRAIGHT = 4,
     DIR_HALF_LEFT = 1,
-    DIR_FORWARD = 4,
-    DIR_REVERSE = 5,
     DIR_HALF_RIGHT = 3,
-    DIR_LEFT = 0,
     DIR_RIGHT = 2,
+    GEO_STOP = 5,
+    DIR_LEFT = 0,
 } GEO_DIRECTION_enum_E ;
 
 
@@ -71,7 +68,7 @@ typedef struct {
 } MASTER_SYSTEM_CMD_t;
 
 
-/// Message: BLE_CHCK_PT from 'BLE', DLC: 8 byte(s), MID: 311
+/// Message: BLE_CHCK_PT from 'BLE', DLC: 8 byte(s), MID: 341
 typedef struct {
     float BLE_CHCK_PT_lat;                    ///< B31:0   Destination: GEO
     float BLE_CHCK_PT_long;                   ///< B63:32   Destination: GEO
@@ -90,7 +87,7 @@ typedef struct {
 
 /// Message: GEO_DEST_RCHD from 'GEO', DLC: 1 byte(s), MID: 413
 typedef struct {
-    uint8_t GEO_DEST_RCHD_stat : 1;           ///< B0:0  Min: 0 Max: 1   Destination: MASTER,IO
+    uint8_t GEO_DEST_RCHD_stat : 1;           ///< B0:0  Min: 0 Max: 1   Destination: MASTER,IO,BLE
 
     // No dbc_mia_info_t for a message that we will send
 } GEO_DEST_RCHD_t;
@@ -105,7 +102,7 @@ typedef struct {
 } GEO_HEARTBEAT_t;
 
 
-/// Message: GEO_LOCATION from 'GEO', DLC: 8 byte(s), MID: 421
+/// Message: GEO_LOCATION from 'GEO', DLC: 8 byte(s), MID: 431
 typedef struct {
     float GEO_LOCATION_lat;                   ///< B31:0   Destination: IO,BLE
     float GEO_LOCATION_long;                  ///< B63:32   Destination: IO,BLE
@@ -140,17 +137,13 @@ extern const BLE_CHCK_PT_t                        BLE_CHCK_PT__MIA_MSG;
 
 /// Not generating code for dbc_encode_SENSOR_ULTRASONIC() since the sender is SENSOR and we are GEO
 
-/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are GEO
-
 /// Not generating code for dbc_encode_SENSOR_HEARTBEAT() since the sender is SENSOR and we are GEO
 
-/// Not generating code for dbc_encode_BLE_CHCK_PT() since the sender is BLE and we are GEO
+/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are GEO
 
 /// Not generating code for dbc_encode_BLE_HEARTBEAT() since the sender is BLE and we are GEO
 
-/// Not generating code for dbc_encode_BLE_MAP_START_DATA() since the sender is BLE and we are GEO
-
-/// Not generating code for dbc_encode_BLE_MAP_DEST_DATA() since the sender is BLE and we are GEO
+/// Not generating code for dbc_encode_BLE_CHCK_PT() since the sender is BLE and we are GEO
 
 /// Encode GEO's 'GEO_DIRECTION' message
 /// @returns the message header of this message
@@ -318,9 +311,11 @@ static inline bool dbc_decode_MASTER_SYSTEM_CMD(MASTER_SYSTEM_CMD_t *to, const u
 
 /// Not generating code for dbc_decode_SENSOR_ULTRASONIC() since 'GEO' is not the recipient of any of the signals
 
+/// Not generating code for dbc_decode_SENSOR_HEARTBEAT() since 'GEO' is not the recipient of any of the signals
+
 /// Not generating code for dbc_decode_SENSOR_BATT() since 'GEO' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_SENSOR_HEARTBEAT() since 'GEO' is not the recipient of any of the signals
+/// Not generating code for dbc_decode_BLE_HEARTBEAT() since 'GEO' is not the recipient of any of the signals
 
 /// Decode BLE's 'BLE_CHCK_PT' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
@@ -349,12 +344,6 @@ static inline bool dbc_decode_BLE_CHCK_PT(BLE_CHCK_PT_t *to, const uint8_t bytes
     return success;
 }
 
-
-/// Not generating code for dbc_decode_BLE_HEARTBEAT() since 'GEO' is not the recipient of any of the signals
-
-/// Not generating code for dbc_decode_BLE_MAP_START_DATA() since 'GEO' is not the recipient of any of the signals
-
-/// Not generating code for dbc_decode_BLE_MAP_DEST_DATA() since 'GEO' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_DIRECTION() since 'GEO' is not the recipient of any of the signals
 

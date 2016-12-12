@@ -286,8 +286,8 @@ void period_10Hz(uint32_t count)
     	if(nav.last_checkpoint_received)
     	{
 
-    		if(geo_direction.GEO_DIRECTION_enum == DIR_FORWARD)
-    			LD.setNumber(DIR_FORWARD);
+    		if(geo_direction.GEO_DIRECTION_enum == DIR_STRAIGHT)
+    			LD.setNumber(DIR_STRAIGHT);
     		if(geo_direction.GEO_DIRECTION_enum == DIR_HALF_LEFT)
     			LD.setNumber(DIR_HALF_LEFT);
     		if(geo_direction.GEO_DIRECTION_enum == DIR_LEFT)
@@ -325,9 +325,9 @@ void period_10Hz(uint32_t count)
 		}
 		else
 		{
-			geo_direction.GEO_DIRECTION_enum = DIR_REVERSE;
+			geo_direction.GEO_DIRECTION_enum = GEO_STOP;
 			dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
-			LD.setNumber(DIR_REVERSE);
+			LD.setNumber(GEO_STOP);
 		}
 
 	}
