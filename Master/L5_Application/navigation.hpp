@@ -18,4 +18,6 @@
 #include "lpc_timers.h"
 #include "string.h"
 
+void navigation_mode();
+
 #endif /* L5_APPLICATION_NAVIGATION_HPP_ */

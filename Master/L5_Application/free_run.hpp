@@ -15,7 +15,6 @@
 #include "lpc_timers.h"
 #include "string.h"
 
-//extern bool free_run_init;
 void free_run_func(void);
 
 #endif /* HANDLERS_HPP_ */

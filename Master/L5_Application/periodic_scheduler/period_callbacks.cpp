@@ -43,33 +43,33 @@
 #include <heartbeat.hpp>
 
 //Heart beat CAN Messages
-const uint32_t BLE_HEARTBEAT__MIA_MS = 500;
-const BLE_HEARTBEAT_t BLE_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            SENSOR_HEARTBEAT__MIA_MS = 200;
-const SENSOR_HEARTBEAT_t      SENSOR_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            GEO_HEARTBEAT__MIA_MS = 200;
-const GEO_HEARTBEAT_t      GEO_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            MOTOR_HEARTBEAT__MIA_MS = 200;
-const MOTOR_HEARTBEAT_t      MOTOR_HEARTBEAT__MIA_MSG = { 0 };
-const uint32_t            IO_HEARTBEAT__MIA_MS = 500;
-const IO_HEARTBEAT_t      IO_HEARTBEAT__MIA_MSG = { 0 };
+const uint32_t			BLE_HEARTBEAT__MIA_MS = 500;
+const BLE_HEARTBEAT_t		BLE_HEARTBEAT__MIA_MSG = { 0 };
+const uint32_t			SENSOR_HEARTBEAT__MIA_MS = 200;
+const SENSOR_HEARTBEAT_t	SENSOR_HEARTBEAT__MIA_MSG = { 0 };
+const uint32_t			GEO_HEARTBEAT__MIA_MS = 200;
+const GEO_HEARTBEAT_t		GEO_HEARTBEAT__MIA_MSG = { 0 };
+const uint32_t			MOTOR_HEARTBEAT__MIA_MS = 200;
+const MOTOR_HEARTBEAT_t	MOTOR_HEARTBEAT__MIA_MSG = { 0 };
+const uint32_t			IO_HEARTBEAT__MIA_MS = 500;
+const IO_HEARTBEAT_t		IO_HEARTBEAT__MIA_MSG = { 0 };
 
-const uint32_t            BLE_COMM_CMD__MIA_MS = 1000;
-const BLE_COMM_CMD_t      BLE_COMM_CMD__MIA_MSG = {COMM_STOP};
-const uint32_t            SENSOR_ULTRASONIC__MIA_MS = 1000;
-const SENSOR_ULTRASONIC_t   SENSOR_ULTRASONIC__MIA_MSG = { 0 };
-const uint32_t            SENSOR_BATT__MIA_MS = 1000;
-const SENSOR_BATT_t       SENSOR_BATT__MIA_MSG = { 0 };
-const uint32_t                 GEO_DIRECTION__MIA_MS = 1000;
-const GEO_DIRECTION_t          GEO_DIRECTION__MIA_MSG = { 0 };
-const uint32_t                 GEO_DEST_RCHD__MIA_MS = 1000;
-const GEO_DEST_RCHD_t          GEO_DEST_RCHD__MIA_MSG = { 0 };
+const uint32_t			BLE_COMM_CMD__MIA_MS = 1000;
+const BLE_COMM_CMD_t		BLE_COMM_CMD__MIA_MSG = {COMM_STOP};
+const uint32_t			SENSOR_ULTRASONIC__MIA_MS = 1000;
+const SENSOR_ULTRASONIC_t	SENSOR_ULTRASONIC__MIA_MSG = { 0 };
+const uint32_t			SENSOR_BATT__MIA_MS = 1000;
+const SENSOR_BATT_t		SENSOR_BATT__MIA_MSG = { 0 };
+const uint32_t			GEO_DIRECTION__MIA_MS = 1000;
+const GEO_DIRECTION_t		GEO_DIRECTION__MIA_MSG = {DIR_FORWARD};
+const uint32_t			GEO_DEST_RCHD__MIA_MS = 1000;
+const GEO_DEST_RCHD_t		GEO_DEST_RCHD__MIA_MSG = { 0 };
 
 MASTER_SYSTEM_CMD_t system_cmd_message = {SYSTEM_STOP};
 MASTER_SYSTEM_STATUS_t system_status_message = {0};
 BLE_COMM_CMD_t ble_comm_cmd = {COMM_STOP};
 SENSOR_BATT_t sensor_batt_status = { 0 };
-GEO_DIRECTION_t geo_direction_cmd = { 0 };
+GEO_DIRECTION_t geo_direction_cmd = {DIR_REVERSE};
 GEO_DEST_RCHD_t geo_dest_rchd_cmd = { 0 };
 SENSOR_ULTRASONIC_t sensor_ultrasonic_cmd = { 0 };
 MASTER_MOTOR_CMD_t motor_cmd_message = {0};
@@ -78,7 +78,6 @@ SENSOR_HEARTBEAT_t sensor_heartbeat_cmd = { 0 };
 GEO_HEARTBEAT_t geo_heartbeat_cmd = { 0 };
 MOTOR_HEARTBEAT_t motor_heartbeat_cmd = { 0 };
 IO_HEARTBEAT_t io_heartbeat_cmd = { 0 };
-
 
 can_msg_t can_msg;
 int mia_count;

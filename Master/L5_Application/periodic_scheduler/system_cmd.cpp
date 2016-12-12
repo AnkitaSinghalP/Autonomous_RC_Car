@@ -1,5 +1,6 @@
 #include "system_cmd.hpp"
 #include "free_run.hpp"
+#include "navigation.hpp"
 
 void sys_cmd(void)
 {
@@ -12,6 +13,8 @@ void sys_cmd(void)
 
 		dbc_decode_BLE_COMM_CMD(&ble_comm_cmd, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_SENSOR_ULTRASONIC(&sensor_ultrasonic_cmd, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_GEO_DIRECTION(&geo_direction_cmd,can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_GEO_DEST_RCHD(&geo_dest_rchd_cmd,can_msg.data.bytes, &can_msg_hdr);
 		if(dbc_decode_BLE_HEARTBEAT(&ble_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
 			system_status_message.MASTER_SYSTEM_STATUS_ble = 1;
 		if(dbc_decode_SENSOR_HEARTBEAT(&sensor_heartbeat_cmd, can_msg.data.bytes, &can_msg_hdr))
@@ -30,15 +33,14 @@ void sys_cmd(void)
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_STOP;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
 					sys_start_flag = 0;
-					LD.setNumber(55);
+					LD.setNumber(88);
 					break;
 
 			case(COMM_START):
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_START;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
 					sys_start_flag = 1;
-					LD.setNumber(44);
-					//free_run_func();
+					LD.setNumber(99);
 					break;
 
 			case(COMM_RESET):
@@ -52,6 +54,9 @@ void sys_cmd(void)
 		}
 	}
 
-	if (sys_start_flag)
-		free_run_func();
+	if (sys_start_flag){
+		navigation_mode();
+		dbc_encode_and_send_MASTER_MOTOR_CMD(&motor_cmd_message);
+	}
+
 }
