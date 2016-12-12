@@ -34,8 +34,27 @@ using namespace std;
 
 #define MIN_ANGLE       0
 #define MAX_ANGLE       360
-#define DISTANCE_OFFSET 45
-#define STEER_OFFSET    10
+#define DISTANCE_OFFSET 20
+#define STEER_OFFSET    5
+#define DEV_WR_ADDRESS  0x3C
+#define DEV_RD_ADDRESS  0x3D
+#define X_MSB_REG       0x03
+#define X_LSB_REG       0x04
+#define Y_MSB_REG       0x07
+#define Y_LSB_REG       0x08
+#define Z_MSB_REG       0x05
+#define Z_LSB_REG       0x06
+#define MODE_REG        0x02
+#define CRA_REG_M       0x00
+#define COMPASS_ADDR    0x1E
+#define CASE1_MUL_CAL   0.8378
+#define CASE2_MUL_CAL   1.1612
+#define CASE3_MUL_CAL   1.25
+#define CASE1_ADD_CAL   25
+#define CASE2_ADD_CAL   -34.8387
+#define CASE3_ADD_CAL   -425
+
+
 
 typedef struct {
         float latitude;
@@ -73,6 +92,7 @@ class Navigation
         //GEO_DIRECTION_t steer;
         bool last_checkpoint_received;
         vector<gps_data> all_checkpoints;
+        uint16_t gps_bearing_angle;
 
         float gps_distance;		//can be changed to a private variable after testing phase of the project
 
@@ -108,7 +128,7 @@ class Navigation
         void compass_calibrate();
 
         char* gps_raw_data;
-        uint16_t gps_bearing_angle;
+
         bool pop_next_checkpoint;
         bool next_checkpoint_reached;
 

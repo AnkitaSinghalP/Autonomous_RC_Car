@@ -37,7 +37,7 @@ void Navigation::compass_init()
 	  LPC_SC->PCLKSEL1 &= ~(3<<18);
 	  LPC_SC->PCLKSEL1 |= (1<<18);
 
-	  LPC_I2C2->I2ADR0 = 0x1E;
+	  LPC_I2C2->I2ADR0 = COMPASS_ADDR;
 }
 
 void Navigation::compass_direction()
@@ -47,17 +47,18 @@ void Navigation::compass_direction()
 	float heading;
 
 	/**
-	 * CALVIN: Don't use magic numbers. This code is unmaintanable.
-	 * SHAURYA: Yes, We'll change them to macros later
+	 * CALVIN: Don't use magic numbers. This code is unmaintainable.
+	 * SHAURYA:Yes, We'll change them to macros later
+	 * HARSHA: Magic numbers are removed.
 	 */
-	i2c.writeReg(0x3C,0x02,0x00);
+	i2c.writeReg(DEV_WR_ADDRESS,MODE_REG,CRA_REG_M);
 
-	xMHiByte = i2c.readReg(0x3D, 0x03);
-	xMLoByte = i2c.readReg(0x3D, 0x04);
-	yMHiByte = i2c.readReg(0x3D, 0x07);
-	yMLoByte = i2c.readReg(0x3D, 0x08);
-	zMHiByte = i2c.readReg(0x3D, 0x05);
-	zMLoByte = i2c.readReg(0x3D, 0x06);
+	xMHiByte = i2c.readReg(DEV_RD_ADDRESS, X_MSB_REG);
+	xMLoByte = i2c.readReg(DEV_RD_ADDRESS, X_LSB_REG);
+	yMHiByte = i2c.readReg(DEV_RD_ADDRESS, Y_MSB_REG);
+	yMLoByte = i2c.readReg(DEV_RD_ADDRESS, Y_LSB_REG);
+	zMHiByte = i2c.readReg(DEV_RD_ADDRESS, Z_MSB_REG);
+	zMLoByte = i2c.readReg(DEV_RD_ADDRESS, Z_LSB_REG);
 
 	xMagData = (xMHiByte << 8) | xMLoByte;
 	yMagData = (yMHiByte << 8) | yMLoByte;
@@ -102,13 +103,13 @@ void Navigation::compass_calibrate()
 	 * We know they seems to be magic numbers.
 	 */
     if(compass_angle >= 0 && compass_angle <= 185)
-        compass_angle = (compass_angle * 0.8378) + 25;
+        compass_angle = (compass_angle * CASE1_MUL_CAL) + CASE1_ADD_CAL;
 
     else if(compass_angle > 185 && compass_angle <= 340)
-        compass_angle = (compass_angle * 1.1612) - 34.8387;
+        compass_angle = (compass_angle * CASE2_MUL_CAL) + CASE2_ADD_CAL;
 
     else if(compass_angle > 340 && compass_angle <= 360)
-        compass_angle = (compass_angle * 1.25) - 425;
+        compass_angle = (compass_angle * CASE3_MUL_CAL) + CASE3_ADD_CAL;
 
 }
 

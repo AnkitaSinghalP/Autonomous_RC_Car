@@ -67,6 +67,8 @@ bool sys_cmd_flag = false;
  */
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 
+GEO_HEARTBEAT_t geo_heartbeat = { 0 };
+
 bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 {
     can_msg_t can_msg = { 0 };
@@ -81,7 +83,7 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
  * test code starts here
  */
 
-BLE_CHCK_PT_t p1,p2,p3,p4,p5,last;
+BLE_CHCK_PT_t p1,p2,p3,p4,p5,p6,p7,last;
 
 vector<BLE_CHCK_PT_t> dummy_checkpoints;
 
@@ -100,20 +102,29 @@ bool period_init(void)
  * test code starts here
  * this is for testing purpose only
  */
-    p1.BLE_CHCK_PT_lat  = 37.335361;
-    p1.BLE_CHCK_PT_long = -121.881363;
+    p1.BLE_CHCK_PT_lat  = 37.335497;//37.336039;//37.335510;
+    p1.BLE_CHCK_PT_long = -121.883331;//-121.881883;//-121.881462;
 
-    p2.BLE_CHCK_PT_lat  = 37.335510;
-    p2.BLE_CHCK_PT_long = -121.881462;
+    p2.BLE_CHCK_PT_lat  = 37.335945;//37.335735;//37.335361;
+    p2.BLE_CHCK_PT_long = -121.883651;//-121.881691;//-121.881363;
 
-    p3.BLE_CHCK_PT_lat  = 37.335758;
-    p3.BLE_CHCK_PT_long = -121.881638;
+    p3.BLE_CHCK_PT_lat  = 37.335568;//37.336039;//37.335510;
+    p3.BLE_CHCK_PT_long = -121.884418;//-121.881883;//-121.881462;
 
-    p4.BLE_CHCK_PT_lat  = 37.336025;
-    p4.BLE_CHCK_PT_long = -121.881660;
 
-    p5.BLE_CHCK_PT_lat  = 37.336189;
-    p5.BLE_CHCK_PT_long = -121.881790;
+    p4.BLE_CHCK_PT_lat  = 37.334307;//37.335758;
+    p4.BLE_CHCK_PT_long = -121.883516;//-121.881638;
+
+
+    p5.BLE_CHCK_PT_lat  = 37.335013;//37.335745;//37.336025;
+    p5.BLE_CHCK_PT_long = -121.882022;//-121.882736;//-121.881660;
+
+    p6.BLE_CHCK_PT_lat  = 37.335295;//37.337059;//37.336189;
+    p6.BLE_CHCK_PT_long = -121.881274;//-121.880859;//-121.881790;
+
+    p7.BLE_CHCK_PT_lat  = 37.336267;
+    p7.BLE_CHCK_PT_long = -121.882001;
+
 
     last.BLE_CHCK_PT_lat = 0;
     last.BLE_CHCK_PT_long = 0;
@@ -123,6 +134,8 @@ bool period_init(void)
     dummy_checkpoints.push_back(p3);
     dummy_checkpoints.push_back(p4);
     dummy_checkpoints.push_back(p5);
+    dummy_checkpoints.push_back(p6);
+    dummy_checkpoints.push_back(p7);
 
     dummy_checkpoints.push_back(last);
 
@@ -151,7 +164,7 @@ void period_1Hz(uint32_t count)
     if(CAN_is_bus_off(can1))
     	CAN_reset_bus(can1);
 
-    GEO_HEARTBEAT_t geo_heartbeat = { 0 };
+  //  GEO_HEARTBEAT_t geo_heartbeat = { 0 };
     geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
 
 	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
@@ -167,9 +180,10 @@ void period_1Hz(uint32_t count)
 
 
 
-    //printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
+    printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
     //printf("Distance = %f(feet)\n\n", nav.gps_distance);
-	//printf("Compass= %d\n\n",nav.compass_angle);
+	printf("Compass= %d\n\n",nav.compass_angle);
+	printf("Bearing = %d\n",nav.gps_bearing_angle);
 
 
 /*	nav.next_checkpoint = {37,121};
@@ -250,7 +264,8 @@ void period_10Hz(uint32_t count)
 		//printf("size = %d\n",nav.all_checkpoints.size());
 	}
 
-	nav.geo();
+	if(!nav.geo())
+		nav.gps_fix = false;
 
 
 
@@ -272,15 +287,15 @@ void period_10Hz(uint32_t count)
     	{
 
     		if(geo_direction.GEO_DIRECTION_enum == DIR_FORWARD)
-    			printf("Go straight\n");
+    			LD.setNumber(DIR_FORWARD);
     		if(geo_direction.GEO_DIRECTION_enum == DIR_HALF_LEFT)
-    			printf("Half left\n");
+    			LD.setNumber(DIR_HALF_LEFT);
     		if(geo_direction.GEO_DIRECTION_enum == DIR_LEFT)
-    			printf("Full left\n");
+    			LD.setNumber(DIR_LEFT);
     		if(geo_direction.GEO_DIRECTION_enum == DIR_HALF_RIGHT)
-    			printf("Half right\n");
+    			LD.setNumber(DIR_HALF_RIGHT);
     		if(geo_direction.GEO_DIRECTION_enum == DIR_RIGHT)
-    			printf("Full right\n");
+    			LD.setNumber(DIR_RIGHT);
 
 /*    		if(nav.steer == 0)
     			printf("Go straight\n");
@@ -294,18 +309,27 @@ void period_10Hz(uint32_t count)
     			printf("Full right\n");*/
 
 			//geo_direction.GEO_DIRECTION_enum = nav.steer;
+    		dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
 
 			GEO_DEST_RCHD_t geo_dest_rchd;
 			geo_dest_rchd.GEO_DEST_RCHD_stat = nav.destination_reached;
 
-			dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
 			dbc_encode_and_send_GEO_DEST_RCHD(&geo_dest_rchd);
     	}
     }
 	else
 	{
 		if(!nav.gps_fix)
-			printf("No Fix\n");
+		{
+			LD.setNumber(6);
+		}
+		else
+		{
+			geo_direction.GEO_DIRECTION_enum = DIR_REVERSE;
+			dbc_encode_and_send_GEO_DIRECTION(&geo_direction);
+			LD.setNumber(DIR_REVERSE);
+		}
+
 	}
 
 }
