@@ -28,7 +28,7 @@
  * do must be completed within 1ms.  Running over the time slot will reset the system.
  */
 
-//#include <sensor_sonar.hpp>
+#include <sensor_sonar.hpp>
 #include <stdint.h>
 #include "io.hpp"
 #include "periodic_callback.h"
@@ -43,30 +43,15 @@
 #include "string.h"
 #include "eint.h"
 #include "tasks.hpp"
-SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
-//can_msg_t can_msg_sensor = { 0 };
-can_msg_t can_msg_received;
-can_msg_t can_msg = { 0 };
-MASTER_SYSTEM_CMD_t master_command;
-
-const uint32_t                             MASTER_SYSTEM_CMD__MIA_MS = 1000;
-const MASTER_SYSTEM_CMD_t                  MASTER_SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
-SENSOR_ULTRASONIC_t ultrasonic_sensor_data = {0};
-
-SENSOR_ULTRASONIC_t ultrasonic_sensor_receiver = {0};
-
-dbc_mia_info_t mia_handling = {0};
-
-SENSOR_BATT_t battery_status = {0};
+#include "current_sensor.hpp"
 
 
-dbc_msg_hdr_t can_msg_hdr;
 
-static int counter = 0;
-//SYSTEM_CMD_t master_cmd = {0};
 
-//const uint32_t            MASTER_CMD__MIA_MS = 3000;
-//const SYSTEM_CMD_t      MASTER_CMD__MIA_MSG = { 25 };
+bool start=false;
+
+
+
 
 
 /// This is the stack size used for each of the period tasks (1Hz, 10Hz, 100Hz, and 1000Hz)
@@ -83,14 +68,7 @@ const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 /// Called once before the RTOS is started, this is a good place to initialize things once
 
 
-bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
-{
 
-	can_msg.msg_id = mid;
-	can_msg.frame_fields.data_len = dlc;
-	memcpy(can_msg.data.bytes, bytes, dlc);
-	return CAN_tx(can1, &can_msg, 0);
-}
 
 bool period_init(void)
 {
@@ -99,10 +77,10 @@ bool period_init(void)
 	CAN_reset_bus(can1);
 	CAN_bypass_filter_accept_all_msgs();
 	LD.setNumber(0);
-
-	// scheduler_add_task(new I2C_hapTask(PRIORITY_MEDIUM));
-sensor_init();
+	sensor_init();
 	can_init_sensor();
+	INA219_configure(INA219_RANGE_32V,INA219_GAIN_320MV,INA219_BUS_RES_12BIT,INA219_SHUNT_RES_12BIT_128S,INA219_MODE_SHUNT_BUS_CONT);
+    INA219_calibrate(8192);
 
 	return true; // Must return true upon success
 }
@@ -115,10 +93,7 @@ bool period_reg_tlm(void)
 }
 
 
-/**
- * Below are your periodic functions.
- * The argument 'count' is the number of times each periodic task is called.
- */
+
 
 void period_1Hz(uint32_t count)
 {
@@ -129,15 +104,11 @@ void period_1Hz(uint32_t count)
 		CAN_reset_bus(can1);
 	}
 
-	sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
-	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
-
-	//printf("%d",count);
-	//sensor_measure();
-	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);
 	LE.toggle(1);
 
-
+	if(count%20==0 && start){
+	    current_sensor_measure();
+	}
     ultrasonic_sensor_heartbeat_message();
 
 
@@ -145,42 +116,7 @@ void period_1Hz(uint32_t count)
 
 void period_10Hz(uint32_t count)
 {
-    static bool start=false;
-	/*sensor_heartbeat_message.SENSOR_HEARTBEAT_tx_bytes = 12;
-	sensor_heartbeat_message.SENSOR_HEARTBEAT_rx_bytes = 54;
-	dbc_encode_and_send_SENSOR_HEARTBEAT(&sensor_heartbeat_message);*/
 
-
-	/*ultrasonic_sensor_data.SENSOR_ULTRASONIC_middle = 0;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_left = ;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_right = ;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_rear = ;
-	ultrasonic_sensor_data.SENSOR_ULTRASONIC_critical = ;*/
-
-	dbc_encode_and_send_SENSOR_ULTRASONIC(&ultrasonic_sensor_data);
-
-	battery_status.SENSOR_BATT_stat = 75;
-	dbc_encode_and_send_SENSOR_BATT(&battery_status);
-	//puts("sent");
-
-	while(CAN_rx(can1, &can_msg_received, 0))
-	{
-		can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg_received.msg_id;
-
-		dbc_decode_MASTER_SYSTEM_CMD(&master_command, can_msg_received.data.bytes, &can_msg_hdr);
-
-	}
-
-	if(dbc_handle_mia_MASTER_SYSTEM_CMD(&master_command, 10))
-	{
-		LD.setNumber(counter);
-		counter++;
-		LE.toggle(3);
-		if(counter == 99 )
-			counter =0;
-
-	}
 
     /**
      * wait for system command from CAN before starting
@@ -197,8 +133,6 @@ void period_10Hz(uint32_t count)
         sensor_measure();
     }
 
-    //decoded_can_sensor_message(1,0,0);
-	//LE.toggle(2);
 }
 
 void period_100Hz(uint32_t count)

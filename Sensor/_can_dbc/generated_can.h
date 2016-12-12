@@ -38,16 +38,16 @@ static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
 // static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 // static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
 // static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
-// static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 8 };
+// static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 2 };
 // static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
 // static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 // static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
     SYSTEM_START = 1,
     SYSTEM_RESET = 2,
+    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 
@@ -63,11 +63,11 @@ typedef struct {
 
 /// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 1 byte(s), MID: 211
 typedef struct {
-    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,
-    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,
-    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,
-    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,
-    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,
+    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,IO
 
     // No dbc_mia_info_t for a message that we will send
 } SENSOR_ULTRASONIC_t;

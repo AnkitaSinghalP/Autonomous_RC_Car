@@ -57,7 +57,7 @@
 #define INA219_MODE_SHUNT_CONT       0x05
 #define INA219_MODE_BUS_CONT         0x06
 #define INA219_MODE_SHUNT_BUS_CONT   0x07
-
+#define battery_constant 6.5
 
 uint16_t INA219_configure(uint8_t range, uint8_t gain, uint8_t busRes, uint8_t shuntRes, uint8_t mode);
 
@@ -72,7 +72,7 @@ float INA219_getShuntVoltage_mV(void);
 float INA219_getBusVoltage_V(void);
 float INA219_getCurrent_mA(void);
 float INA219_getPower_mW(void);
-
+void current_sensor_measure(void);
 
 void INA219_writeRegister16(uint8_t reg, uint16_t val);
 int16_t INA219_readRegister16(uint8_t reg);

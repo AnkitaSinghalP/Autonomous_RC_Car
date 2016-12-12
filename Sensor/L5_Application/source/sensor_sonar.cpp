@@ -26,6 +26,16 @@
 #include "string.h"
 
 #define TIMER_TICK 1
+ /*
+ *
+ * The preference for turn is left in case there is an obstacle in the
+ * middle, so the sensitivity for the left side must be a little higher
+ * than the right
+ */
+#define LEFT_DISTANCE 38
+#define RIGHT_DISTANCE 30
+#define MIDDLE_DISTANCE 45
+#define REAR_DISTANCE 45
 
 sensor_readings obstacle;
 
@@ -36,7 +46,6 @@ static int start_time_rear=0, actual_time_rear =0;
 
 
 SENSOR_HEARTBEAT_t sensor_heartbeat_message = {0};
-//can_msg_t can_msg_sensor = { 0 };
 can_msg_t can_msg_received;
 can_msg_t can_msg = { 0 };
 
@@ -50,7 +59,6 @@ MASTER_SYSTEM_CMD_t master_command;
 
 dbc_mia_info_t mia_handling = {0};
 
-SENSOR_BATT_t battery_status = {0};
 
 dbc_msg_hdr_t can_msg_hdr;
 
@@ -88,7 +96,6 @@ void ultrasonic_sensor_heartbeat_message()
 
 void isr_middle1()
 {
-    // puts("inside isr_middle1 \n");
     actual_time_middle = lpc_timer_get_value(lpc_timer0) - start_time_middle;
     obstacle.middle_distance = actual_time_middle / 147;
     portYIELD_FROM_ISR(0);
@@ -96,7 +103,6 @@ void isr_middle1()
 
 void isr_right1()
 {
-    // puts("inside isr_right1 \n");
     actual_time_right = lpc_timer_get_value(lpc_timer0) - start_time_right;
     obstacle.right_distance = actual_time_right / 147;
 
@@ -104,7 +110,6 @@ void isr_right1()
 }
 void isr_left1()
 {
-    // puts("inside isr_left1 \n");
     actual_time_left = lpc_timer_get_value(lpc_timer0) - start_time_left;
     obstacle.left_distance = actual_time_left / 147;
 
@@ -113,7 +118,6 @@ void isr_left1()
 
 void isr_rear1()
 {
-    //puts("inside isr3 \n");
     actual_time_rear = lpc_timer_get_value(lpc_timer0) - start_time_rear;
     obstacle.rear_distance = actual_time_rear / 147;
     portYIELD_FROM_ISR(0);
@@ -121,28 +125,21 @@ void isr_rear1()
 
 void isr_middle()
 {
-    //puts("inside isr1");
     start_time_middle = lpc_timer_get_value(lpc_timer0);
-
-
 }
 void isr_right()
 {
-    //puts("inside isr1");
     start_time_right = lpc_timer_get_value(lpc_timer0);
 
 }
 void isr_left()
 {
-    //puts("inside isr1");
     start_time_left = lpc_timer_get_value(lpc_timer0);
 
 }
 void isr_rear()
 {
-    //puts("inside isr1");
     start_time_rear = lpc_timer_get_value(lpc_timer0);
-
 }
 
 
@@ -197,32 +194,15 @@ void interrupt_falling_edge_enable()
     eint3_enable_port2(5,eint_falling_edge,isr_left1);
     eint3_enable_port2(7,eint_falling_edge,isr_rear1);
 }
-void sensor_receiver_pins()
-{
-    /*LPC_GPIO2->FIODIR &= ~(1 << 1);
-    LPC_GPIO2->FIODIR &= ~(1 << 3);
-    LPC_GPIO2->FIODIR &= ~(1 << 5);
-    LPC_GPIO2->FIODIR &= ~(1 << 7);*/
-}
 
 void can_init_sensor()
 {
     CAN_init(can1, 100, 20, 20,0,0);
     CAN_bypass_filter_accept_all_msgs();
     CAN_reset_bus(can1);
-
-    //return true;
-
 }
 
 void sensor_init(){
-
-    /**
-     * todo: CALVIN:remove this if it's not being used.
-     * KARTHIK: will be removed after demo 2.
-     */
-    sensor_receiver_pins();
-
     interrupt_enable();
     lpc_timer_enable(lpc_timer0, TIMER_TICK);
     interrupt_falling_edge_enable();
@@ -231,56 +211,26 @@ void sensor_init(){
 void compute()
 {
     uint8_t left,right,middle,rear;
-    static uint8_t count,left_avg,right_avg,mid_avg,rear_avg,sum_left,sum_right,sum_mid,sum_rear,critical;
-    static uint8_t left_old,middle_old,right_old,rear_old;
-    static bool flag=false;
-   // if(flag){
-        left_old= sum_left;
-        middle_old=sum_right;
-        right_old= sum_mid;
-        rear_old=sum_rear;
-        sum_left= obstacle.left_distance;
-        sum_right=obstacle.right_distance;
-        sum_mid=obstacle.middle_distance;
-        sum_rear=obstacle.rear_distance;
-/*
+    static uint8_t dist_left,dist_right,dist_mid,dist_rear,critical;
 
-        if(abs(sum_left-left_old)>30){
-            sum_left=left_old;
-        }
-        if(abs(sum_right-right_old)>30){
-            sum_right  =   right_old;
-        }
-        if(abs(sum_mid-middle_old)>30){
-            sum_mid = middle_old;
-        }
-        if(abs(sum_rear-rear_old)>30){
-            sum_rear  = rear_old;
-        }
 
-    }
-    else{//get the first reading into the old variables
-        left_old=obstacle.left_distance;
-        middle_old = obstacle.right_distance;
-        right_old=obstacle.right_distance;
-        rear_old=obstacle.rear_distance;
-        flag=true;
-    }
-*/
+        dist_left= obstacle.left_distance;
+        dist_right=obstacle.right_distance;
+        dist_mid=obstacle.middle_distance;
+        dist_rear=obstacle.rear_distance;
 
 
 
-
-    if(sum_right<=30){
+    if(dist_right<=RIGHT_DISTANCE){
         right=1;
         LE.toggle(1);
     }
     else{
         right=0;
     }
-    if(sum_mid<=45){
+    if(dist_mid<=MIDDLE_DISTANCE){
         middle=1;
-        if(sum_mid<20){
+        if(dist_mid<20){
             critical=1;
             LD.setNumber(88);
         }
@@ -291,27 +241,20 @@ void compute()
         critical=0;
         middle=0;
     }
-    /**
-     * The preference for turn is left in case there is an obstacle in the
-     * middle, so the sensitivity for the left side must be a little higher
-     * than the right
-     */
-    if(sum_left<=38){
+    if(dist_left<=LEFT_DISTANCE){
         left=1;
         LE.toggle(3);
     }
     else{
         left=0;
     }
-    if(sum_rear<=45){
+    if(dist_rear<=REAR_DISTANCE){
         rear=1;
-        //LE.toggle(4);
     }
     else{
         rear=0;
     }
-    // printf(" %d     %d      %d   %d\n",left_avg,right_avg,mid_avg,rear_avg);
-    decoded_can_sensor_message(middle,left,right,left,critical);
+    decoded_can_sensor_message(middle,left,right,rear,critical);
 }
 
 
@@ -319,13 +262,11 @@ void compute()
 void sensor_measure()
 {
     sensor_sonar_middle_trigger();
-    //sensor_sonar_rear_trigger();
+    sensor_sonar_rear_trigger();
     delay_ms(10);
     sensor_sonar_right_trigger();
     delay_ms(10);
     sensor_sonar_left_trigger();
-    //delay_ms(10);
-    // sensor_sonar_rear_trigger();
     compute();
 
 }
@@ -333,7 +274,6 @@ void can_communication_sensor()
 {
     static int counter_send = 0;
     counter_send++;
-    // decoded_can_sensor_message();
     if(counter_send % 100==0)
         ultrasonic_sensor_heartbeat_message();
 
@@ -341,9 +281,6 @@ void can_communication_sensor()
 
 uint8_t received_sensor_can_msg()
 {
-    /**
-     * todo: do not use while loops.
-     */
     if(CAN_rx(can1, &can_msg_received, 0))
     {
         can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
