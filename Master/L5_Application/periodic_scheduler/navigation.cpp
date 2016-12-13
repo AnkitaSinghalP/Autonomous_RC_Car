@@ -7,12 +7,12 @@ void navigation_mode(void)
 		{
 			switch (geo_direction_cmd.GEO_DIRECTION_enum)
 			{
-			case(DIR_FORWARD):
+			case(DIR_STRAIGHT):
 				if(!sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_middle)
 				{
-					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_FORWARD;
+					motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_STRAIGHT;
 					motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
-					LD.setNumber(DIR_FORWARD);
+					LD.setNumber(DIR_STRAIGHT);
 				}
 				else
 				{
@@ -74,15 +74,21 @@ void navigation_mode(void)
 				}
 				break;
 
-			case(DIR_REVERSE):
+			case(GEO_STOP):
 			default:
 				motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
-				LD.setNumber(DIR_REVERSE);
+				LD.setNumber(GEO_STOP);
 
 				break;
 			}
-		} else {
+		} else if (sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_critical && (!geo_dest_rchd_cmd.GEO_DEST_RCHD_stat)) {
+			//Critical obstacle. Check Reverse
 			motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
+			free_run_func();
 			LD.setNumber(77);
+		} else {
+			//Destination Reached
+			motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
+			LD.setNumber(66);
 		}
 }

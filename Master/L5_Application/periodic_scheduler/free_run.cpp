@@ -25,7 +25,7 @@ void free_run_func()
 		{
 		case 0:
 		case 5:
-			motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_FORWARD;
+			motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_STRAIGHT;
 			motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
 			LD.setNumber(44);
 			break;
@@ -56,8 +56,15 @@ void free_run_func()
 			break;
 
 		case 7:
-			motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
-			LD.setNumber(55);
+			// If there is obstacles on all 3 sides, try reversing the vehicle
+			if (!sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_rear){
+				motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_REVERSE;
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+				LD.setNumber(99);
+			} else {
+				motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
+				LD.setNumber(55);
+			}
 			break;
 
 		default:
@@ -66,8 +73,15 @@ void free_run_func()
 
 		}
 	} else {
-		motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
-		LD.setNumber(77);
+		// If there is a critical obstacle, try reversing the vehicle
+		if (!sensor_ultrasonic_cmd.SENSOR_ULTRASONIC_rear){
+			motor_cmd_message.MASTER_MOTOR_CMD_steer = STEER_REVERSE;
+			motor_cmd_message.MASTER_MOTOR_CMD_drive = START;
+			LD.setNumber(99);
+		} else {
+			motor_cmd_message.MASTER_MOTOR_CMD_drive = STOP;
+			LD.setNumber(77);
+		}
 	}
 }
 

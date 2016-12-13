@@ -33,18 +33,14 @@ void sys_cmd(void)
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_STOP;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
 					sys_start_flag = 0;
-					LD.setNumber(88);
+					LD.setNumber(80);
 					break;
 
 			case(COMM_START):
 					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_START;
 					dbc_encode_and_send_MASTER_SYSTEM_CMD(&system_cmd_message);
 					sys_start_flag = 1;
-					LD.setNumber(99);
-					break;
-
-			case(COMM_RESET):
-					system_cmd_message.MASTER_SYSTEM_CMD_enum = SYSTEM_RESET;
+					LD.setNumber(90);
 					break;
 
 			default:

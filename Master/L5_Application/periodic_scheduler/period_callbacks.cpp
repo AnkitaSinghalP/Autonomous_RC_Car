@@ -58,21 +58,18 @@ const uint32_t			BLE_COMM_CMD__MIA_MS = 1000;
 const BLE_COMM_CMD_t		BLE_COMM_CMD__MIA_MSG = {COMM_STOP};
 const uint32_t			SENSOR_ULTRASONIC__MIA_MS = 1000;
 const SENSOR_ULTRASONIC_t	SENSOR_ULTRASONIC__MIA_MSG = { 0 };
-const uint32_t			SENSOR_BATT__MIA_MS = 1000;
-const SENSOR_BATT_t		SENSOR_BATT__MIA_MSG = { 0 };
 const uint32_t			GEO_DIRECTION__MIA_MS = 1000;
-const GEO_DIRECTION_t		GEO_DIRECTION__MIA_MSG = {DIR_FORWARD};
+const GEO_DIRECTION_t		GEO_DIRECTION__MIA_MSG = {DIR_STRAIGHT};
 const uint32_t			GEO_DEST_RCHD__MIA_MS = 1000;
 const GEO_DEST_RCHD_t		GEO_DEST_RCHD__MIA_MSG = { 0 };
 
 MASTER_SYSTEM_CMD_t system_cmd_message = {SYSTEM_STOP};
 MASTER_SYSTEM_STATUS_t system_status_message = {0};
 BLE_COMM_CMD_t ble_comm_cmd = {COMM_STOP};
-SENSOR_BATT_t sensor_batt_status = { 0 };
-GEO_DIRECTION_t geo_direction_cmd = {DIR_REVERSE};
+GEO_DIRECTION_t geo_direction_cmd = {GEO_STOP};
 GEO_DEST_RCHD_t geo_dest_rchd_cmd = { 0 };
 SENSOR_ULTRASONIC_t sensor_ultrasonic_cmd = { 0 };
-MASTER_MOTOR_CMD_t motor_cmd_message = {0};
+MASTER_MOTOR_CMD_t motor_cmd_message = {STEER_STRAIGHT, STOP};
 BLE_HEARTBEAT_t ble_heartbeat_cmd = { 0 };
 SENSOR_HEARTBEAT_t sensor_heartbeat_cmd = { 0 };
 GEO_HEARTBEAT_t geo_heartbeat_cmd = { 0 };
@@ -138,7 +135,7 @@ void period_1Hz(uint32_t count)
 
 void period_10Hz(uint32_t count)
 {
-	//Recieve system command from BLE and send system command to all modules to either start or stop
+	//Receive system command from BLE and send system command to all modules to either start or stop
 	sys_cmd();
 
 }
