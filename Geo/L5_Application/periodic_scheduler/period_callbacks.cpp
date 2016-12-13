@@ -49,7 +49,7 @@
 #include "eint.h"
 #include "navigation.h"
 
-GEO_DIRECTION_t geo_direction;
+GEO_DIRECTION_t geo_direction = {GEO_STOP};
 
 
 GPIO *flag = NULL;
