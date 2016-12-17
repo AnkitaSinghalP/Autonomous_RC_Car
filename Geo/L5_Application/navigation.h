@@ -61,21 +61,6 @@ typedef struct {
         float longitude;
 }gps_data;
 
-/*enum direction {
-	straight,
-	half_left,
-	full_left,
-	half_right,
-	full_right
-
-    DIR_LEFT,
-    DIR_HALF_LEFT,
-    DIR_RIGHT,
-    DIR_HALF_RIGHT,
-    DIR_FORWARD
-
-};*/
-
 class Navigation
 {
     public:
@@ -88,8 +73,6 @@ class Navigation
         uint16_t compass_angle;
         bool destination_reached;
         bool gps_fix;
-        //direction steer;
-        //GEO_DIRECTION_t steer;
         bool last_checkpoint_received;
         vector<gps_data> all_checkpoints;
         uint16_t gps_bearing_angle;
@@ -106,7 +89,6 @@ class Navigation
             gps_distance = -1;
             compass_angle = -1;
             destination_reached = false;
-            //steer = DIR_FORWARD;
             last_checkpoint_received = false;
             pop_next_checkpoint = true;
             next_checkpoint_reached = false;

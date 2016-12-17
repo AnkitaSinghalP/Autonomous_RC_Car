@@ -83,9 +83,9 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
  * test code starts here
  */
 
-BLE_CHCK_PT_t p1,p2,p3,p4,p5,p6,p7,last;
-
-vector<BLE_CHCK_PT_t> dummy_checkpoints;
+//BLE_CHCK_PT_t p1,p2,p3,p4,p5,p6,p7,last;
+//
+//vector<BLE_CHCK_PT_t> dummy_checkpoints;
 
 /*****test code ends here*****/
 
@@ -102,42 +102,42 @@ bool period_init(void)
  * test code starts here
  * this is for testing purpose only
  */
-    p1.BLE_CHCK_PT_lat  = 37.335497;//37.336039;//37.335510;
-    p1.BLE_CHCK_PT_long = -121.883331;//-121.881883;//-121.881462;
-
-    p2.BLE_CHCK_PT_lat  = 37.335945;//37.335735;//37.335361;
-    p2.BLE_CHCK_PT_long = -121.883651;//-121.881691;//-121.881363;
-
-    p3.BLE_CHCK_PT_lat  = 37.335568;//37.336039;//37.335510;
-    p3.BLE_CHCK_PT_long = -121.884418;//-121.881883;//-121.881462;
-
-
-    p4.BLE_CHCK_PT_lat  = 37.334307;//37.335758;
-    p4.BLE_CHCK_PT_long = -121.883516;//-121.881638;
-
-
-    p5.BLE_CHCK_PT_lat  = 37.335013;//37.335745;//37.336025;
-    p5.BLE_CHCK_PT_long = -121.882022;//-121.882736;//-121.881660;
-
-    p6.BLE_CHCK_PT_lat  = 37.335295;//37.337059;//37.336189;
-    p6.BLE_CHCK_PT_long = -121.881274;//-121.880859;//-121.881790;
-
-    p7.BLE_CHCK_PT_lat  = 37.336267;
-    p7.BLE_CHCK_PT_long = -121.882001;
-
-
-    last.BLE_CHCK_PT_lat = 0;
-    last.BLE_CHCK_PT_long = 0;
-
-    dummy_checkpoints.push_back(p1);
-    dummy_checkpoints.push_back(p2);
-    dummy_checkpoints.push_back(p3);
-    dummy_checkpoints.push_back(p4);
-    dummy_checkpoints.push_back(p5);
-    dummy_checkpoints.push_back(p6);
-    dummy_checkpoints.push_back(p7);
-
-    dummy_checkpoints.push_back(last);
+//    p1.BLE_CHCK_PT_lat  = 37.335497;//37.336039;//37.335510;
+//    p1.BLE_CHCK_PT_long = -121.883331;//-121.881883;//-121.881462;
+//
+//    p2.BLE_CHCK_PT_lat  = 37.335945;//37.335735;//37.335361;
+//    p2.BLE_CHCK_PT_long = -121.883651;//-121.881691;//-121.881363;
+//
+//    p3.BLE_CHCK_PT_lat  = 37.335568;//37.336039;//37.335510;
+//    p3.BLE_CHCK_PT_long = -121.884418;//-121.881883;//-121.881462;
+//
+//
+//    p4.BLE_CHCK_PT_lat  = 37.334307;//37.335758;
+//    p4.BLE_CHCK_PT_long = -121.883516;//-121.881638;
+//
+//
+//    p5.BLE_CHCK_PT_lat  = 37.335013;//37.335745;//37.336025;
+//    p5.BLE_CHCK_PT_long = -121.882022;//-121.882736;//-121.881660;
+//
+//    p6.BLE_CHCK_PT_lat  = 37.335295;//37.337059;//37.336189;
+//    p6.BLE_CHCK_PT_long = -121.881274;//-121.880859;//-121.881790;
+//
+//    p7.BLE_CHCK_PT_lat  = 37.336267;
+//    p7.BLE_CHCK_PT_long = -121.882001;
+//
+//
+//    last.BLE_CHCK_PT_lat = 0;
+//    last.BLE_CHCK_PT_long = 0;
+//
+//    dummy_checkpoints.push_back(p1);
+//    dummy_checkpoints.push_back(p2);
+//    dummy_checkpoints.push_back(p3);
+//    dummy_checkpoints.push_back(p4);
+//    dummy_checkpoints.push_back(p5);
+//    dummy_checkpoints.push_back(p6);
+//    dummy_checkpoints.push_back(p7);
+//
+//    dummy_checkpoints.push_back(last);
 
 /*
  * test code ends here
@@ -180,10 +180,10 @@ void period_1Hz(uint32_t count)
 
 
 
-    printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
+    //printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
     //printf("Distance = %f(feet)\n\n", nav.gps_distance);
-	printf("Compass= %d\n\n",nav.compass_angle);
-	printf("Bearing = %d\n",nav.gps_bearing_angle);
+	//printf("Compass= %d\n\n",nav.compass_angle);
+	//printf("Bearing = %d\n",nav.gps_bearing_angle);
 
 
 /*	nav.next_checkpoint = {37,121};
@@ -235,13 +235,13 @@ void period_10Hz(uint32_t count)
 	}
 
 /*test code starts here*/
-	sys_cmd_flag = true;
-
-	if(!dummy_checkpoints.empty())
-	{
-		ble_chck_pt = dummy_checkpoints[0];
-		dummy_checkpoints.erase(dummy_checkpoints.begin());
-	}
+//	sys_cmd_flag = true;
+//
+//	if(!dummy_checkpoints.empty())
+//	{
+//		ble_chck_pt = dummy_checkpoints[0];
+//		dummy_checkpoints.erase(dummy_checkpoints.begin());
+//	}
 
 
 /*test code ends here*/
@@ -261,7 +261,7 @@ void period_10Hz(uint32_t count)
 	{
 		nav.last_checkpoint_received = true;
 
-		//printf("size = %d\n",nav.all_checkpoints.size());
+		//printf("number of checkpoints = %d\n",nav.all_checkpoints.size());
 	}
 
 	if(!nav.geo())

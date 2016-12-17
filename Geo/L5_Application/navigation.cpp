@@ -74,18 +74,6 @@ void Navigation::compass_direction()
 
 	//printf("angle = %d\n",(int)heading);
 
-
-
-/*	if(heading >= 0 && heading <= 135)
-		heading = ((heading + 45) * 2) / 3;
-
-	else if(heading > 135 && heading <= 320)
-		heading = ((heading - 40) * 9) / 7;
-
-	else if(heading > 320 && heading <= 360)
-		heading = (((heading - 320) * 3) / 4 );*/
-
-
 	compass_angle = (uint16_t)heading;
 
 }
