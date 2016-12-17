@@ -52,7 +52,7 @@
 
 
 can_msg_t msg_received;
-MASTER_MOTOR_CMD_t motorcmd={0};
+MASTER_MOTOR_CMD_t motorcmd={STEER_STRAIGHT,STOP};
 MASTER_SYSTEM_CMD_t systemcmd;
 MOTOR_HEARTBEAT_t motorheartbeat;
 MOTOR_SPEED_t motorspeed;
@@ -79,7 +79,7 @@ const MASTER_SYSTEM_CMD_t      MASTER_SYSTEM_CMD__MIA_MSG  = {SYSTEM_STOP};
 
 
 const uint32_t          MASTER_MOTOR_CMD__MIA_MS =1000 ;
-const MASTER_MOTOR_CMD_t         MASTER_MOTOR_CMD__MIA_MSG = {0};
+const MASTER_MOTOR_CMD_t         MASTER_MOTOR_CMD__MIA_MSG = {STEER_STRAIGHT,STOP};
 
 
 
@@ -292,7 +292,7 @@ void period_10Hz(uint32_t count)
 
 			break;
 
-		case STEER_FORWARD :
+		case STEER_STRAIGHT :
 			LD.setNumber(2);
 			servomotor.set(STEER_MIDDLE);
 
