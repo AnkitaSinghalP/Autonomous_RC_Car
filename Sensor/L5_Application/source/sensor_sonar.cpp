@@ -250,6 +250,7 @@ void compute()
     }
     if(dist_rear<=REAR_DISTANCE){
         rear=1;
+        LE.toggle(4);
     }
     else{
         rear=0;

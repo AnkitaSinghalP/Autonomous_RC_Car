@@ -104,7 +104,7 @@ void period_1Hz(uint32_t count)
 		CAN_reset_bus(can1);
 	}
 
-	LE.toggle(1);
+
 
 	if(count%20==0 && start){
 	    current_sensor_measure();
