@@ -85,7 +85,10 @@ bool UartDev::flush(void)
 
     return true;
 }
-
+bool UartDev::flush_rx(void){
+	xQueueReset(mRxQueue);
+	return true;
+}
 bool UartDev::recentlyActive(unsigned int ms) const
 {
     TickType_t lastTimeStampMs = MS_PER_TICK() * mLastActivityTime;

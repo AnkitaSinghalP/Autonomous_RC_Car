@@ -45,16 +45,16 @@ static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
 
 /// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
 typedef enum {
-    COMM_STOP = 0,
     COMM_RESET = 2,
     COMM_START = 1,
+    COMM_STOP = 0,
 } BLE_COMM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
+    SYSTEM_RESET = 2,
+    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 

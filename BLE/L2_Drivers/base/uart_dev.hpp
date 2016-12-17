@@ -85,6 +85,7 @@ class UartDev : public CharDev
 
         /// Flushed all pending transmission of the uart queue
         bool flush(void);
+        bool flush_rx();
 
         /**
          * @{ Get the Rx and Tx queue information
