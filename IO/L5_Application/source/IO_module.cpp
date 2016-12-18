@@ -19,11 +19,10 @@
 
 
 MASTER_SYSTEM_CMD_t system_cmd;
-MASTER_MOTOR_CMD_t motor_cmd = {0};
+MASTER_MOTOR_CMD_t motor_cmd = {};
 MASTER_SYSTEM_STATUS_t system_status = {0};
 SENSOR_BATT_t battery_status = {0};
-BLE_MAP_START_DATA_t ble_map_start_data = {0};
-BLE_MAP_DEST_DATA_t ble_map_destination_data = {0};
+
 GEO_DEST_RCHD_t GEO_DEST_RCHD = {0};
 MOTOR_SPEED_t motor_speed = {0};
 IO_HEARTBEAT_t io_heart_beat_msg = {1};
@@ -39,17 +38,14 @@ MASTER_MOTOR_CMD_drive_E master_motor_command_drive;
 const uint32_t                             MASTER_SYSTEM_CMD__MIA_MS = 1000;
 const MASTER_SYSTEM_CMD_t                  MASTER_SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
 const uint32_t                             MASTER_MOTOR_CMD__MIA_MS= 1000;
-const MASTER_MOTOR_CMD_t                   MASTER_MOTOR_CMD__MIA_MSG = {0};
+const MASTER_MOTOR_CMD_t             MASTER_MOTOR_CMD__MIA_MSG = {STEER_STRAIGHT};
 const uint32_t                             MASTER_SYSTEM_STATUS__MIA_MS= 1000;
 const MASTER_SYSTEM_STATUS_t               MASTER_SYSTEM_STATUS__MIA_MSG= {0};
 const uint32_t                             SENSOR_ULTRASONIC__MIA_MS= 1000;
 const SENSOR_ULTRASONIC_t                  SENSOR_ULTRASONIC__MIA_MSG= {0};
 const uint32_t                             SENSOR_BATT__MIA_MS= 1000;
 const SENSOR_BATT_t                        SENSOR_BATT__MIA_MSG= {0};
-const uint32_t                             BLE_MAP_START_DATA__MIA_MS= 1000;
-const BLE_MAP_START_DATA_t                 BLE_MAP_START_DATA__MIA_MSG= {0};
-const uint32_t                             BLE_MAP_DEST_DATA__MIA_MS= 1000;
-const BLE_MAP_DEST_DATA_t                  BLE_MAP_DEST_DATA__MIA_MSG= {0};
+
 const uint32_t                             GEO_DEST_RCHD__MIA_MS= 1000;
 const GEO_DEST_RCHD_t                      GEO_DEST_RCHD__MIA_MSG= {0};
 const uint32_t                             GEO_LOCATION__MIA_MS= 1000;
@@ -591,8 +587,6 @@ void start(){
 		dbc_decode_MASTER_MOTOR_CMD(&motor_cmd, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_MASTER_SYSTEM_STATUS(&system_status, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_SENSOR_BATT(&battery_status, can_msg.data.bytes, &can_msg_hdr);
-		dbc_decode_BLE_MAP_START_DATA(&ble_map_start_data, can_msg.data.bytes, &can_msg_hdr);
-		dbc_decode_BLE_MAP_DEST_DATA(&ble_map_destination_data, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_MOTOR_SPEED(&motor_speed, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_GEO_LOCATION(&geo_location, can_msg.data.bytes, &can_msg_hdr);
 		dbc_decode_GEO_DEST_RCHD(&GEO_DEST_RCHD, can_msg.data.bytes, &can_msg_hdr);
