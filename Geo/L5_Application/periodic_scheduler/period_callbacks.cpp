@@ -95,7 +95,8 @@ bool period_init(void)
     nav.gps_init();
     nav.compass_init();
 
-    CAN_init(can1, 100, 20, 20, 0, 0);
+    CAN_init(can1, 100, 200, 200, 0, 0);
+    CAN_bypass_filter_accept_all_msgs();
     CAN_reset_bus(can1);
 
 /*
@@ -158,27 +159,21 @@ bool period_reg_tlm(void)
  * Below are your periodic functions.
  * The argument 'count' is the number of times each periodic task is called.
  */
+
+
+can_msg_t can_msg_received;
+dbc_msg_hdr_t can_msg_hdr;
+MASTER_SYSTEM_CMD_t systemcmd = {SYSTEM_STOP};
+BLE_CHCK_PT_t ble_chck_pt = {1,1};
+
 void period_1Hz(uint32_t count)
 {
 
     if(CAN_is_bus_off(can1))
     	CAN_reset_bus(can1);
 
-  //  GEO_HEARTBEAT_t geo_heartbeat = { 0 };
-    geo_heartbeat.GEO_HEARTBEAT_tx_bytes = 9;
-
+    geo_heartbeat.GEO_HEARTBEAT_tx_bytes = count;
 	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
-
-    /**
-     * Calvin: is 1Hz the appropriate task to be running this? Your gps should be faster than 1Hz.
-     * Shaurya: This was just for the initial testing.
-     */
-   // if(nav.geo())
-    //    printf("\n");
-
-    //nav.geo();
-
-
 
     //printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
     //printf("Distance = %f(feet)\n\n", nav.gps_distance);
@@ -186,34 +181,66 @@ void period_1Hz(uint32_t count)
 	//printf("Bearing = %d\n",nav.gps_bearing_angle);
 
 
-/*	nav.next_checkpoint = {37,121};
-	nav.all_checkpoints.push_back(nav.next_checkpoint);
-	printf("size = %d\n",nav.all_checkpoints.size());*/
+	//decode all received messages here
+	while(CAN_rx(can1, &can_msg_received, 0))
+	{
+		can_msg_hdr.dlc = can_msg_received.frame_fields.data_len;
+		can_msg_hdr.mid = can_msg_received.msg_id;
+
+		dbc_decode_MASTER_SYSTEM_CMD(&systemcmd,can_msg_received.data.bytes,&can_msg_hdr);
+		if(dbc_decode_BLE_CHCK_PT(&ble_chck_pt,can_msg_received.data.bytes,&can_msg_hdr))
+		{
+			if((int)ble_chck_pt.BLE_CHCK_PT_lat)
+				printf("lat = %f   long = %f\n",ble_chck_pt.BLE_CHCK_PT_lat,ble_chck_pt.BLE_CHCK_PT_long);
+
+		}
+	}
+
+	if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 0) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 0))
+	{
+		if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 1) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 1))
+		{
+			ble_chck_pt.BLE_CHCK_PT_long = 0 - ble_chck_pt.BLE_CHCK_PT_long;
+			nav.next_checkpoint = {ble_chck_pt.BLE_CHCK_PT_lat,ble_chck_pt.BLE_CHCK_PT_long};
+
+			nav.last_checkpoint_received = false;
+
+			if(nav.all_checkpoints.size() != 0)
+			{
+				if((nav.next_checkpoint.latitude != nav.all_checkpoints[nav.all_checkpoints.size()-1].latitude)
+						&&(nav.next_checkpoint.longitude != nav.all_checkpoints[nav.all_checkpoints.size()-1].longitude))
+					//push to vectors
+					nav.all_checkpoints.push_back(nav.next_checkpoint);
+				else
+					nav.last_checkpoint_received = true;
+			}
+			else
+				nav.all_checkpoints.push_back(nav.next_checkpoint);
+
+		}
+	}
+	else
+	{
+			if(nav.all_checkpoints.size())
+				nav.last_checkpoint_received = true;
+	}
+
+
+	if(nav.last_checkpoint_received)
+		printf("number of checkpoints received= %d\n",nav.all_checkpoints.size());
+
 
 }
 
 void period_10Hz(uint32_t count)
 {
 
-	//decode all received messages here
-	can_msg_t msg_received;
-	static MASTER_SYSTEM_CMD_t systemcmd = {SYSTEM_STOP};
-	static BLE_CHCK_PT_t ble_chck_pt = {1,1};
-
-	while (CAN_rx(can1, &msg_received, 0))
-	{
-		dbc_msg_hdr_t can_msg_hdr;
-		can_msg_hdr.dlc = msg_received.frame_fields.data_len;
-		can_msg_hdr.mid = msg_received.msg_id;
-		dbc_decode_MASTER_SYSTEM_CMD(&systemcmd,msg_received.data.bytes,&can_msg_hdr);
-
-		dbc_decode_BLE_CHCK_PT(&ble_chck_pt,msg_received.data.bytes,&can_msg_hdr);
-	}
-
 	switch(systemcmd.MASTER_SYSTEM_CMD_enum)
 	{
 		case SYSTEM_STOP:
 			sys_cmd_flag = false;
+			LE.on(2);
+
 
 /* commenting this section just for the testing
  *
@@ -227,6 +254,7 @@ void period_10Hz(uint32_t count)
 			break;
 		case SYSTEM_START:
 			sys_cmd_flag = true;
+			LE.on(3);
 			break;
 		default :
 			sys_cmd_flag = false;
@@ -246,28 +274,9 @@ void period_10Hz(uint32_t count)
 
 /*test code ends here*/
 
-	if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 0) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 0))
-	{
-		if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 1) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 1))
-		{
-			nav.next_checkpoint = {ble_chck_pt.BLE_CHCK_PT_lat,ble_chck_pt.BLE_CHCK_PT_long};
-			//push to vectors
-			nav.all_checkpoints.push_back(nav.next_checkpoint);
-
-		}
-		nav.last_checkpoint_received = false;
-	}
-	else
-	{
-		nav.last_checkpoint_received = true;
-
-		//printf("number of checkpoints = %d\n",nav.all_checkpoints.size());
-	}
 
 	if(!nav.geo())
 		nav.gps_fix = false;
-
-
 
     if(sys_cmd_flag && nav.gps_fix)
     {
@@ -336,12 +345,12 @@ void period_10Hz(uint32_t count)
 
 void period_100Hz(uint32_t count)
 {
-    LE.toggle(3);
+   // LE.toggle(3);
 }
 
 // 1Khz (1ms) is only run if Periodic Dispatcher was configured to run it at main():
 // scheduler_add_task(new periodicSchedulerTask(run_1Khz = true));
 void period_1000Hz(uint32_t count)
 {
-    LE.toggle(4);
+    //LE.toggle(4);
 }
