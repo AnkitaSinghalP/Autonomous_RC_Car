@@ -25,20 +25,18 @@ typedef struct {
 
 // static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {   10, 1 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_CMD_HDR =                {  100, 1 };
-static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 3 };
+static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 2 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_STATUS_HDR =             {  162, 3 };
 static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
-static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
 // static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
-// static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
+static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  263, 1 };
 // static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
-static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
-static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
+// static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  341, 8 };
 // static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
 static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 // static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
-static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
-static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 8 };
+static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  431, 8 };
+static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 2 };
 // static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
 static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
@@ -46,24 +44,20 @@ static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_STOP = 0,
-    SYSTEM_RESET = 2,
     SYSTEM_START = 1,
-    SYSTEM_RESET = 2,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
-    STEER_HALF_RIGHT = 3,
-    STEER_REVERSE = 5,
-    STEER_LEFT = 0,
-    STEER_FORWARD = 4,
     STEER_RIGHT = 2,
+    STEER_HALF_RIGHT = 3,
+    STEER_LEFT = 0,
+    STEER_REVERSE = 5,
     STEER_HALF_LEFT = 1,
+    STEER_STRAIGHT = 4,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
-    BRAKE = 2,
-    RESUME = 3,
     START = 1,
     STOP = 0,
 } MASTER_MOTOR_CMD_drive_E ;
@@ -79,11 +73,10 @@ typedef struct {
 } MASTER_SYSTEM_CMD_t;
 
 
-/// Message: MASTER_MOTOR_CMD from 'MASTER', DLC: 3 byte(s), MID: 151
+/// Message: MASTER_MOTOR_CMD from 'MASTER', DLC: 2 byte(s), MID: 151
 typedef struct {
-    uint8_t MASTER_MOTOR_CMD_speed;           ///< B6:0  Min: 0 Max: 100   Destination: MOTOR,IO
-    MASTER_MOTOR_CMD_steer_E MASTER_MOTOR_CMD_steer; ///< B15:8   Destination: MOTOR,IO
-    MASTER_MOTOR_CMD_drive_E MASTER_MOTOR_CMD_drive; ///< B23:16   Destination: MOTOR,IO
+    MASTER_MOTOR_CMD_steer_E MASTER_MOTOR_CMD_steer; ///< B7:0   Destination: MOTOR,IO
+    MASTER_MOTOR_CMD_drive_E MASTER_MOTOR_CMD_drive; ///< B15:8   Destination: MOTOR,IO
 
     dbc_mia_info_t mia_info;
 } MASTER_MOTOR_CMD_t;
@@ -97,7 +90,6 @@ typedef struct {
     uint8_t MASTER_SYSTEM_STATUS_master : 1;  ///< B3:3   Destination: IO,BLE
     uint8_t MASTER_SYSTEM_STATUS_motor : 1;   ///< B4:4   Destination: IO,BLE
     uint8_t MASTER_SYSTEM_STATUS_sensor : 1;  ///< B5:5   Destination: IO,BLE
-    float MASTER_SYSTEM_STATUS_util;          ///< B23:8  Min: 0 Max: 100   Destination: IO,BLE
 
     dbc_mia_info_t mia_info;
 } MASTER_SYSTEM_STATUS_t;
@@ -105,51 +97,33 @@ typedef struct {
 
 /// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 1 byte(s), MID: 211
 typedef struct {
-    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,IO
-    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,IO
-    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,IO
-    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,IO
-    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,IO
+    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,IO,BLE
 
     dbc_mia_info_t mia_info;
 } SENSOR_ULTRASONIC_t;
 
 
-/// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 213
+/// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 263
 typedef struct {
-    uint8_t SENSOR_BATT_stat;                 ///< B6:0  Min: 0 Max: 100   Destination: MASTER,IO
+    uint8_t SENSOR_BATT_stat;                 ///< B6:0  Min: 0 Max: 100   Destination: IO,BLE
 
     dbc_mia_info_t mia_info;
 } SENSOR_BATT_t;
 
 
-/// Message: BLE_MAP_START_DATA from 'BLE', DLC: 8 byte(s), MID: 361
-typedef struct {
-    float BLE_MAP_START_DATA_lat;             ///< B31:0   Destination: IO
-    float BLE_MAP_START_DATA_long;            ///< B63:32   Destination: IO
-
-    dbc_mia_info_t mia_info;
-} BLE_MAP_START_DATA_t;
-
-
-/// Message: BLE_MAP_DEST_DATA from 'BLE', DLC: 8 byte(s), MID: 362
-typedef struct {
-    float BLE_MAP_DEST_DATA_lat;              ///< B31:0   Destination: IO
-    float BLE_MAP_DEST_DATA_long;             ///< B63:32   Destination: IO
-
-    dbc_mia_info_t mia_info;
-} BLE_MAP_DEST_DATA_t;
-
-
 /// Message: GEO_DEST_RCHD from 'GEO', DLC: 1 byte(s), MID: 413
 typedef struct {
-    uint8_t GEO_DEST_RCHD_stat : 1;           ///< B0:0  Min: 0 Max: 1   Destination: MASTER,IO
+    uint8_t GEO_DEST_RCHD_stat : 1;           ///< B0:0  Min: 0 Max: 1   Destination: MASTER,IO,BLE
 
     dbc_mia_info_t mia_info;
 } GEO_DEST_RCHD_t;
 
 
-/// Message: GEO_LOCATION from 'GEO', DLC: 8 byte(s), MID: 421
+/// Message: GEO_LOCATION from 'GEO', DLC: 8 byte(s), MID: 431
 typedef struct {
     float GEO_LOCATION_lat;                   ///< B31:0   Destination: IO,BLE
     float GEO_LOCATION_long;                  ///< B63:32   Destination: IO,BLE
@@ -158,9 +132,9 @@ typedef struct {
 } GEO_LOCATION_t;
 
 
-/// Message: GEO_COMPASS from 'GEO', DLC: 8 byte(s), MID: 461
+/// Message: GEO_COMPASS from 'GEO', DLC: 2 byte(s), MID: 461
 typedef struct {
-    uint8_t GEO_COMPASS_mag;                  ///< B7:0   Destination: IO
+    uint16_t GEO_COMPASS_mag;                 ///< B8:0   Destination: IO
 
     dbc_mia_info_t mia_info;
 } GEO_COMPASS_t;
@@ -168,7 +142,7 @@ typedef struct {
 
 /// Message: MOTOR_SPEED from 'MOTOR', DLC: 2 byte(s), MID: 561
 typedef struct {
-    float MOTOR_SPEED_actual;                 ///< B13:0  Min: 0 Max: 100.00   Destination: IO
+    float MOTOR_SPEED_actual;                 ///< B13:0  Min: 0 Max: 100.00   Destination: IO,BLE
 
     dbc_mia_info_t mia_info;
 } MOTOR_SPEED_t;
@@ -194,10 +168,6 @@ extern const uint32_t                             SENSOR_ULTRASONIC__MIA_MS;
 extern const SENSOR_ULTRASONIC_t                  SENSOR_ULTRASONIC__MIA_MSG;
 extern const uint32_t                             SENSOR_BATT__MIA_MS;
 extern const SENSOR_BATT_t                        SENSOR_BATT__MIA_MSG;
-extern const uint32_t                             BLE_MAP_START_DATA__MIA_MS;
-extern const BLE_MAP_START_DATA_t                 BLE_MAP_START_DATA__MIA_MSG;
-extern const uint32_t                             BLE_MAP_DEST_DATA__MIA_MS;
-extern const BLE_MAP_DEST_DATA_t                  BLE_MAP_DEST_DATA__MIA_MSG;
 extern const uint32_t                             GEO_DEST_RCHD__MIA_MS;
 extern const GEO_DEST_RCHD_t                      GEO_DEST_RCHD__MIA_MSG;
 extern const uint32_t                             GEO_LOCATION__MIA_MS;
@@ -219,17 +189,13 @@ extern const MOTOR_SPEED_t                        MOTOR_SPEED__MIA_MSG;
 
 /// Not generating code for dbc_encode_SENSOR_ULTRASONIC() since the sender is SENSOR and we are IO
 
-/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are IO
-
 /// Not generating code for dbc_encode_SENSOR_HEARTBEAT() since the sender is SENSOR and we are IO
 
-/// Not generating code for dbc_encode_BLE_CHCK_PT() since the sender is BLE and we are IO
+/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are IO
 
 /// Not generating code for dbc_encode_BLE_HEARTBEAT() since the sender is BLE and we are IO
 
-/// Not generating code for dbc_encode_BLE_MAP_START_DATA() since the sender is BLE and we are IO
-
-/// Not generating code for dbc_encode_BLE_MAP_DEST_DATA() since the sender is BLE and we are IO
+/// Not generating code for dbc_encode_BLE_CHCK_PT() since the sender is BLE and we are IO
 
 /// Not generating code for dbc_encode_GEO_DIRECTION() since the sender is GEO and we are IO
 
@@ -306,11 +272,9 @@ static inline bool dbc_decode_MASTER_MOTOR_CMD(MASTER_MOTOR_CMD_t *to, const uin
     }
 
     uint32_t raw;
-    raw  = ((uint32_t)((bytes[0]) & 0x7f)); ///< 7 bit(s) from B0
-    to->MASTER_MOTOR_CMD_speed = ((raw));
-    raw  = ((uint32_t)((bytes[1]))); ///< 8 bit(s) from B8
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
     to->MASTER_MOTOR_CMD_steer = (MASTER_MOTOR_CMD_steer_E)((raw));
-    raw  = ((uint32_t)((bytes[2]))); ///< 8 bit(s) from B16
+    raw  = ((uint32_t)((bytes[1]))); ///< 8 bit(s) from B8
     to->MASTER_MOTOR_CMD_drive = (MASTER_MOTOR_CMD_drive_E)((raw));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
@@ -342,9 +306,6 @@ static inline bool dbc_decode_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS_t *to, c
     to->MASTER_SYSTEM_STATUS_motor = ((raw));
     raw  = ((uint32_t)((bytes[0] >> 5) & 0x01)); ///< 1 bit(s) from B5
     to->MASTER_SYSTEM_STATUS_sensor = ((raw));
-    raw  = ((uint32_t)((bytes[1]))); ///< 8 bit(s) from B8
-    raw |= ((uint32_t)((bytes[2]))) << 8; ///< 8 bit(s) from B16
-    to->MASTER_SYSTEM_STATUS_util = ((raw * 0.01));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
@@ -380,6 +341,8 @@ static inline bool dbc_decode_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *to, const u
 }
 
 
+/// Not generating code for dbc_decode_SENSOR_HEARTBEAT() since 'IO' is not the recipient of any of the signals
+
 /// Decode SENSOR's 'SENSOR_BATT' message
 /// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
 static inline bool dbc_decode_SENSOR_BATT(SENSOR_BATT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
@@ -400,67 +363,9 @@ static inline bool dbc_decode_SENSOR_BATT(SENSOR_BATT_t *to, const uint8_t bytes
 }
 
 
-/// Not generating code for dbc_decode_SENSOR_HEARTBEAT() since 'IO' is not the recipient of any of the signals
-
-/// Not generating code for dbc_decode_BLE_CHCK_PT() since 'IO' is not the recipient of any of the signals
-
 /// Not generating code for dbc_decode_BLE_HEARTBEAT() since 'IO' is not the recipient of any of the signals
 
-/// Decode BLE's 'BLE_MAP_START_DATA' message
-/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
-static inline bool dbc_decode_BLE_MAP_START_DATA(BLE_MAP_START_DATA_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
-{
-    const bool success = true;
-    // If msg header is provided, check if the DLC and the MID match
-    if (NULL != hdr && (hdr->dlc != BLE_MAP_START_DATA_HDR.dlc || hdr->mid != BLE_MAP_START_DATA_HDR.mid)) {
-        return !success;
-    }
-
-    uint32_t raw;
-    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
-    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
-    raw |= ((uint32_t)((bytes[2]))) << 16; ///< 8 bit(s) from B16
-    raw |= ((uint32_t)((bytes[3]))) << 24; ///< 8 bit(s) from B24
-    to->BLE_MAP_START_DATA_lat = ((raw * 1e-06));
-    raw  = ((uint32_t)((bytes[4]))); ///< 8 bit(s) from B32
-    raw |= ((uint32_t)((bytes[5]))) << 8; ///< 8 bit(s) from B40
-    raw |= ((uint32_t)((bytes[6]))) << 16; ///< 8 bit(s) from B48
-    raw |= ((uint32_t)((bytes[7]))) << 24; ///< 8 bit(s) from B56
-    to->BLE_MAP_START_DATA_long = ((raw * 1e-06));
-
-    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
-
-    return success;
-}
-
-
-/// Decode BLE's 'BLE_MAP_DEST_DATA' message
-/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
-static inline bool dbc_decode_BLE_MAP_DEST_DATA(BLE_MAP_DEST_DATA_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
-{
-    const bool success = true;
-    // If msg header is provided, check if the DLC and the MID match
-    if (NULL != hdr && (hdr->dlc != BLE_MAP_DEST_DATA_HDR.dlc || hdr->mid != BLE_MAP_DEST_DATA_HDR.mid)) {
-        return !success;
-    }
-
-    uint32_t raw;
-    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
-    raw |= ((uint32_t)((bytes[1]))) << 8; ///< 8 bit(s) from B8
-    raw |= ((uint32_t)((bytes[2]))) << 16; ///< 8 bit(s) from B16
-    raw |= ((uint32_t)((bytes[3]))) << 24; ///< 8 bit(s) from B24
-    to->BLE_MAP_DEST_DATA_lat = ((raw * 1e-06));
-    raw  = ((uint32_t)((bytes[4]))); ///< 8 bit(s) from B32
-    raw |= ((uint32_t)((bytes[5]))) << 8; ///< 8 bit(s) from B40
-    raw |= ((uint32_t)((bytes[6]))) << 16; ///< 8 bit(s) from B48
-    raw |= ((uint32_t)((bytes[7]))) << 24; ///< 8 bit(s) from B56
-    to->BLE_MAP_DEST_DATA_long = ((raw * 1e-06));
-
-    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
-
-    return success;
-}
-
+/// Not generating code for dbc_decode_BLE_CHCK_PT() since 'IO' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_DIRECTION() since 'IO' is not the recipient of any of the signals
 
@@ -526,6 +431,7 @@ static inline bool dbc_decode_GEO_COMPASS(GEO_COMPASS_t *to, const uint8_t bytes
 
     uint32_t raw;
     raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]) & 0x01)) << 8; ///< 1 bit(s) from B8
     to->GEO_COMPASS_mag = ((raw));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
@@ -672,54 +578,6 @@ static inline bool dbc_handle_mia_SENSOR_BATT(SENSOR_BATT_t *msg, uint32_t time_
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
         *msg = SENSOR_BATT__MIA_MSG;
         msg->mia_info.mia_counter_ms = SENSOR_BATT__MIA_MS;
-        msg->mia_info.is_mia = true;
-        mia_occurred = true;
-    }
-
-    return mia_occurred;
-}
-
-/// Handle the MIA for BLE's BLE_MAP_START_DATA message
-/// @param   time_incr_ms  The time to increment the MIA counter with
-/// @returns true if the MIA just occurred
-/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
-static inline bool dbc_handle_mia_BLE_MAP_START_DATA(BLE_MAP_START_DATA_t *msg, uint32_t time_incr_ms)
-{
-    bool mia_occurred = false;
-    const dbc_mia_info_t old_mia = msg->mia_info;
-    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= BLE_MAP_START_DATA__MIA_MS);
-
-    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
-        msg->mia_info.mia_counter_ms += time_incr_ms;
-    }
-    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
-        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
-        *msg = BLE_MAP_START_DATA__MIA_MSG;
-        msg->mia_info.mia_counter_ms = BLE_MAP_START_DATA__MIA_MS;
-        msg->mia_info.is_mia = true;
-        mia_occurred = true;
-    }
-
-    return mia_occurred;
-}
-
-/// Handle the MIA for BLE's BLE_MAP_DEST_DATA message
-/// @param   time_incr_ms  The time to increment the MIA counter with
-/// @returns true if the MIA just occurred
-/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
-static inline bool dbc_handle_mia_BLE_MAP_DEST_DATA(BLE_MAP_DEST_DATA_t *msg, uint32_t time_incr_ms)
-{
-    bool mia_occurred = false;
-    const dbc_mia_info_t old_mia = msg->mia_info;
-    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= BLE_MAP_DEST_DATA__MIA_MS);
-
-    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
-        msg->mia_info.mia_counter_ms += time_incr_ms;
-    }
-    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
-        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
-        *msg = BLE_MAP_DEST_DATA__MIA_MSG;
-        msg->mia_info.mia_counter_ms = BLE_MAP_DEST_DATA__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }

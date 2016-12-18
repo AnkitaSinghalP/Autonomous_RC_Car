@@ -38,7 +38,7 @@ MASTER_MOTOR_CMD_drive_E master_motor_command_drive;
 const uint32_t                             MASTER_SYSTEM_CMD__MIA_MS = 1000;
 const MASTER_SYSTEM_CMD_t                  MASTER_SYSTEM_CMD__MIA_MSG = {SYSTEM_STOP};
 const uint32_t                             MASTER_MOTOR_CMD__MIA_MS= 1000;
-const MASTER_MOTOR_CMD_t             MASTER_MOTOR_CMD__MIA_MSG = {STEER_STRAIGHT};
+const MASTER_MOTOR_CMD_t             MASTER_MOTOR_CMD__MIA_MSG = {};
 const uint32_t                             MASTER_SYSTEM_STATUS__MIA_MS= 1000;
 const MASTER_SYSTEM_STATUS_t               MASTER_SYSTEM_STATUS__MIA_MSG= {0};
 const uint32_t                             SENSOR_ULTRASONIC__MIA_MS= 1000;
@@ -73,17 +73,14 @@ LCD_SCREENS lcdscreen = home_message;
 Uart3 &U3 = Uart3::getInstance();
 
 
-static GPIO left_pin(P1_20);
-static GPIO right_pin(P1_19);
+static GPIO front_left_pin(P1_20);
+static GPIO front_right_pin(P1_19);
 static GPIO reverse_pin(P2_0);
-static GPIO start_pin(P0_29);
-static GPIO stop_pin(P0_29);
+static GPIO back_left_pin(P1_20);
+static GPIO back_right_pin(P1_19);
 static GPIO brake_pin(P0_30);
 static GPIO resume_pin(P0_30);
 static GPIO headlight_pin(P1_22);
-static GPIO system_start_pin(P1_23);
-static GPIO system_stop_pin(P1_28);
-static GPIO system_reset_pin(P1_29);
 
 static char received_ack;                         // received_acknowledge byte from LCD
 
@@ -126,19 +123,31 @@ void SEND_MSG_LCD(char a,char b,char c, char d,char e) {
 }
 
 
-void SEND_MSG_LCD_STRING(char a,char b,char c, char d,char e,char f,char g,char h, char i,char j,char k,char l, char m,char n) {
-	char comm[15]={a,b,c,d,e,f,g,h,i,j,k,l,m,n,0};
-	for(int i=0;i<15;i++) {
-		comm[15]^=comm[i];
+void SEND_MSG_LCD_LAT(char a,char b,char c, char d,char e,char f,char g,char h, char i,char j,char k,char l) {
+	char comm[13]={a,b,c,d,e,f,g,h,i,j,k,l,0};
+	for(int x=0;x<12;x++) {
+		comm[12]^=comm[x];
 	}
 
-	for(int i=0;i<16;i++) {
-		U3.putChar(comm[i],10);
+	for(int y=0;y<13;y++) {
+		U3.putChar(comm[y],10);
 	}
 	U3.getChar(&received_ack,10);
 
 }
 
+void SEND_MSG_LCD_LONG(char a,char b,char c, char d,char e,char f,char g,char h, char i,char j,char k,char l, char m,char n) {
+	char comm[15]={a,b,c,d,e,f,g,h,i,j,k,l,m,n,0};
+	for(int x=0;x<15;x++) {
+		comm[14]^=comm[x];
+	}
+
+	for(int y=0;y<15;y++) {
+		U3.putChar(comm[y],10);
+	}
+	U3.getChar(&received_ack,10);
+
+}
 
 void can_init_IO()
 {
@@ -159,45 +168,55 @@ void SEND_IO_HEARTBEAT()
 void system_destination_reached()
 {
 
-	   static int counter;
-	   if(counter==2){
-	       left_pin.setLow();
-	       right_pin.setHigh();
-	       headlight_pin.setHigh();
-	       reverse_pin.setHigh();
-	       brake_pin.setHigh();
-	   }
-	   if(counter==4){
-	       left_pin.setHigh();
-	       right_pin.setLow();
-	       headlight_pin.setHigh();
-	       reverse_pin.setHigh();
-	       brake_pin.setHigh();
-	   }
-	   if(counter==6){
-	       left_pin.setHigh();
-	       right_pin.setHigh();
-	       headlight_pin.setLow();
-	       reverse_pin.setHigh();
-	       brake_pin.setHigh();
-	       }
-	   if(counter==8){
-	       left_pin.setHigh();
-	       right_pin.setHigh();
-	       headlight_pin.setHigh();
-	       reverse_pin.setLow();
-	       brake_pin.setHigh();
-	       }
-	   if(counter==10){
-	       left_pin.setHigh();
-	       right_pin.setHigh();
-	       headlight_pin.setHigh();
-	       reverse_pin.setHigh();
-	       brake_pin.setLow();
+	static int counter;
+	if(counter==2){
+		front_left_pin.setLow();
+		front_right_pin.setHigh();
+		back_left_pin.setLow();
+		back_right_pin.setHigh();
+		headlight_pin.setHigh();
+		reverse_pin.setHigh();
+		brake_pin.setHigh();
+	}
+	if(counter==4){
+		front_left_pin.setHigh();
+		front_right_pin.setLow();
+		back_left_pin.setHigh();
+		back_right_pin.setLow();
+		headlight_pin.setHigh();
+		reverse_pin.setHigh();
+		brake_pin.setHigh();
+	}
+	if(counter==6){
+		front_left_pin.setHigh();
+		front_right_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
+		headlight_pin.setLow();
+		reverse_pin.setHigh();
+		brake_pin.setHigh();
+	}
+	if(counter==8){
+		front_left_pin.setHigh();
+		front_right_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
+		headlight_pin.setHigh();
+		reverse_pin.setLow();
+		brake_pin.setHigh();
+	}
+	if(counter==10){
+		front_left_pin.setHigh();
+		front_right_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
+		headlight_pin.setHigh();
+		reverse_pin.setHigh();
+		brake_pin.setLow();
 
-	       counter=0;
-	   }
-	   counter++;
+		counter=0;
+	}
+	counter++;
 
 }
 void RECEIVED_SYSTEM_CMD()
@@ -215,7 +234,7 @@ void RECEIVED_SYSTEM_CMD()
 	{
 		system_command_flag = true;
 		SEND_MSG_LCD(ON,LED_VAL,0x08,OFF,ON);
-		system_start_pin.setLow();
+
 		//return true;
 
 	}
@@ -224,9 +243,10 @@ void RECEIVED_SYSTEM_CMD()
 		system_command_flag = false;
 		SEND_MSG_LCD(ON,LED_VAL,0x06,OFF,ON);
 		headlight_pin.setHigh();
-		system_stop_pin.setLow();
-		right_pin.setHigh();
-		left_pin.setHigh();
+		front_right_pin.setHigh();
+		front_left_pin.setHigh();
+		back_right_pin.setHigh();
+		back_left_pin.setHigh();
 		reverse_pin.setHigh();
 		//return false;
 
@@ -304,8 +324,10 @@ void RECEIVED_MOTOR_CMD()
 	switch( motor_cmd.MASTER_MOTOR_CMD_steer){
 	case 0:
 	case 1:
-		left_pin.setLow();
-		right_pin.setHigh();
+		front_left_pin.setLow();
+		front_right_pin.setHigh();
+		back_left_pin.setLow();
+		back_right_pin.setHigh();
 		reverse_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,ON); // direction left
 
@@ -318,8 +340,10 @@ void RECEIVED_MOTOR_CMD()
 
 	case 2:
 	case 3:
-		right_pin.setLow();
-		left_pin.setHigh();
+		front_right_pin.setLow();
+		front_left_pin.setHigh();
+		back_right_pin.setLow();
+		back_left_pin.setHigh();
 		reverse_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,ON);   // direction right
 
@@ -330,38 +354,40 @@ void RECEIVED_MOTOR_CMD()
 
 	case 4:
 		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,ON); // direction front
-		left_pin.setHigh();
-		right_pin.setHigh();
+		front_left_pin.setHigh();
+		front_right_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
 		break;
 	case 5:
 		reverse_pin.setLow();
-		right_pin.setHigh();
-		left_pin.setHigh();
+		front_right_pin.setHigh();
+		front_left_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,ON);
 		break;
 	default:
-		right_pin.setHigh();
-		left_pin.setHigh();
+		front_right_pin.setHigh();
+		front_left_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
 		reverse_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
 	}
-	//}
-	/*right_pin.setHigh();
-	left_pin.setHigh();
-	reverse_pin.setHigh();*/
-
-
 
 	if(dbc_handle_mia_MASTER_MOTOR_CMD(&motor_cmd, 10))
 	{
-		right_pin.setHigh();
-		left_pin.setHigh();
+		front_right_pin.setHigh();
+		front_left_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
 		reverse_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
@@ -494,16 +520,21 @@ void RECEIVED_GEO_DEST_RCHD()
 void RECEIVED_GEO_LOCATION()
 {
 	float latitude = 0.0 , longitude = 0.0;
-
+char data_lat[20];
+char data_long[20];
 	latitude = geo_location.GEO_LOCATION_lat;
 	longitude = geo_location.GEO_LOCATION_long;
 
-	SEND_MSG_LCD(0x02,ON,ON,latitude,'.');
-	SEND_MSG_LCD(0x02,ON,ON,longitude,'.');
+	snprintf(data_lat, 20, "%f", latitude);
+	snprintf(data_long, 20, "%f", longitude);
+
+	SEND_MSG_LCD_LAT(0x02,ON,ON,data_lat[0],data_lat[1],data_lat[2],data_lat[3],data_lat[4],data_lat[5],data_lat[6],data_lat[7],data_lat[8]);
+	SEND_MSG_LCD_LONG(0x02,OFF,ON,data_long[0],data_long[1],data_long[2],data_long[3],data_long[4],data_long[5],data_long[5],data_long[6],data_long[7],data_long[8],data_long[9]);
 
 	if(dbc_handle_mia_GEO_LOCATION(&geo_location, 10))
 	{
-
+		SEND_MSG_LCD_LAT(0x02,ON,ON,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
+		SEND_MSG_LCD_LONG(0x02,OFF,ON,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
 	}
 
 }
@@ -549,29 +580,26 @@ void LCD_init(void) {
 }
 void IO_init()
 {
-	left_pin.setAsOutput();
-	right_pin.setAsOutput();
+	front_left_pin.setAsOutput();
+	front_right_pin.setAsOutput();
+	back_left_pin.setAsOutput();
+	back_right_pin.setAsOutput();
 	reverse_pin.setAsOutput();
-	start_pin.setAsOutput();
-	stop_pin.setAsOutput();
+
 	brake_pin.setAsOutput();
 	resume_pin.setAsOutput();
 	headlight_pin.setAsOutput();
-	system_start_pin.setAsOutput();
-	system_stop_pin.setAsOutput();
-	system_reset_pin.setAsOutput();
 
-	left_pin.setHigh();
-	right_pin.setHigh();
+	front_left_pin.setHigh();
+	front_right_pin.setHigh();
+	back_left_pin.setHigh();
+	back_right_pin.setHigh();
 	reverse_pin.setHigh();
-	start_pin.setHigh();
-	stop_pin.setHigh();
+
 	brake_pin.setHigh();
 	resume_pin.setHigh();
 	headlight_pin.setHigh();
-	system_start_pin.setHigh();
-	system_stop_pin.setHigh();
-	system_reset_pin.setHigh();
+
 	system_command_flag = false;
 
 }
