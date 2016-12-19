@@ -45,9 +45,9 @@
 #define STEER_HALFLEFT 12.42
 #define STEER_MIDDLE 14.02
 #define STEER_HALFRIGHT 15.62
-#define STEER_FULLRIGHT 20.0
+#define STEER_FULLRIGHT 18.04
 #define THROTTLE_NEUTRAL 15.2
-
+#define MAX_SPEED 17.5
 
 
 
@@ -180,6 +180,13 @@ rpmcount=0;
 speed_counter=0;
 
 
+/*
+	static PWM servomotor(PWM::pwm1, 100);
+
+	servomotor.set(15.0);
+*/
+
+
 }
 
 
@@ -189,6 +196,13 @@ void period_10Hz(uint32_t count)
 
 	static  PWM  servomotor(PWM::pwm1, 100);
 	static PWM dcmotor(PWM::pwm2, 100);
+
+/*	static PWM dcmotor(PWM::pwm2, 100);
+	static PWM servomotor(PWM::pwm1, 100);*/
+
+	//servomotor.set(15.0);
+
+
 
 
 
@@ -201,8 +215,8 @@ void period_10Hz(uint32_t count)
 	static bool steerflag=0;
 
 
-	if(throttle_forward > 18)
-		throttle_forward = 18;
+	if(throttle_forward > MAX_SPEED)
+		throttle_forward = THROTTLE_NEUTRAL;
 	//printf("%f\n",throttle_forward - 0.2);
 
 		dcmotor.set(throttle_forward - 0.2);
@@ -220,7 +234,7 @@ void period_10Hz(uint32_t count)
 		{
 		case SYSTEM_STOP:
 			//dcmotor.set(throttle_neutral);
-			//servomotor.set(steer_middle);
+			servomotor.set(STEER_MIDDLE);
 			throttle_forward = THROTTLE_NEUTRAL;
 			decodeflag=0;
 			LD.setNumber(1);
@@ -249,7 +263,7 @@ void period_10Hz(uint32_t count)
 			steerflag=0;
 			throttle_forward = THROTTLE_NEUTRAL;
 			//dcmotor.set(throttle_neutral);
-			servomotor.set(STEER_MIDDLE);
+			//servomotor.set(STEER_MIDDLE);
 			break;
 		case START:
 			//dcmotor.set(17.0);
