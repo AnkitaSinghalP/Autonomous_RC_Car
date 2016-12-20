@@ -257,7 +257,10 @@ void RECEIVED_SENSOR_ULTRASONIC()
 	else if(sen_count == 7)
 	{
 		if(ultrasonic_sensor.SENSOR_ULTRASONIC_rear == 0)
+		{
 			SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x32);
+			sen_count = 0;
+		}
 		else
 			SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x5A);
 		sen_count = 0;
@@ -275,22 +278,19 @@ void RECEIVED_SENSOR_ULTRASONIC()
 
 void RECEIVED_MOTOR_CMD_LCD()
 {
-
+static int motor_cmd_count;
+if(motor_cmd_count %3== 0)
+{
 	switch( motor_cmd.MASTER_MOTOR_CMD_steer){
 	case 0:
 	case 1:
 		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,ON); // direction left
-		/*SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);*/
+
 		break;
 
 	case 2:
 	case 3:
 		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,ON);   // direction right
-		/*SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);*/
 		break;
 
 	case 4:
@@ -303,20 +303,8 @@ void RECEIVED_MOTOR_CMD_LCD()
 		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,ON);
 		break;
 	}
-
-	/*if(dbc_handle_mia_MASTER_MOTOR_CMD(&motor_cmd, 10))
-	{
-		front_right_pin.setHigh();
-		front_left_pin.setHigh();
-		back_left_pin.setHigh();
-		back_right_pin.setHigh();
-		reverse_pin.setHigh();
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
-	}*/
-
+}
+motor_cmd_count++;
 }
 
 
@@ -390,13 +378,20 @@ void RECEIVED_MOTOR_CMD_LED()
 
 void RECEIVED_SYSTEM_STATUS()
 {
-	SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_ble);
-	SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_geo);
-	SEND_MSG_LCD(ON,LED_VAL,IO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_io);
-	SEND_MSG_LCD(ON,LED_VAL,MASTER_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_master);
-	SEND_MSG_LCD(ON,LED_VAL,MOTOR_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_motor);
-	SEND_MSG_LCD(ON,LED_VAL,SENSOR_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_sensor);
+	static int system_status_count;
+	system_status.MASTER_SYSTEM_STATUS_io = 1;
+	system_status.MASTER_SYSTEM_STATUS_motor = 1;
+	if(system_status_count % 3 == 0)
+	{
+		SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_ble);
+		SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_geo);
+		SEND_MSG_LCD(ON,LED_VAL,IO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_io);
+		SEND_MSG_LCD(ON,LED_VAL,MASTER_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_master);
+		SEND_MSG_LCD(ON,LED_VAL,MOTOR_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_motor);
+		SEND_MSG_LCD(ON,LED_VAL,SENSOR_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_sensor);
 
+	}
+	system_status_count++;
 }
 
 
@@ -441,22 +436,16 @@ void RECEIVED_GEO_LOCATION()
 	float latitude = 0.0 , longitude = 0.0;
 	char data_lat[15];
 	char data_long[15];
-	latitude = -121.333679;//geo_location.GEO_LOCATION_lat;
-	longitude = 33.33334554;//geo_location.GEO_LOCATION_long;
+	/*latitude = -121.333679;//geo_location.GEO_LOCATION_lat;
+	longitude = 33.33334554;//geo_location.GEO_LOCATION_long;*/
 
 	sprintf(data_lat, "%f", latitude);
 	sprintf(data_long, "%f", longitude);
-	//printf("lat %c, long %c", data_lat[0],data_long[7]);
-	SEND_MSG_LCD(0x02,ON,ON,data_lat[0],data_lat[1]);
-	SEND_MSG_LCD(0x02,OFF,ON,data_long[0],data_long[1]);
-	//SEND_MSG_LCD_LAT(0x02,ON,ON,data_lat[0],data_lat[1],data_lat[2],data_lat[3],data_lat[4],data_lat[5],data_lat[6],data_lat[7],data_lat[8]);
-	//SEND_MSG_LCD_LONG(0x02,OFF,ON,data_long[0],data_long[1],data_long[2],data_long[3],data_long[4],data_long[5],data_long[5],data_long[6],data_long[7],data_long[8],data_long[9]);
-/*
-	if(dbc_handle_mia_GEO_LOCATION(&geo_location, 10))
-	{
-		SEND_MSG_LCD_LAT(0x02,ON,ON,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
-		SEND_MSG_LCD_LONG(0x02,OFF,ON,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
-	}*/
+
+	/*SEND_MSG_LCD(0x02,ON,ON,data_lat[0],data_lat[1]);
+	SEND_MSG_LCD(0x02,OFF,ON,data_long[0],data_long[1]);*/
+	SEND_MSG_LCD_LAT(0x02,ON,ON,data_lat[0],data_lat[1],data_lat[2],data_lat[3],data_lat[4],data_lat[5],data_lat[6],data_lat[7],data_lat[8]);
+	SEND_MSG_LCD_LONG(0x02,OFF,ON,data_long[0],data_long[1],data_long[2],data_long[3],data_long[4],data_long[5],data_long[5],data_long[6],data_long[7],data_long[8],data_long[9]);
 
 }
 

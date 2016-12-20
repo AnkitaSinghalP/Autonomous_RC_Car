@@ -35,7 +35,6 @@
 #include<stdio.h>
 #include "_can_dbc/generated_can.h"
 #include <string.h>
-//#include "uart3.hpp"
 #include "utilities.h"
 #include "gpio.hpp"
 #include "IO_module.hpp"
@@ -100,9 +99,11 @@ void period_1Hz(uint32_t count)
 {
 
 	static int screen_count;
-	if(CAN_is_bus_off(can1)){
+	if(CAN_is_bus_off(can1))
+	{
 		CAN_reset_bus(can1);
 	}
+
 	io_heart_beat_msg.IO_HEARTBEAT_rx_bytes = count;
 	io_heart_beat_msg.IO_HEARTBEAT_tx_bytes = count;
 	dbc_encode_and_send_IO_HEARTBEAT(&io_heart_beat_msg);
@@ -176,14 +177,11 @@ void period_1Hz(uint32_t count)
 
 void period_10Hz(uint32_t count)
 {
-
 	start();
-
 }
 
 void period_100Hz(uint32_t count)
 {
-
 	//LE.toggle(3);
 }
 

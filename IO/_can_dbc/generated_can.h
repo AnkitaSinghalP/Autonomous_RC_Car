@@ -49,17 +49,17 @@ typedef enum {
 
 /// Enumeration(s) for Message: 'MASTER_MOTOR_CMD' from 'MASTER'
 typedef enum {
+    STEER_LEFT = 0,
     STEER_REVERSE = 5,
     STEER_HALF_RIGHT = 3,
+    STEER_STRAIGHT = 4,
     STEER_HALF_LEFT = 1,
     STEER_RIGHT = 2,
-    STEER_STRAIGHT = 4,
-    STEER_LEFT = 0,
 } MASTER_MOTOR_CMD_steer_E ;
 
 typedef enum {
-    STOP = 0,
     START = 1,
+    STOP = 0,
 } MASTER_MOTOR_CMD_drive_E ;
 
 
