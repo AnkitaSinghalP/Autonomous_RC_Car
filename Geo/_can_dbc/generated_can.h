@@ -43,18 +43,18 @@ static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 2 };
 
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
-    SYSTEM_STOP = 0,
     SYSTEM_START = 1,
+    SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
 /// Enumeration(s) for Message: 'GEO_DIRECTION' from 'GEO'
 typedef enum {
-    DIR_RIGHT = 2,
+    DIR_STRAIGHT = 4,
+    DIR_LEFT = 0,
     DIR_HALF_RIGHT = 3,
     DIR_HALF_LEFT = 1,
+    DIR_RIGHT = 2,
     GEO_STOP = 5,
-    DIR_LEFT = 0,
-    DIR_STRAIGHT = 4,
 } GEO_DIRECTION_enum_E ;
 
 

@@ -172,10 +172,10 @@ void period_1Hz(uint32_t count)
     if(CAN_is_bus_off(can1))
     	CAN_reset_bus(can1);
 
-    geo_heartbeat.GEO_HEARTBEAT_tx_bytes = count;
+    geo_heartbeat.GEO_HEARTBEAT_tx_bytes = nav.all_checkpoints.size();
 	dbc_encode_and_send_GEO_HEARTBEAT(&geo_heartbeat);
 
-    //printf("GPS: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
+    //printf("GPS -: %f  %f\n",nav.coordinates.latitude,nav.coordinates.longitude);
     //printf("Distance = %f(feet)\n\n", nav.gps_distance);
 	//printf("Compass= %d\n\n",nav.compass_angle);
 	//printf("Bearing = %d\n",nav.gps_bearing_angle);
@@ -188,12 +188,13 @@ void period_1Hz(uint32_t count)
 		can_msg_hdr.mid = can_msg_received.msg_id;
 
 		dbc_decode_MASTER_SYSTEM_CMD(&systemcmd,can_msg_received.data.bytes,&can_msg_hdr);
-		if(dbc_decode_BLE_CHCK_PT(&ble_chck_pt,can_msg_received.data.bytes,&can_msg_hdr))
+		dbc_decode_BLE_CHCK_PT(&ble_chck_pt,can_msg_received.data.bytes,&can_msg_hdr);
+		/*if(dbc_decode_BLE_CHCK_PT(&ble_chck_pt,can_msg_received.data.bytes,&can_msg_hdr))
 		{
 			if((int)ble_chck_pt.BLE_CHCK_PT_lat)
 				printf("lat = %f   long = %f\n",ble_chck_pt.BLE_CHCK_PT_lat,ble_chck_pt.BLE_CHCK_PT_long);
 
-		}
+		}*/
 	}
 
 	if(((int)ble_chck_pt.BLE_CHCK_PT_lat != 0) && ((int)ble_chck_pt.BLE_CHCK_PT_long != 0))
@@ -222,12 +223,17 @@ void period_1Hz(uint32_t count)
 	else
 	{
 			if(nav.all_checkpoints.size())
-				nav.last_checkpoint_received = true;
+			{
+			    LE.on(4);
+			    nav.last_checkpoint_received = true;
+			}
+
+
 	}
 
 
-	if(nav.last_checkpoint_received)
-		printf("number of checkpoints received= %d\n",nav.all_checkpoints.size());
+/*	if(nav.last_checkpoint_received)
+		printf("number of checkpoints received= %d\n",nav.all_checkpoints.size());*/
 
 
 }

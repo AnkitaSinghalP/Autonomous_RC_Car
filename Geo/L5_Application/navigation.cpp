@@ -145,7 +145,7 @@ bool Navigation::parse_gps_raw_data()
 	int32_t degree;
 	long minutes;
 	float latitude, longitude;
-	float latitudeDegrees, longitudeDegrees;
+	float latitudeDegrees = 0, longitudeDegrees = 0;
 
 	if (strstr(gps_raw_data, "$GPGGA"))
 	{
@@ -197,7 +197,7 @@ bool Navigation::parse_gps_raw_data()
 	     * Checking if absolute values of coordinates are for San Jose or not.
 	     * Will remove this area specific checking at later stages of this project.
 	     */
-		if((int)latitudeDegrees != STATIC_LAT || (int)longitudeDegrees != STATIC_LONG)
+		if((int)(latitudeDegrees * 10) != STATIC_LAT || (int)(longitudeDegrees * 10) != STATIC_LONG)
 			return false;
 
 		/*
@@ -330,6 +330,30 @@ void Navigation::steer_command()
 	}
 }
 
+void Navigation::filter_geo_coordinates()
+{
+    filter_count ++;
+        //printf("Before: %d   %f  %f\n",filter_count,coordinates.latitude,coordinates.longitude);
+
+        filter_lat  += coordinates.latitude;
+        filter_long += coordinates.longitude;
+
+        //printf("sum = %Lf   %Lf\n",filter_lat,filter_long);
+
+        if(filter_count == MAX_FILTER_SAMPLES)
+        {
+            coordinates.latitude    = filter_lat / MAX_FILTER_SAMPLES;
+            coordinates.longitude   = filter_long / MAX_FILTER_SAMPLES;
+
+            //printf("After : %d   %f  %f\n\n",filter_count,coordinates.latitude,coordinates.longitude);
+
+            filter_lat  = 0;
+            filter_long = 0;
+            filter_count = 0;
+         }
+}
+
+
 bool Navigation::geo()
 {
     compass_direction();
@@ -349,6 +373,7 @@ bool Navigation::geo()
 
 	gps_fix = true;
 
+	filter_geo_coordinates();
 
 	//printf("%d %d\n",last_checkpoint_received,destination_reached);
 
@@ -366,7 +391,7 @@ bool Navigation::geo()
 			if(all_checkpoints.empty())
 			{
 				destination_reached = true;
-				printf("Final destination reached\n");
+				//printf("Final destination reached\n");
 
 			}
 			else
@@ -374,7 +399,7 @@ bool Navigation::geo()
 				next_checkpoint = all_checkpoints[0];
 				all_checkpoints.erase(all_checkpoints.begin());
 
-				printf("popping next point\n");
+				//printf("popping next point\n");
 			}
 
 			pop_next_checkpoint = false;

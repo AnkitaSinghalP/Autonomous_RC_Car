@@ -28,8 +28,8 @@ using namespace std;
 #define RX_Q_SIZE       100
 #define TX_Q_SIZE       1
 
-#define STATIC_LAT      37
-#define STATIC_LONG     121
+#define STATIC_LAT      373
+#define STATIC_LONG     1218
 #define RADIUS          20902231.64
 
 #define MIN_ANGLE       0
@@ -53,6 +53,7 @@ using namespace std;
 #define CASE1_ADD_CAL   25
 #define CASE2_ADD_CAL   -34.8387
 #define CASE3_ADD_CAL   -425
+#define MAX_FILTER_SAMPLES 3
 
 
 
@@ -92,7 +93,10 @@ class Navigation
             last_checkpoint_received = false;
             pop_next_checkpoint = true;
             next_checkpoint_reached = false;
-        }
+            filter_count = 0;
+            filter_lat	 = 0.0;
+            filter_long	 = 0.0;
+       }
 
         ~Navigation(){
             delete [] gps_raw_data;
@@ -108,11 +112,15 @@ class Navigation
         void compass_direction();
         void steer_command();
         void compass_calibrate();
+        void filter_geo_coordinates();
 
         char* gps_raw_data;
 
         bool pop_next_checkpoint;
         bool next_checkpoint_reached;
+        int filter_count;
+        float filter_lat;
+        float filter_long;
 
 };
 
