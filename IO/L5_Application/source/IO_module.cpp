@@ -13,7 +13,7 @@
 #include "io.hpp"
 #include "stdlib.h"
 #include "utilities.h"
-#include "uart3.hpp"
+#include "uart2.hpp"
 #include "gpio.hpp"
 #include "string.h"
 
@@ -25,8 +25,8 @@ SENSOR_BATT_t battery_status = {0};
 
 GEO_DEST_RCHD_t GEO_DEST_RCHD = {0};
 MOTOR_SPEED_t motor_speed = {0};
-IO_HEARTBEAT_t io_heart_beat_msg = {1};
-can_msg_t can_msg = { 0 };
+
+
 dbc_msg_hdr_t can_msg_hdr;
 GEO_LOCATION_t geo_location = {0};
 SENSOR_ULTRASONIC_t ultrasonic_sensor = {0};
@@ -55,71 +55,35 @@ const GEO_COMPASS_t                        GEO_COMPASS__MIA_MSG= {0};
 const uint32_t                             MOTOR_SPEED__MIA_MS= 1000;
 const MOTOR_SPEED_t                        MOTOR_SPEED__MIA_MSG= {0};
 
-
-bool geo_flag = false;
-bool geo_page_flag = false;
-bool sensor_flag = false;
-bool sensors_page_flag = false;
-bool motor_flag = false;
-bool motor_page_flag = false;
-bool home_flag = false;
-bool home_page_flag = false;
-bool system_command_flag = false;
 char lcd_cha;
 
-
-LCD_SCREENS lcdscreen = home_message;
-//Uart3 &u3 = Uart3::getInstance();
-Uart3 &U3 = Uart3::getInstance();
+Uart2 &U2 = Uart2::getInstance();
 
 
-static GPIO front_left_pin(P1_20);
-static GPIO front_right_pin(P1_19);
-static GPIO reverse_pin(P2_0);
-static GPIO back_left_pin(P1_20);
-static GPIO back_right_pin(P1_19);
-static GPIO brake_pin(P0_30);
-static GPIO resume_pin(P0_30);
-static GPIO headlight_pin(P1_22);
+static GPIO front_left_pin(P1_28);
+static GPIO front_right_pin(P1_30);
+static GPIO reverse_pin(P0_30);
+static GPIO back_left_pin(P0_29);
+static GPIO back_right_pin(P2_4);
+static GPIO brake_pin(P1_19);
+static GPIO headlight_pin(P1_29);
 
 static char received_ack;                         // received_acknowledge byte from LCD
 
-void flag_change(bool* flagp){
-	geo_flag = false;
-	home_flag = false;
-	sensor_flag = false;
-	motor_flag = false;
-	*flagp = true;
-}
-
-void flag_page_change(bool* flagp){
-	geo_page_flag = false;
-	home_page_flag = false;
-	sensors_page_flag = false;
-	motor_page_flag = false;
-	*flagp = true;
-}
+bool destination_reached_flag;
+bool system_command_flag;
 
 
-bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
-{
-
-	can_msg.msg_id = mid;
-	can_msg.frame_fields.data_len = dlc;
-	memcpy(can_msg.data.bytes, bytes, dlc);
-	return CAN_tx(can1, &can_msg, 0);
-}
 void SEND_MSG_LCD(char a,char b,char c, char d,char e) {
-	char comm[6]={a,b,c,d,e,0};
+	char character[6]={a,b,c,d,e,0};
 	for(int i=0;i<5;i++) {
-		comm[5]^=comm[i];
+		character[5]^=character[i];
 	}
 
 	for(int i=0;i<6;i++) {
-		U3.putChar(comm[i],10);
+		U2.putChar(character[i],1);
 	}
-	U3.getChar(&received_ack,10);
-
+	U2.getChar(&received_ack,1);
 }
 
 
@@ -130,9 +94,9 @@ void SEND_MSG_LCD_LAT(char a,char b,char c, char d,char e,char f,char g,char h, 
 	}
 
 	for(int y=0;y<13;y++) {
-		U3.putChar(comm[y],10);
+		U2.putChar(comm[y],1);
 	}
-	U3.getChar(&received_ack,10);
+	U2.getChar(&received_ack,1);
 
 }
 
@@ -143,31 +107,31 @@ void SEND_MSG_LCD_LONG(char a,char b,char c, char d,char e,char f,char g,char h,
 	}
 
 	for(int y=0;y<15;y++) {
-		U3.putChar(comm[y],10);
+		U2.putChar(comm[y],1);
 	}
-	U3.getChar(&received_ack,10);
+	U2.getChar(&received_ack,1);
 
 }
 
 void can_init_IO()
 {
-	CAN_init(can1, 100, 128, 256,0,0);
+	CAN_init(can1, 100, 256, 256,0,0);
 
 	CAN_bypass_filter_accept_all_msgs();
 
 	CAN_reset_bus(can1);
 }
 
-
 void SEND_IO_HEARTBEAT()
 {
+	static int counter;
+	counter++;
 
-	dbc_encode_and_send_IO_HEARTBEAT(&io_heart_beat_msg);
+
 }
 
 void system_destination_reached()
 {
-
 	static int counter;
 	if(counter==2){
 		front_left_pin.setLow();
@@ -221,19 +185,14 @@ void system_destination_reached()
 }
 void RECEIVED_SYSTEM_CMD()
 {
-	/*	while(CAN_rx(can1, &can_msg, 0))
-	{
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;
 
-
-	}*/
 	master_system_command = system_cmd.MASTER_SYSTEM_CMD_enum;
-	//printf("system message  %d \n",master_system_command );
+
 	if(master_system_command == SYSTEM_START)
 	{
 		system_command_flag = true;
-		SEND_MSG_LCD(ON,LED_VAL,0x08,OFF,ON);
+		SEND_MSG_LCD(ON,LED_VAL,0x08,0x00,ON);
+		SEND_MSG_LCD(ON,LED_VAL,0x06,0x00,0x00);
 
 		//return true;
 
@@ -242,114 +201,154 @@ void RECEIVED_SYSTEM_CMD()
 	{
 		system_command_flag = false;
 		SEND_MSG_LCD(ON,LED_VAL,0x06,OFF,ON);
+		SEND_MSG_LCD(ON,LED_VAL,0x08,OFF,0x00);
 		headlight_pin.setHigh();
 		front_right_pin.setHigh();
 		front_left_pin.setHigh();
 		back_right_pin.setHigh();
 		back_left_pin.setHigh();
 		reverse_pin.setHigh();
+		brake_pin.setHigh();
 		//return false;
 
 	}
-	/*if(master_system_command == SYSTEM_RESET)
-	{
-		system_command_flag = true;
-		SEND_MSG_LCD(ON,LED_VAL,0x07,OFF,ON);
-		system_reset_pin.setLow();
-		//return true;
-	}*/
 
-
-	//}
 
 	if(dbc_handle_mia_MASTER_SYSTEM_CMD(&system_cmd, 10))
 	{
-		SEND_MSG_LCD(ON,LED_VAL,OFF,OFF,ON);
-		//return true;
+		SEND_MSG_LCD(ON,LED_VAL,0x06,OFF,0x00);
+
 	}
 
 }
 void RECEIVED_SENSOR_ULTRASONIC()
 {
-	/*
-	if(CAN_rx(can1, &can_msg, 0))
+	static int sen_count = 0;
+	sen_count++;
+	if(sen_count == 1)
 	{
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;
-	 */
-
-	//SEND_MSG_LCD(ON,MOTOR_SYSTEM_STATUS_VAL,ON,OFF,OFF);
-	//printf("ultrasonic sensor  \n" );
-
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_right == 0)
-	{SEND_MSG_LCD(ON,GAUGE_VAL,0x02,OFF,0x32);} // value = 50
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_right == 1)
-	{SEND_MSG_LCD(ON,IO_SYSTEM_STATUS_VAL,0x02,OFF,0x5A);} // value = 90
-
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_left == 0)
-	{SEND_MSG_LCD(ON,GAUGE_VAL,0x03,OFF,0x32);}
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_left == 1)
-	{SEND_MSG_LCD(ON,GAUGE_VAL,0x03,OFF,0x5A);}
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_right == 0)
+			SEND_MSG_LCD(ON,GAUGE_VAL,0x02,OFF,0x32); // value = 50
+		else
+			SEND_MSG_LCD(ON,GAUGE_VAL,0x02,OFF,0x5A); // value = 90
+	}
+	else if(sen_count == 3)
+	{
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_left == 0)
 
 
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_middle == 0)
-	{SEND_MSG_LCD(ON,GAUGE_VAL,ON,OFF,0x32);}
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_middle == 1)
-	{SEND_MSG_LCD(ON,GAUGE_VAL,ON,OFF,0x5A);}
+			SEND_MSG_LCD(ON,GAUGE_VAL,0x03,OFF,0x32);
 
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_rear == 0)
-	{SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x32);}
-	if(ultrasonic_sensor.SENSOR_ULTRASONIC_rear == 1)
-	{	SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x5A);}
+		else
+			SEND_MSG_LCD(ON,GAUGE_VAL,0x03,OFF,0x5A);
+	}
 
-	//}
+	else if(sen_count == 5)
+	{
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_middle == 0)
+
+			SEND_MSG_LCD(ON,GAUGE_VAL,ON,OFF,0x32);
+
+		else
+			SEND_MSG_LCD(ON,GAUGE_VAL,ON,OFF,0x5A);
+
+	}
+
+	else if(sen_count == 7)
+	{
+		if(ultrasonic_sensor.SENSOR_ULTRASONIC_rear == 0)
+			SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x32);
+		else
+			SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x5A);
+		sen_count = 0;
+	}
+
 	if(dbc_handle_mia_SENSOR_ULTRASONIC(&ultrasonic_sensor, 10))
 	{
-		SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x32);
-		SEND_MSG_LCD(ON,GAUGE_VAL,ON,OFF,0x32);
-		SEND_MSG_LCD(ON,GAUGE_VAL,0x02,OFF,0x32);
-		SEND_MSG_LCD(ON,GAUGE_VAL,0x03,OFF,0x32);
+		SEND_MSG_LCD(ON,GAUGE_VAL,OFF,OFF,0x00);
+		SEND_MSG_LCD(ON,GAUGE_VAL,ON,OFF,0x00);
+		SEND_MSG_LCD(ON,GAUGE_VAL,0x02,OFF,0x00);
+		SEND_MSG_LCD(ON,GAUGE_VAL,0x03,OFF,0x00);
 	}
 }
 
 
-void RECEIVED_MOTOR_CMD()
+void RECEIVED_MOTOR_CMD_LCD()
 {
-	/*if(CAN_rx(can1, &can_msg, 0))
-	{
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;*/
 
-	//printf("motor command   %d \n",motor_cmd.MASTER_MOTOR_CMD_steer );
 	switch( motor_cmd.MASTER_MOTOR_CMD_steer){
 	case 0:
 	case 1:
-		front_left_pin.setLow();
-		front_right_pin.setHigh();
-		back_left_pin.setLow();
-		back_right_pin.setHigh();
-		reverse_pin.setHigh();
 		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,ON); // direction left
-
-
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
+		/*SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
 		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
-
+		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);*/
 		break;
 
 	case 2:
 	case 3:
-		front_right_pin.setLow();
+		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,ON);   // direction right
+		/*SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);*/
+		break;
+
+	case 4:
+		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,ON); // direction front
+		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
+		break;
+	case 5:
+		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,ON);
+		break;
+	}
+
+	/*if(dbc_handle_mia_MASTER_MOTOR_CMD(&motor_cmd, 10))
+	{
+		front_right_pin.setHigh();
 		front_left_pin.setHigh();
+		back_left_pin.setHigh();
+		back_right_pin.setHigh();
+		reverse_pin.setHigh();
+		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
+		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
+	}*/
+
+}
+
+
+void RECEIVED_MOTOR_CMD_LED()
+{
+
+	if(motor_cmd.MASTER_MOTOR_CMD_steer == 0)
+	{
+		brake_pin.setLow();
+	}
+	else
+	{
+		brake_pin.setHigh();
+	}
+
+	switch( motor_cmd.MASTER_MOTOR_CMD_steer){
+	case 0:
+	case 1:
+		front_right_pin.setLow();
 		back_right_pin.setLow();
+		front_left_pin.setHigh();
 		back_left_pin.setHigh();
 		reverse_pin.setHigh();
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,ON);   // direction right
+		break;
 
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
+	case 2:
+	case 3:
+		front_left_pin.setLow();
+		back_left_pin.setLow();
+		front_right_pin.setHigh();
+		back_right_pin.setHigh();
+		reverse_pin.setHigh();
 		break;
 
 	case 4:
@@ -358,17 +357,15 @@ void RECEIVED_MOTOR_CMD()
 		front_right_pin.setHigh();
 		back_left_pin.setHigh();
 		back_right_pin.setHigh();
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
 		break;
+
 	case 5:
 		reverse_pin.setLow();
 		front_right_pin.setHigh();
 		front_left_pin.setHigh();
 		back_left_pin.setHigh();
 		back_right_pin.setHigh();
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,ON);
+
 		break;
 	default:
 		front_right_pin.setHigh();
@@ -376,10 +373,7 @@ void RECEIVED_MOTOR_CMD()
 		back_left_pin.setHigh();
 		back_right_pin.setHigh();
 		reverse_pin.setHigh();
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
+
 	}
 
 	if(dbc_handle_mia_MASTER_MOTOR_CMD(&motor_cmd, 10))
@@ -389,103 +383,25 @@ void RECEIVED_MOTOR_CMD()
 		back_left_pin.setHigh();
 		back_right_pin.setHigh();
 		reverse_pin.setHigh();
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,OFF);
 	}
 
 }
 
+
 void RECEIVED_SYSTEM_STATUS()
 {
-	/*
-	if(CAN_rx(can1, &can_msg, 0))
-	{
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;
-	 */
-	//printf("%f",system_status.MASTER_SYSTEM_STATUS_util);
-	//}
-	//SEND_MSG_LCD(ON,MOTOR_SYSTEM_STATUS_VAL,0x02,OFF,OFF);
-
-	if(system_status.MASTER_SYSTEM_STATUS_ble == 1)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,ON);
-
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_geo == 1)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,ON);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_io == 1)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,IO_SYSTEM_STATUS_VAL,OFF,ON);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_master == 1)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,MASTER_SYSTEM_STATUS_VAL,OFF,ON);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_motor == 1)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,MOTOR_SYSTEM_STATUS_VAL,OFF,ON);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_sensor == 1)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,SENSOR_SYSTEM_STATUS_VAL,OFF,ON);
-	}
-
-
-	if(system_status.MASTER_SYSTEM_STATUS_ble == 0)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,OFF);
-
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_geo == 0)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,OFF);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_io == 0)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,IO_SYSTEM_STATUS_VAL,OFF,OFF);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_master == 0)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,MASTER_SYSTEM_STATUS_VAL,OFF,OFF);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_motor == 0)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,MOTOR_SYSTEM_STATUS_VAL,OFF,OFF);
-	}
-	if(system_status.MASTER_SYSTEM_STATUS_sensor == 0)
-	{
-		SEND_MSG_LCD(ON,LED_VAL,SENSOR_SYSTEM_STATUS_VAL,OFF,OFF);
-	}
-
-
-
-	if(dbc_handle_mia_MASTER_SYSTEM_STATUS(&system_status, 10))
-	{
-		SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,IO_SYSTEM_STATUS_VAL,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,MASTER_SYSTEM_STATUS_VAL,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,MOTOR_SYSTEM_STATUS_VAL,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,SENSOR_SYSTEM_STATUS_VAL,OFF,OFF);
-	}
+	SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_ble);
+	SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_geo);
+	SEND_MSG_LCD(ON,LED_VAL,IO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_io);
+	SEND_MSG_LCD(ON,LED_VAL,MASTER_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_master);
+	SEND_MSG_LCD(ON,LED_VAL,MOTOR_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_motor);
+	SEND_MSG_LCD(ON,LED_VAL,SENSOR_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_sensor);
 
 }
 
 
 void RECEIVED_SENSOR_BATTERY()
 {
-	/*if(CAN_rx(can1, &can_msg, 0))
-	{
-		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
-		can_msg_hdr.mid = can_msg.msg_id;*/
-	//}
-
-
 	SEND_MSG_LCD(ON,0x0B,0x04,OFF,battery_status.SENSOR_BATT_stat);
 
 	if(dbc_handle_mia_SENSOR_BATT(&battery_status, 10))
@@ -503,16 +419,19 @@ void RECEIVED_GEO_DEST_RCHD()
 
 	if(GEO_DEST_RCHD.GEO_DEST_RCHD_stat == 1)
 	{
-		SEND_MSG_LCD(ON,0x0A,0x04,OFF,OFF);
+
+		destination_reached_flag = true;
 		system_destination_reached();
 	}
 	else
 	{
+		destination_reached_flag = false;
 
 	}
+
 	if(dbc_handle_mia_GEO_DEST_RCHD(&GEO_DEST_RCHD, 10))
 	{
-		GEO_DEST_RCHD.GEO_DEST_RCHD_stat = 0;
+		destination_reached_flag = false;
 	}
 
 }
@@ -520,22 +439,24 @@ void RECEIVED_GEO_DEST_RCHD()
 void RECEIVED_GEO_LOCATION()
 {
 	float latitude = 0.0 , longitude = 0.0;
-char data_lat[20];
-char data_long[20];
-	latitude = geo_location.GEO_LOCATION_lat;
-	longitude = geo_location.GEO_LOCATION_long;
+	char data_lat[15];
+	char data_long[15];
+	latitude = -121.333679;//geo_location.GEO_LOCATION_lat;
+	longitude = 33.33334554;//geo_location.GEO_LOCATION_long;
 
-	snprintf(data_lat, 20, "%f", latitude);
-	snprintf(data_long, 20, "%f", longitude);
-
-	SEND_MSG_LCD_LAT(0x02,ON,ON,data_lat[0],data_lat[1],data_lat[2],data_lat[3],data_lat[4],data_lat[5],data_lat[6],data_lat[7],data_lat[8]);
-	SEND_MSG_LCD_LONG(0x02,OFF,ON,data_long[0],data_long[1],data_long[2],data_long[3],data_long[4],data_long[5],data_long[5],data_long[6],data_long[7],data_long[8],data_long[9]);
-
+	sprintf(data_lat, "%f", latitude);
+	sprintf(data_long, "%f", longitude);
+	//printf("lat %c, long %c", data_lat[0],data_long[7]);
+	SEND_MSG_LCD(0x02,ON,ON,data_lat[0],data_lat[1]);
+	SEND_MSG_LCD(0x02,OFF,ON,data_long[0],data_long[1]);
+	//SEND_MSG_LCD_LAT(0x02,ON,ON,data_lat[0],data_lat[1],data_lat[2],data_lat[3],data_lat[4],data_lat[5],data_lat[6],data_lat[7],data_lat[8]);
+	//SEND_MSG_LCD_LONG(0x02,OFF,ON,data_long[0],data_long[1],data_long[2],data_long[3],data_long[4],data_long[5],data_long[5],data_long[6],data_long[7],data_long[8],data_long[9]);
+/*
 	if(dbc_handle_mia_GEO_LOCATION(&geo_location, 10))
 	{
 		SEND_MSG_LCD_LAT(0x02,ON,ON,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
 		SEND_MSG_LCD_LONG(0x02,OFF,ON,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00);
-	}
+	}*/
 
 }
 
@@ -554,29 +475,28 @@ void RECEIVED_MOTOR_SPEED()
 void RECEIVED_GEO_COMPASS_HEADER()
 {
 
-	uint16_t magnetometer = geo_compass_location.GEO_COMPASS_mag;
+	static uint16_t magnetometer = geo_compass_location.GEO_COMPASS_mag;
 	static uint8_t high_byte = 0, low_byte = 0;
-
-	if(geo_compass_location.GEO_COMPASS_mag < 255)
-		SEND_MSG_LCD(ON,0x07,OFF,OFF,magnetometer);
+	magnetometer = 279;
+	if(geo_compass_location.GEO_COMPASS_mag < 255){
+		low_byte |= magnetometer & 0xFF;
+		SEND_MSG_LCD(ON,0x07,OFF,OFF,low_byte);
+	}
 
 	else{
-		low_byte |= magnetometer;
-		high_byte |= (magnetometer >> 8);
+		low_byte |= magnetometer & 0xFF;
+		high_byte |= (magnetometer >> 8) & 0xFF;
 		SEND_MSG_LCD(ON,0x07,OFF,low_byte,high_byte);
 	}
 
-	if(dbc_handle_mia_MOTOR_SPEED(&motor_speed, 10))
+	if(dbc_handle_mia_GEO_COMPASS(&geo_compass_location,10))
 	{
 		SEND_MSG_LCD(ON,0x07,OFF,OFF,magnetometer);
 	}
 
 }
 void LCD_init(void) {
-	U3.init(LCD_BAUD_RATE,LCD_RXQSIZE,LCD_TXQSIZE);
-	SEND_MSG_LCD(ON,MOTOR_SYSTEM_STATUS_VAL,ON,OFF,OFF);
-	//SEND_MSG_LCD(ON,MOTOR_SYSTEM_STATUS_VAL,OFF,OFF,OFF);
-
+	U2.init(LCD_BAUD_RATE,LCD_RXQSIZE,LCD_TXQSIZE);
 }
 void IO_init()
 {
@@ -585,19 +505,16 @@ void IO_init()
 	back_left_pin.setAsOutput();
 	back_right_pin.setAsOutput();
 	reverse_pin.setAsOutput();
-
 	brake_pin.setAsOutput();
-	resume_pin.setAsOutput();
 	headlight_pin.setAsOutput();
+
 
 	front_left_pin.setHigh();
 	front_right_pin.setHigh();
 	back_left_pin.setHigh();
 	back_right_pin.setHigh();
 	reverse_pin.setHigh();
-
 	brake_pin.setHigh();
-	resume_pin.setHigh();
 	headlight_pin.setHigh();
 
 	system_command_flag = false;
@@ -621,33 +538,29 @@ void start(){
 	}
 
 	RECEIVED_SYSTEM_CMD();
-
-	if(system_command_flag){
+	//system_command_flag = true;
+	if(system_command_flag )
+	{
 		headlight_pin.setLow();
-
-		//if( can_msg.msg_id == 211)
+		RECEIVED_MOTOR_CMD_LED();
 		RECEIVED_SENSOR_ULTRASONIC();
-
-		//if(can_msg.msg_id== 151)
-		RECEIVED_MOTOR_CMD();
-
-		//if(can_msg.msg_id ==  162)
-		RECEIVED_SYSTEM_STATUS();
-
-		//if( can_msg.msg_id == 213)
-		RECEIVED_SENSOR_BATTERY();
-
-
-		//if(can_msg.msg_id ==  561)
-		RECEIVED_MOTOR_SPEED();
-
-		//if(can_msg.msg_id == 421)
-		RECEIVED_GEO_LOCATION();
-
-		//if(can_msg.msg_id == 413)
 		RECEIVED_GEO_DEST_RCHD();
-
-		//if(can_msg.msg_id== 461)
-		RECEIVED_GEO_COMPASS_HEADER();
 	}
+}
+void start_5sec(){
+	RECEIVED_MOTOR_CMD_LCD();
+	RECEIVED_MOTOR_SPEED();
+}
+
+void start_10sec()
+{
+	RECEIVED_SENSOR_BATTERY();
+	RECEIVED_SYSTEM_STATUS();
+
+}
+
+void start_15sec()
+{
+	RECEIVED_GEO_LOCATION();
+	RECEIVED_GEO_COMPASS_HEADER();
 }
