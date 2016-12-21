@@ -187,16 +187,20 @@ void RECEIVED_SYSTEM_CMD()
 {
 
 	master_system_command = system_cmd.MASTER_SYSTEM_CMD_enum;
-
+	static int counter_sys_cmd;
 	if(master_system_command == SYSTEM_START)
 	{
 		system_command_flag = true;
 		SEND_MSG_LCD(ON,LED_VAL,0x08,0x00,ON);
-		SEND_MSG_LCD(ON,LED_VAL,0x06,0x00,0x00);
 
-		//return true;
+		if(counter_sys_cmd %5 == 0)
+		{
+			SEND_MSG_LCD(ON,LED_VAL,0x06,0x00,0x00);
+		}
 
 	}
+	counter_sys_cmd++;
+
 	if(master_system_command == SYSTEM_STOP)
 	{
 		system_command_flag = false;
@@ -209,7 +213,6 @@ void RECEIVED_SYSTEM_CMD()
 		back_left_pin.setHigh();
 		reverse_pin.setHigh();
 		brake_pin.setHigh();
-		//return false;
 
 	}
 
@@ -278,33 +281,33 @@ void RECEIVED_SENSOR_ULTRASONIC()
 
 void RECEIVED_MOTOR_CMD_LCD()
 {
-static int motor_cmd_count;
-if(motor_cmd_count %3== 0)
-{
-	switch( motor_cmd.MASTER_MOTOR_CMD_steer){
-	case 0:
-	case 1:
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,ON); // direction left
+	static int motor_cmd_count;
+	if(motor_cmd_count %3== 0)
+	{
+		switch( motor_cmd.MASTER_MOTOR_CMD_steer){
+		case 0:
+		case 1:
+			SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,ON); // direction left
 
-		break;
+			break;
 
-	case 2:
-	case 3:
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,ON);   // direction right
-		break;
+		case 2:
+		case 3:
+			SEND_MSG_LCD(ON,LED_VAL,ON,OFF,ON);   // direction right
+			break;
 
-	case 4:
-		SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,ON); // direction front
-		SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
-		break;
-	case 5:
-		SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,ON);
-		break;
+		case 4:
+			SEND_MSG_LCD(ON,LED_VAL,0x04,OFF,ON); // direction front
+			SEND_MSG_LCD(ON,LED_VAL,0x02,OFF,OFF);
+			SEND_MSG_LCD(ON,LED_VAL,ON,OFF,OFF);
+			SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,OFF);
+			break;
+		case 5:
+			SEND_MSG_LCD(ON,LED_VAL,0x03,OFF,ON);
+			break;
+		}
 	}
-}
-motor_cmd_count++;
+	motor_cmd_count++;
 }
 
 
@@ -381,7 +384,7 @@ void RECEIVED_SYSTEM_STATUS()
 	static int system_status_count;
 	system_status.MASTER_SYSTEM_STATUS_io = 1;
 	system_status.MASTER_SYSTEM_STATUS_motor = 1;
-	if(system_status_count % 3 == 0)
+	if(system_status_count % 5 == 0)
 	{
 		SEND_MSG_LCD(ON,LED_VAL,BLE_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_ble);
 		SEND_MSG_LCD(ON,LED_VAL,GEO_SYSTEM_STATUS_VAL,OFF,system_status.MASTER_SYSTEM_STATUS_geo);
@@ -401,7 +404,7 @@ void RECEIVED_SENSOR_BATTERY()
 
 	if(dbc_handle_mia_SENSOR_BATT(&battery_status, 10))
 	{
-		SEND_MSG_LCD(ON,GAUGE_VAL,0x04,OFF,OFF);
+		SEND_MSG_LCD(ON,GAUGE_VAL,0x04,OFF,0x49);
 	}
 
 }
@@ -417,6 +420,7 @@ void RECEIVED_GEO_DEST_RCHD()
 
 		destination_reached_flag = true;
 		system_destination_reached();
+		SEND_MSG_LCD(0x01,0x0A,0x04,0x00,0x00);
 	}
 	else
 	{
@@ -527,7 +531,7 @@ void start(){
 	}
 
 	RECEIVED_SYSTEM_CMD();
-	//system_command_flag = true;
+	system_command_flag = true;
 	if(system_command_flag )
 	{
 		headlight_pin.setLow();
