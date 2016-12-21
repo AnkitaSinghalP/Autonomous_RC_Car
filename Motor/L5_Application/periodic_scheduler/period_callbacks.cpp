@@ -48,6 +48,7 @@
 #define STEER_FULLRIGHT 18.04
 #define THROTTLE_NEUTRAL 15.2
 #define MAX_SPEED 17.5
+#define REVERSE_SPEED 13.8
 
 
 
@@ -68,8 +69,7 @@ int msg_systcount=0;
 int  msg_motorcount=0;
 int totaltx=0;
 int totalrx=0;
-GPIO *flag = NULL;
-
+int reverse_rotation_counter = 0;
 
 int valflag=0;
 
@@ -96,10 +96,12 @@ const uint32_t PERIOD_TASKS_STACK_SIZE_BYTES = (512 * 4);
 const uint32_t PERIOD_DISPATCHER_TASK_STACK_SIZE_BYTES = (512 * 3);
 void speedcounter()
 {
-	//flag->setLow();
 	rpmcount++;
 	speed_counter++;
-	//printf("rpmcount %d",rpmcount);
+	reverse_rotation_counter ++;
+
+	//printf("reverse_rotation_counter = %d\n",reverse_rotation_counter);
+
 }
 /// Called once before the RTOS is started, this is a good place to initialize things once
 bool period_init(void)
@@ -147,11 +149,18 @@ float getspeed(int rpm1)
 
 void period_1Hz(uint32_t count)
 {
+	if(CAN_is_bus_off(can1))
+			CAN_reset_bus(can1);
+
 	motorheartbeat.MOTOR_HEARTBEAT_rx_bytes = count;
 	dbc_encode_and_send_MOTOR_HEARTBEAT(&motorheartbeat);
 
-motorspeed.MOTOR_SPEED_actual = (float)speed_counter;
-dbc_encode_and_send_MOTOR_SPEED(&motorspeed);
+	motorspeed.MOTOR_SPEED_actual = (float)speed_counter;
+	dbc_encode_and_send_MOTOR_SPEED(&motorspeed);
+
+	speed_counter=0;
+
+
 
 	/*if(count==3)
 	{
@@ -177,7 +186,6 @@ rpmcount=0;
 	}*/
 
 	//LE.toggle(4);
-speed_counter=0;
 
 
 /*
@@ -189,26 +197,20 @@ speed_counter=0;
 
 }
 
+bool reverse_flag = false;
+bool reverse_wait_flag = false;
+bool start_reversing_flag = false;
+int reverse_counter = 0;
+
 
 void period_10Hz(uint32_t count)
 {
 
-
-	static  PWM  servomotor(PWM::pwm1, 100);
+	static PWM servomotor(PWM::pwm1, 100);
 	static PWM dcmotor(PWM::pwm2, 100);
-
-/*	static PWM dcmotor(PWM::pwm2, 100);
-	static PWM servomotor(PWM::pwm1, 100);*/
-
-	//servomotor.set(15.0);
-
-
-
-
 
 	static float throttle_forward = THROTTLE_NEUTRAL;
 	//float throttle_backward = 14.4;
-
 
 
 	static bool decodeflag=0;
@@ -219,7 +221,7 @@ void period_10Hz(uint32_t count)
 		throttle_forward = THROTTLE_NEUTRAL;
 	//printf("%f\n",throttle_forward - 0.2);
 
-		dcmotor.set(throttle_forward - 0.2);
+	dcmotor.set(throttle_forward - 0.2);
 
 
 	while (CAN_rx(can1, &msg_received, 0))
@@ -250,7 +252,9 @@ void period_10Hz(uint32_t count)
 			servomotor.set(STEER_MIDDLE);
 
 		}
+
 	}
+	dbc_handle_mia_MASTER_MOTOR_CMD(&motorcmd, 50);
 
 
 	if(decodeflag)
@@ -262,81 +266,158 @@ void period_10Hz(uint32_t count)
 			LD.setNumber(4);
 			steerflag=0;
 			throttle_forward = THROTTLE_NEUTRAL;
-			//dcmotor.set(throttle_neutral);
-			//servomotor.set(STEER_MIDDLE);
 			break;
 		case START:
-			//dcmotor.set(17.0);
-
 			steerflag=1;
 			break;
-
-		//default:
-			//dcmotor.set(throttle_neutral);
 		}
-
-}
-
+	}
 
 	if(steerflag)
 	{
-
 		switch(motorcmd.MASTER_MOTOR_CMD_steer)
 		{
+			case STEER_LEFT:
+				LD.setNumber(3);
+				if(!reverse_flag)
+					servomotor.set(STEER_FULLLEFT);
+				reverse_wait_flag = false;
 
-		case STEER_LEFT:
-			LD.setNumber(3);
-			servomotor.set(STEER_FULLLEFT);
+				break;
+			case STEER_HALF_LEFT:
+				LD.setNumber(3);
+				if(!reverse_flag)
+					servomotor.set(STEER_HALFLEFT);
+				reverse_wait_flag = false;
+				break;
 
-			break;
-		case STEER_HALF_LEFT:
-			LD.setNumber(3);
-			servomotor.set(STEER_HALFLEFT);
-			break;
+			case STEER_RIGHT:
+				LD.setNumber(1);
+				if(!reverse_flag)
+					servomotor.set(STEER_FULLRIGHT);
+				reverse_wait_flag = false;
+				break;
 
-		case STEER_RIGHT:
-			LD.setNumber(1);
-			servomotor.set(STEER_FULLRIGHT);
+			case STEER_HALF_RIGHT:
+				LD.setNumber(1);
+				if(!reverse_flag)
+					servomotor.set(STEER_HALFRIGHT);
+				reverse_wait_flag = false;
+				break;
 
-			break;
+			case STEER_STRAIGHT:
+				LD.setNumber(2);
+				if(!reverse_flag)
+					servomotor.set(STEER_MIDDLE);
+				reverse_wait_flag = false;
+				break;
 
-		case STEER_HALF_RIGHT:
-			LD.setNumber(1);
-			servomotor.set(STEER_HALFRIGHT);
+			case STEER_REVERSE:
+				reverse_flag = true;
+				reverse_wait_flag = true;
+				break;
 
-			break;
-
-		case STEER_STRAIGHT :
-			LD.setNumber(2);
-			servomotor.set(STEER_MIDDLE);
-
-			break;
-
-		default:
-			LD.setNumber(4);
-			servomotor.set(STEER_MIDDLE);
+			default:
+				LD.setNumber(4);
+				servomotor.set(STEER_MIDDLE);
 		}
 
-		//dcmotor.set(20.0);
-/*		if(throttle_forward < 16.05)
+		if(!reverse_flag)
 		{
+			if(rpmcount < 1)
+			{
+				throttle_forward = throttle_forward + 0.03;
+			}
+			else if(rpmcount > 1)
+			{
+				throttle_forward = throttle_forward - 0.03;
+			}
 
-			throttle_forward = throttle_forward + 0.05;
-
-		}*/
-
-
-
-		if(rpmcount < 1)
-		{
-			throttle_forward = throttle_forward + 0.03;
 		}
-		else if(rpmcount > 1)
+		else
 		{
-			throttle_forward = throttle_forward - 0.03;
+			reverse_counter ++;
+
+			if(reverse_counter < 30)
+			{
+				throttle_forward = THROTTLE_NEUTRAL;
+
+				if(!reverse_wait_flag)
+				{
+					reverse_flag = false;
+					reverse_counter = 0;
+					start_reversing_flag = false;
+				}
+				else
+					start_reversing_flag = true;
+			}
+			else if(reverse_counter >= 30) //wait for 3 seconds when reverse command is received
+			{
+				if(start_reversing_flag)
+				{
+					if(reverse_counter == 31)
+						throttle_forward = THROTTLE_NEUTRAL;
+
+					if(reverse_counter == 32)
+						throttle_forward = REVERSE_SPEED;
+
+					if(reverse_counter == 33)
+					{
+						throttle_forward = THROTTLE_NEUTRAL;
+						reverse_rotation_counter = 0;
+					}
+
+					if(reverse_counter >= 34 && reverse_rotation_counter < 14)	//going back straight
+					{
+						throttle_forward = REVERSE_SPEED;
+						//LD.setNumber(reverse_rotation_counter);
+
+						/*if(rpmcount < 1)
+							throttle_forward = 15 - 0.03;
+
+						else if(rpmcount > 1)
+							throttle_forward = 15 + 0.03;*/
+
+
+
+						if(reverse_rotation_counter == 0)
+							servomotor.set(STEER_MIDDLE);
+
+						else if(reverse_rotation_counter == 4)
+							servomotor.set(STEER_FULLRIGHT);
+					}
+
+					if(reverse_rotation_counter == 14)
+					{
+						throttle_forward = THROTTLE_NEUTRAL;
+						servomotor.set(STEER_MIDDLE);
+					}
+
+					if(reverse_rotation_counter >= 14 && reverse_rotation_counter < 25)
+					{
+						if(rpmcount < 1)
+						{
+							throttle_forward = throttle_forward + 0.03;
+						}
+						else if(rpmcount > 1)
+						{
+							throttle_forward = throttle_forward - 0.03;
+						}
+					}
+
+					if(reverse_rotation_counter == 25)
+					{
+						//throttle_forward = THROTTLE_NEUTRAL;
+						//servomotor.set(STEER_MIDDLE);
+						reverse_flag = false;
+						reverse_wait_flag = false;
+						start_reversing_flag = false;
+						reverse_counter = 0;
+						reverse_rotation_counter = 0;
+					}
+				}
+			}
 		}
-
-
 	}
 
 	//printf("rpmcount %d",rpmcount);
