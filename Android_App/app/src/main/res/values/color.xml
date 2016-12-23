@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="black">#000000</color>
+    <color name="brown">#66663300</color>
+    <color name="bg_blue">#01214a</color>
+    <color name="light_grey">#adadad</color>
+    <color name="offwhite">#f9f7f7</color>
+    <color name="tabDark">#000000</color>
+    <color name="tabMedium">#2B2B2B</color>
+    <color name="tabTransparent">#10ffffff</color>
+    <color name="greytrans">#505a5a5a</color>
+    <color name="grey">#5a5a5a</color>
+    <color name="dialog_grey">#1e324c</color>
+    <color name="lightergrey">#858585</color>
+    <color name="blue_for_fonts">#479bff</color>
+    <color name="golden_yellow_for_fonts">#d1ad40</color>
+    <color name="header_light">#1f7efa</color>
+    <color name="header_dark">#093a79</color>
+    <color name="schedule_box_light">#0c4c9f</color>
+    <color name="schedule_box_dark">#093978</color>
+    <color name="powered_by_tcs_box">#0c4da2</color>
+    <!-- <color name="tans_black">#50000000</color> -->
+    <color name="tans_black">#80000000</color>
+    <color name="league_standing_box">#7f0c4da2</color>
+    <color name="lightRed">#ff0c3f</color>
+    <color name="darkOrange">#fc9919</color>
+    <color name="limeGreen">#1cd84b</color>
+    <color name="deepSkyBlue">#13b6d7</color>
+    <color name="darkGoldenRod">#B8860B</color>
+    <color name="tran_blue">#20479bff</color>
+    <color name="sch_blue_patch">#af0c4da2</color>
+    <color name="bat_bal_table_head">#00377d</color>
+    <color name="background_tab_pressed">#6633B5E5</color>
+    <color name="transparent">#00000000</color>
+    <color name="trans_green_dark_l1">#801BE0D6</color>
+    <color name="trans_green_dark_l2">#8019D4CA</color>
+    <color name="trans_green_dark_l3">#8019D4CA</color>
+    <color name="trans_green_dark_l4">#80128A84</color>
+    <color name="trans_green_light_l1">#8029F266</color>
+    <color name="trans_green_light_l2">#8021D156</color>
+    <color name="trans_green_light_l3">#801DB84C</color>
+    <color name="trans_green_light_l4">#801DB84C</color>
+    <color name="trans_blue_light_l1">#8060C3EB</color>
+    <color name="trans_blue_light_l2">#80499BC4</color>
+    <color name="trans_blue_light_l3">#804089AD</color>
+    <color name="trans_blue_light_l4">#80257DA8</color>
+    <color name="trans_saffron_light_l1">#80FFB973</color>
+    <color name="trans_saffron_light_l2">#80FFA347</color>
+    <color name="trans_saffron_light_l3">#80FC8D1E</color>
+    <color name="trans_saffron_light_l4">#80FC7E00</color>
+    <color name="trans_dark_blue_light_l1">#805858BF</color>
+    <color name="trans_dark_blue_light_l2">#805050B5</color>
+    <color name="trans_dark_blue_light_l3">#801f2e61</color>
+    <color name="trans_dark_blue_light_l4">#80FC7E00</color>
+    <color name="trans_black">#CC000000</color>
+    <color name="dark_blue">#1f2e61</color>
+    <color name="mid_blue">#1175BD</color>
+    <color name="light_gray">#dbdbdb</color>
+    <color name="pager_back">#011939</color>
+    <color name="blue_for_bottom_logo">#01214A</color>
+    <color name="bluish_gray">#99FFFFFF</color>
+    <color name="royal_blue">#0C4DA2</color>
+
+    <!-- Color for UI Provided Colors -->
+    <color name="blue">#008fd3</color>
+    <color name="blue_dark">#035e8a</color>
+    <color name="blue_dark_transparent">#E6035e8a</color>
+    <color name="grey_dark_trans">#32353535</color>
+    <color name="yellow_light">#fce9cc</color>
+    <color name="grey_light">#686868</color>
+    <color name="white">#FFFFFF</color>
+    <color name="grey_patch_landing">#f1f1f1</color>
+    <color name="red">#FF0000</color>
+    <!-- New -->
+    <color name="yellow">#f29200</color>
+    <!-- <color name="very_light_grey">#e8e8e8</color> -->
+    <color name="row_color">#fcfbfb</color>
+    <color name="light_blue">#6fc0e7</color>
+    <color name="singapore_blue">#0066B3</color>
+
+    <!-- Newly Singapore Added 2014 -->
+    <color name="singapore_greytrans">#90424a4a</color>
+    <color name="singapore_dark_grey">#353535</color>
+    <color name="singapore_trans_dark_grey">#cc353535</color>
+    <color name="tab_blue">#005c87</color>
+    <color name="trans_white">#BFffffff</color>
+    <color name="trans_white_social">#CCffffff</color>
+    <color name="singapore_green">#229947</color>
+    <color name="singapore_drawer_green">#E4FDD8</color>
+    <color name="singapore_results_highlight_green">#0DFB6C</color>
+    <color name="singapore_dropDown_fontColor">#6A6A6A</color>
+    <color name="list_header_bg">#B3183443</color>
+
+    <!-- Newly AmsterDam Added 2014 -->
+    <color name="layout_background_color">#4e84c4</color>
+    <color name="amsterdam_tab_highlighter_red">#ef4137</color>
+    <color name="unselected_tab_text">#124979</color>
+    <color name="amsterdam_drawer_selected_blue">#053355</color>
+
+    <!-- Estimation Colors -->
+    <color name="greenRoute">#00FF00</color>
+    <color name="redRoute">#FF0000</color>
+    <color name="pureBlue">#0000FF</color>
+
+    <!-- Fitness Module colors -->
+    <color name="greenStart">#149A3C</color>
+
+    <!-- Mumbai Marathon 2015 colors -->
+    <color name="mumbai_background_blue">#007fb3</color>
+    <color name="mumbai_headingText_blue">#007fb3</color>
+    <color name="mumbai_normalText_grey">#353535</color>
+    <color name="mumbai_smallHeadingText_Green">#22aa47</color>
+    <color name="mumbai_Tab_BG_darkblue">#005d87</color>
+    <color name="mumbai_Tab_Text_black">#353535</color>
+    <color name="mumbai_Tab_divider_black">#353535</color>
+    <color name="mumbai_runnerprogress_marathon">#22AA47</color>
+    <color name="mumbai_runnerprogress_halfmarathon">#F08B26</color>
+    <color name="mumbai_unselected_tab">#005d87</color>
+    <color name="mumbai_drawer_green">#E4FDD8</color>
+    <color name="transparent_cms_white">#0DFFFFFF</color>
+    <color name="help_text_color">#3adefc</color>
+    <color name="progress_wheel_green">#2DCB6C</color>
+    <color name="progress_wheel_orange">#F08B26</color>
+    <color name="help_screen_background">#BB000000</color>
+
+</resources>

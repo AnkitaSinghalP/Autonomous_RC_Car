@@ -25,27 +25,24 @@ typedef struct {
 
 static const dbc_msg_hdr_t BLE_COMM_CMD_HDR =                     {   10, 1 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_CMD_HDR =                {  100, 1 };
-// static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 3 };
+// static const dbc_msg_hdr_t MASTER_MOTOR_CMD_HDR =                 {  151, 2 };
 static const dbc_msg_hdr_t MASTER_SYSTEM_STATUS_HDR =             {  162, 3 };
-// static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
-// static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  213, 1 };
+static const dbc_msg_hdr_t SENSOR_ULTRASONIC_HDR =                {  211, 1 };
 // static const dbc_msg_hdr_t SENSOR_HEARTBEAT_HDR =                 {  214, 4 };
-static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  311, 8 };
+static const dbc_msg_hdr_t SENSOR_BATT_HDR =                      {  263, 1 };
 static const dbc_msg_hdr_t BLE_HEARTBEAT_HDR =                    {  314, 4 };
-static const dbc_msg_hdr_t BLE_MAP_START_DATA_HDR =               {  361, 8 };
-static const dbc_msg_hdr_t BLE_MAP_DEST_DATA_HDR =                {  362, 8 };
+static const dbc_msg_hdr_t BLE_CHCK_PT_HDR =                      {  341, 8 };
 // static const dbc_msg_hdr_t GEO_DIRECTION_HDR =                    {  411, 1 };
-// static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
+static const dbc_msg_hdr_t GEO_DEST_RCHD_HDR =                    {  413, 1 };
 // static const dbc_msg_hdr_t GEO_HEARTBEAT_HDR =                    {  414, 4 };
-static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  421, 8 };
-// static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 8 };
+static const dbc_msg_hdr_t GEO_LOCATION_HDR =                     {  431, 8 };
+// static const dbc_msg_hdr_t GEO_COMPASS_HDR =                      {  461, 2 };
 // static const dbc_msg_hdr_t MOTOR_HEARTBEAT_HDR =                  {  514, 4 };
-// static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
+static const dbc_msg_hdr_t MOTOR_SPEED_HDR =                      {  561, 2 };
 // static const dbc_msg_hdr_t IO_HEARTBEAT_HDR =                     {  614, 4 };
 
 /// Enumeration(s) for Message: 'BLE_COMM_CMD' from 'BLE'
 typedef enum {
-    COMM_RESET = 2,
     COMM_START = 1,
     COMM_STOP = 0,
 } BLE_COMM_CMD_enum_E ;
@@ -53,7 +50,6 @@ typedef enum {
 /// Enumeration(s) for Message: 'MASTER_SYSTEM_CMD' from 'MASTER'
 typedef enum {
     SYSTEM_START = 1,
-    SYSTEM_RESET = 2,
     SYSTEM_STOP = 0,
 } MASTER_SYSTEM_CMD_enum_E ;
 
@@ -84,19 +80,29 @@ typedef struct {
     uint8_t MASTER_SYSTEM_STATUS_master : 1;  ///< B3:3   Destination: IO,BLE
     uint8_t MASTER_SYSTEM_STATUS_motor : 1;   ///< B4:4   Destination: IO,BLE
     uint8_t MASTER_SYSTEM_STATUS_sensor : 1;  ///< B5:5   Destination: IO,BLE
-    float MASTER_SYSTEM_STATUS_util;          ///< B23:8  Min: 0 Max: 100   Destination: IO,BLE
 
     dbc_mia_info_t mia_info;
 } MASTER_SYSTEM_STATUS_t;
 
 
-/// Message: BLE_CHCK_PT from 'BLE', DLC: 8 byte(s), MID: 311
+/// Message: SENSOR_ULTRASONIC from 'SENSOR', DLC: 1 byte(s), MID: 211
 typedef struct {
-    float BLE_CHCK_PT_lat;                    ///< B31:0   Destination: GEO
-    float BLE_CHCK_PT_long;                   ///< B63:32   Destination: GEO
+    uint8_t SENSOR_ULTRASONIC_left : 1;       ///< B0:0   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_middle : 1;     ///< B1:1   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_right : 1;      ///< B2:2   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_rear : 1;       ///< B3:3   Destination: MASTER,IO,BLE
+    uint8_t SENSOR_ULTRASONIC_critical : 1;   ///< B4:4   Destination: MASTER,IO,BLE
 
-    // No dbc_mia_info_t for a message that we will send
-} BLE_CHCK_PT_t;
+    dbc_mia_info_t mia_info;
+} SENSOR_ULTRASONIC_t;
+
+
+/// Message: SENSOR_BATT from 'SENSOR', DLC: 1 byte(s), MID: 263
+typedef struct {
+    uint8_t SENSOR_BATT_stat;                 ///< B6:0  Min: 0 Max: 100   Destination: IO,BLE
+
+    dbc_mia_info_t mia_info;
+} SENSOR_BATT_t;
 
 
 /// Message: BLE_HEARTBEAT from 'BLE', DLC: 4 byte(s), MID: 314
@@ -108,25 +114,24 @@ typedef struct {
 } BLE_HEARTBEAT_t;
 
 
-/// Message: BLE_MAP_START_DATA from 'BLE', DLC: 8 byte(s), MID: 361
+/// Message: BLE_CHCK_PT from 'BLE', DLC: 8 byte(s), MID: 341
 typedef struct {
-    float BLE_MAP_START_DATA_lat;             ///< B31:0   Destination: IO
-    float BLE_MAP_START_DATA_long;            ///< B63:32   Destination: IO
+    float BLE_CHCK_PT_lat;                    ///< B31:0   Destination: GEO
+    float BLE_CHCK_PT_long;                   ///< B63:32   Destination: GEO
 
     // No dbc_mia_info_t for a message that we will send
-} BLE_MAP_START_DATA_t;
+} BLE_CHCK_PT_t;
 
 
-/// Message: BLE_MAP_DEST_DATA from 'BLE', DLC: 8 byte(s), MID: 362
+/// Message: GEO_DEST_RCHD from 'GEO', DLC: 1 byte(s), MID: 413
 typedef struct {
-    float BLE_MAP_DEST_DATA_lat;              ///< B31:0   Destination: IO
-    float BLE_MAP_DEST_DATA_long;             ///< B63:32   Destination: IO
+    uint8_t GEO_DEST_RCHD_stat : 1;           ///< B0:0  Min: 0 Max: 1   Destination: MASTER,IO,BLE
 
-    // No dbc_mia_info_t for a message that we will send
-} BLE_MAP_DEST_DATA_t;
+    dbc_mia_info_t mia_info;
+} GEO_DEST_RCHD_t;
 
 
-/// Message: GEO_LOCATION from 'GEO', DLC: 8 byte(s), MID: 421
+/// Message: GEO_LOCATION from 'GEO', DLC: 8 byte(s), MID: 431
 typedef struct {
     float GEO_LOCATION_lat;                   ///< B31:0   Destination: IO,BLE
     float GEO_LOCATION_long;                  ///< B63:32   Destination: IO,BLE
@@ -135,13 +140,29 @@ typedef struct {
 } GEO_LOCATION_t;
 
 
+/// Message: MOTOR_SPEED from 'MOTOR', DLC: 2 byte(s), MID: 561
+typedef struct {
+    float MOTOR_SPEED_actual;                 ///< B13:0  Min: 0 Max: 100.00   Destination: IO,BLE
+
+    dbc_mia_info_t mia_info;
+} MOTOR_SPEED_t;
+
+
 /// @{ These 'externs' need to be defined in a source file of your project
 extern const uint32_t                             MASTER_SYSTEM_CMD__MIA_MS;
 extern const MASTER_SYSTEM_CMD_t                  MASTER_SYSTEM_CMD__MIA_MSG;
 extern const uint32_t                             MASTER_SYSTEM_STATUS__MIA_MS;
 extern const MASTER_SYSTEM_STATUS_t               MASTER_SYSTEM_STATUS__MIA_MSG;
+extern const uint32_t                             SENSOR_ULTRASONIC__MIA_MS;
+extern const SENSOR_ULTRASONIC_t                  SENSOR_ULTRASONIC__MIA_MSG;
+extern const uint32_t                             SENSOR_BATT__MIA_MS;
+extern const SENSOR_BATT_t                        SENSOR_BATT__MIA_MSG;
+extern const uint32_t                             GEO_DEST_RCHD__MIA_MS;
+extern const GEO_DEST_RCHD_t                      GEO_DEST_RCHD__MIA_MSG;
 extern const uint32_t                             GEO_LOCATION__MIA_MS;
 extern const GEO_LOCATION_t                       GEO_LOCATION__MIA_MSG;
+extern const uint32_t                             MOTOR_SPEED__MIA_MS;
+extern const MOTOR_SPEED_t                        MOTOR_SPEED__MIA_MSG;
 /// @}
 
 
@@ -176,41 +197,9 @@ static inline bool dbc_encode_and_send_BLE_COMM_CMD(BLE_COMM_CMD_t *from)
 
 /// Not generating code for dbc_encode_SENSOR_ULTRASONIC() since the sender is SENSOR and we are BLE
 
-/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are BLE
-
 /// Not generating code for dbc_encode_SENSOR_HEARTBEAT() since the sender is SENSOR and we are BLE
 
-/// Encode BLE's 'BLE_CHCK_PT' message
-/// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_BLE_CHCK_PT(uint8_t bytes[8], BLE_CHCK_PT_t *from)
-{
-    uint32_t raw;
-    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
-
-    raw = ((uint32_t)(((from->BLE_CHCK_PT_lat) / 1e-06) + 0.5)) & 0xffffffff;
-    bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
-    bytes[1] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B8
-    bytes[2] |= (((uint8_t)(raw >> 16) & 0xff)); ///< 8 bit(s) starting from B16
-    bytes[3] |= (((uint8_t)(raw >> 24) & 0xff)); ///< 8 bit(s) starting from B24
-
-    raw = ((uint32_t)(((from->BLE_CHCK_PT_long) / 1e-06) + 0.5)) & 0xffffffff;
-    bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-    bytes[5] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B40
-    bytes[6] |= (((uint8_t)(raw >> 16) & 0xff)); ///< 8 bit(s) starting from B48
-    bytes[7] |= (((uint8_t)(raw >> 24) & 0xff)); ///< 8 bit(s) starting from B56
-
-    return BLE_CHCK_PT_HDR;
-}
-
-/// Encode and send for dbc_encode_BLE_CHCK_PT() message
-static inline bool dbc_encode_and_send_BLE_CHCK_PT(BLE_CHCK_PT_t *from)
-{
-    uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_BLE_CHCK_PT(bytes, from);
-    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
-}
-
-
+/// Not generating code for dbc_encode_SENSOR_BATT() since the sender is SENSOR and we are BLE
 
 /// Encode BLE's 'BLE_HEARTBEAT' message
 /// @returns the message header of this message
@@ -240,65 +229,33 @@ static inline bool dbc_encode_and_send_BLE_HEARTBEAT(BLE_HEARTBEAT_t *from)
 
 
 
-/// Encode BLE's 'BLE_MAP_START_DATA' message
+/// Encode BLE's 'BLE_CHCK_PT' message
 /// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_BLE_MAP_START_DATA(uint8_t bytes[8], BLE_MAP_START_DATA_t *from)
+static inline dbc_msg_hdr_t dbc_encode_BLE_CHCK_PT(uint8_t bytes[8], BLE_CHCK_PT_t *from)
 {
     uint32_t raw;
     bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
 
-    raw = ((uint32_t)(((from->BLE_MAP_START_DATA_lat) / 1e-06) + 0.5)) & 0xffffffff;
+    raw = ((uint32_t)(((from->BLE_CHCK_PT_lat) / 1e-06) + 0.5)) & 0xffffffff;
     bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
     bytes[1] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B8
     bytes[2] |= (((uint8_t)(raw >> 16) & 0xff)); ///< 8 bit(s) starting from B16
     bytes[3] |= (((uint8_t)(raw >> 24) & 0xff)); ///< 8 bit(s) starting from B24
 
-    raw = ((uint32_t)(((from->BLE_MAP_START_DATA_long) / 1e-06) + 0.5)) & 0xffffffff;
+    raw = ((uint32_t)(((from->BLE_CHCK_PT_long) / 1e-06) + 0.5)) & 0xffffffff;
     bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
     bytes[5] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B40
     bytes[6] |= (((uint8_t)(raw >> 16) & 0xff)); ///< 8 bit(s) starting from B48
     bytes[7] |= (((uint8_t)(raw >> 24) & 0xff)); ///< 8 bit(s) starting from B56
 
-    return BLE_MAP_START_DATA_HDR;
+    return BLE_CHCK_PT_HDR;
 }
 
-/// Encode and send for dbc_encode_BLE_MAP_START_DATA() message
-static inline bool dbc_encode_and_send_BLE_MAP_START_DATA(BLE_MAP_START_DATA_t *from)
+/// Encode and send for dbc_encode_BLE_CHCK_PT() message
+static inline bool dbc_encode_and_send_BLE_CHCK_PT(BLE_CHCK_PT_t *from)
 {
     uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_BLE_MAP_START_DATA(bytes, from);
-    return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
-}
-
-
-
-/// Encode BLE's 'BLE_MAP_DEST_DATA' message
-/// @returns the message header of this message
-static inline dbc_msg_hdr_t dbc_encode_BLE_MAP_DEST_DATA(uint8_t bytes[8], BLE_MAP_DEST_DATA_t *from)
-{
-    uint32_t raw;
-    bytes[0]=bytes[1]=bytes[2]=bytes[3]=bytes[4]=bytes[5]=bytes[6]=bytes[7]=0;
-
-    raw = ((uint32_t)(((from->BLE_MAP_DEST_DATA_lat) / 1e-06) + 0.5)) & 0xffffffff;
-    bytes[0] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B0
-    bytes[1] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B8
-    bytes[2] |= (((uint8_t)(raw >> 16) & 0xff)); ///< 8 bit(s) starting from B16
-    bytes[3] |= (((uint8_t)(raw >> 24) & 0xff)); ///< 8 bit(s) starting from B24
-
-    raw = ((uint32_t)(((from->BLE_MAP_DEST_DATA_long) / 1e-06) + 0.5)) & 0xffffffff;
-    bytes[4] |= (((uint8_t)(raw) & 0xff)); ///< 8 bit(s) starting from B32
-    bytes[5] |= (((uint8_t)(raw >> 8) & 0xff)); ///< 8 bit(s) starting from B40
-    bytes[6] |= (((uint8_t)(raw >> 16) & 0xff)); ///< 8 bit(s) starting from B48
-    bytes[7] |= (((uint8_t)(raw >> 24) & 0xff)); ///< 8 bit(s) starting from B56
-
-    return BLE_MAP_DEST_DATA_HDR;
-}
-
-/// Encode and send for dbc_encode_BLE_MAP_DEST_DATA() message
-static inline bool dbc_encode_and_send_BLE_MAP_DEST_DATA(BLE_MAP_DEST_DATA_t *from)
-{
-    uint8_t bytes[8];
-    const dbc_msg_hdr_t hdr = dbc_encode_BLE_MAP_DEST_DATA(bytes, from);
+    const dbc_msg_hdr_t hdr = dbc_encode_BLE_CHCK_PT(bytes, from);
     return dbc_app_send_can_msg(hdr.mid, hdr.dlc, bytes);
 }
 
@@ -367,9 +324,6 @@ static inline bool dbc_decode_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS_t *to, c
     to->MASTER_SYSTEM_STATUS_motor = ((raw));
     raw  = ((uint32_t)((bytes[0] >> 5) & 0x01)); ///< 1 bit(s) from B5
     to->MASTER_SYSTEM_STATUS_sensor = ((raw));
-    raw  = ((uint32_t)((bytes[1]))); ///< 8 bit(s) from B8
-    raw |= ((uint32_t)((bytes[2]))) << 8; ///< 8 bit(s) from B16
-    to->MASTER_SYSTEM_STATUS_util = ((raw * 0.01));
 
     to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
 
@@ -377,23 +331,81 @@ static inline bool dbc_decode_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS_t *to, c
 }
 
 
-/// Not generating code for dbc_decode_SENSOR_ULTRASONIC() since 'BLE' is not the recipient of any of the signals
+/// Decode SENSOR's 'SENSOR_ULTRASONIC' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != SENSOR_ULTRASONIC_HDR.dlc || hdr->mid != SENSOR_ULTRASONIC_HDR.mid)) {
+        return !success;
+    }
 
-/// Not generating code for dbc_decode_SENSOR_BATT() since 'BLE' is not the recipient of any of the signals
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]) & 0x01)); ///< 1 bit(s) from B0
+    to->SENSOR_ULTRASONIC_left = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 1) & 0x01)); ///< 1 bit(s) from B1
+    to->SENSOR_ULTRASONIC_middle = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 2) & 0x01)); ///< 1 bit(s) from B2
+    to->SENSOR_ULTRASONIC_right = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 3) & 0x01)); ///< 1 bit(s) from B3
+    to->SENSOR_ULTRASONIC_rear = ((raw));
+    raw  = ((uint32_t)((bytes[0] >> 4) & 0x01)); ///< 1 bit(s) from B4
+    to->SENSOR_ULTRASONIC_critical = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
 
 /// Not generating code for dbc_decode_SENSOR_HEARTBEAT() since 'BLE' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_BLE_CHCK_PT() since 'BLE' is not the recipient of any of the signals
+/// Decode SENSOR's 'SENSOR_BATT' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_SENSOR_BATT(SENSOR_BATT_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != SENSOR_BATT_HDR.dlc || hdr->mid != SENSOR_BATT_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]) & 0x7f)); ///< 7 bit(s) from B0
+    to->SENSOR_BATT_stat = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
 
 /// Not generating code for dbc_decode_BLE_HEARTBEAT() since 'BLE' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_BLE_MAP_START_DATA() since 'BLE' is not the recipient of any of the signals
-
-/// Not generating code for dbc_decode_BLE_MAP_DEST_DATA() since 'BLE' is not the recipient of any of the signals
+/// Not generating code for dbc_decode_BLE_CHCK_PT() since 'BLE' is not the recipient of any of the signals
 
 /// Not generating code for dbc_decode_GEO_DIRECTION() since 'BLE' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_GEO_DEST_RCHD() since 'BLE' is not the recipient of any of the signals
+/// Decode GEO's 'GEO_DEST_RCHD' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_GEO_DEST_RCHD(GEO_DEST_RCHD_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != GEO_DEST_RCHD_HDR.dlc || hdr->mid != GEO_DEST_RCHD_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]) & 0x01)); ///< 1 bit(s) from B0
+    to->GEO_DEST_RCHD_stat = ((raw));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
 
 /// Not generating code for dbc_decode_GEO_HEARTBEAT() since 'BLE' is not the recipient of any of the signals
 
@@ -429,7 +441,26 @@ static inline bool dbc_decode_GEO_LOCATION(GEO_LOCATION_t *to, const uint8_t byt
 
 /// Not generating code for dbc_decode_MOTOR_HEARTBEAT() since 'BLE' is not the recipient of any of the signals
 
-/// Not generating code for dbc_decode_MOTOR_SPEED() since 'BLE' is not the recipient of any of the signals
+/// Decode MOTOR's 'MOTOR_SPEED' message
+/// @param hdr  The header of the message to validate its DLC and MID; this can be NULL to skip this check
+static inline bool dbc_decode_MOTOR_SPEED(MOTOR_SPEED_t *to, const uint8_t bytes[8], const dbc_msg_hdr_t *hdr)
+{
+    const bool success = true;
+    // If msg header is provided, check if the DLC and the MID match
+    if (NULL != hdr && (hdr->dlc != MOTOR_SPEED_HDR.dlc || hdr->mid != MOTOR_SPEED_HDR.mid)) {
+        return !success;
+    }
+
+    uint32_t raw;
+    raw  = ((uint32_t)((bytes[0]))); ///< 8 bit(s) from B0
+    raw |= ((uint32_t)((bytes[1]) & 0x3f)) << 8; ///< 6 bit(s) from B8
+    to->MOTOR_SPEED_actual = ((raw * 0.01));
+
+    to->mia_info.mia_counter_ms = 0; ///< Reset the MIA counter
+
+    return success;
+}
+
 
 /// Not generating code for dbc_decode_IO_HEARTBEAT() since 'BLE' is not the recipient of any of the signals
 
@@ -481,6 +512,78 @@ static inline bool dbc_handle_mia_MASTER_SYSTEM_STATUS(MASTER_SYSTEM_STATUS_t *m
     return mia_occurred;
 }
 
+/// Handle the MIA for SENSOR's SENSOR_ULTRASONIC message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_SENSOR_ULTRASONIC(SENSOR_ULTRASONIC_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_ULTRASONIC__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = SENSOR_ULTRASONIC__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_ULTRASONIC__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for SENSOR's SENSOR_BATT message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_SENSOR_BATT(SENSOR_BATT_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= SENSOR_BATT__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = SENSOR_BATT__MIA_MSG;
+        msg->mia_info.mia_counter_ms = SENSOR_BATT__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for GEO's GEO_DEST_RCHD message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_GEO_DEST_RCHD(GEO_DEST_RCHD_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= GEO_DEST_RCHD__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = GEO_DEST_RCHD__MIA_MSG;
+        msg->mia_info.mia_counter_ms = GEO_DEST_RCHD__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
 /// Handle the MIA for GEO's GEO_LOCATION message
 /// @param   time_incr_ms  The time to increment the MIA counter with
 /// @returns true if the MIA just occurred
@@ -498,6 +601,30 @@ static inline bool dbc_handle_mia_GEO_LOCATION(GEO_LOCATION_t *msg, uint32_t tim
         // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
         *msg = GEO_LOCATION__MIA_MSG;
         msg->mia_info.mia_counter_ms = GEO_LOCATION__MIA_MS;
+        msg->mia_info.is_mia = true;
+        mia_occurred = true;
+    }
+
+    return mia_occurred;
+}
+
+/// Handle the MIA for MOTOR's MOTOR_SPEED message
+/// @param   time_incr_ms  The time to increment the MIA counter with
+/// @returns true if the MIA just occurred
+/// @post    If the MIA counter reaches the MIA threshold, MIA struct will be copied to *msg
+static inline bool dbc_handle_mia_MOTOR_SPEED(MOTOR_SPEED_t *msg, uint32_t time_incr_ms)
+{
+    bool mia_occurred = false;
+    const dbc_mia_info_t old_mia = msg->mia_info;
+    msg->mia_info.is_mia = (msg->mia_info.mia_counter_ms >= MOTOR_SPEED__MIA_MS);
+
+    if (!msg->mia_info.is_mia) { // Not MIA yet, so keep incrementing the MIA counter
+        msg->mia_info.mia_counter_ms += time_incr_ms;
+    }
+    else if(!old_mia.is_mia)   { // Previously not MIA, but it is MIA now
+        // Copy MIA struct, then re-write the MIA counter and is_mia that is overwriten
+        *msg = MOTOR_SPEED__MIA_MSG;
+        msg->mia_info.mia_counter_ms = MOTOR_SPEED__MIA_MS;
         msg->mia_info.is_mia = true;
         mia_occurred = true;
     }

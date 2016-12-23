@@ -18,6 +18,7 @@ public class Dashboard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
         speedometer = (SpeedometerGauge) findViewById(R.id.speedometer);
+        batteryindicator = (BatteryIndicatorGauge) findViewById(R.id.batteryindicator);
         speedometer.setMaxSpeed(50);
         speedometer.setLabelConverter(new SpeedometerGauge.LabelConverter() {
             @Override
@@ -32,7 +33,7 @@ public class Dashboard extends AppCompatActivity {
         speedometer.addColoredRange(30, 45, Color.YELLOW);
         speedometer.addColoredRange(45, 50, Color.RED);
         speedometer.setSpeed(33, 1000, 300);
-        batteryindicator = (BatteryIndicatorGauge) findViewById(R.id.batteryindicator);
+
         batteryindicator.setValue(80, 1000, 300);
 
         CircularProgressBar circ = (CircularProgressBar) findViewById(R.id.circularprogress);

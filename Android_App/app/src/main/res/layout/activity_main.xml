@@ -3,227 +3,481 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
+    android:background="@drawable/sjsulogo"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.mana1991.selfdrivingcar.MainActivity">
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/material_design_android_floating_action_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="11dp"
+        android:layout_marginLeft="11dp"
+        android:layout_marginRight="11dp"
+        fab:menu_animationDelayPerItem="55"
+        fab:menu_backgroundColor="@android:color/transparent"
+        fab:menu_buttonSpacing="0dp"
+        fab:menu_colorNormal="#0639dc"
+        fab:menu_colorPressed="#0639dc"
+        fab:menu_colorRipple="#99d4d4d4"
+        fab:menu_fab_size="normal"
+        fab:menu_icon="@drawable/fab_add"
+        fab:menu_labels_colorNormal="#df0557ff"
+        fab:menu_labels_colorPressed="#444"
+        fab:menu_labels_colorRipple="#66efecec"
+        fab:menu_labels_cornerRadius="3dp"
+        fab:menu_labels_ellipsize="none"
+        fab:menu_labels_hideAnimation="@anim/fab_slide_out_to_right"
+        fab:menu_labels_margin="0dp"
+        fab:menu_labels_maxLines="-1"
+        fab:menu_labels_padding="8dp"
+        fab:menu_labels_position="left"
+        fab:menu_labels_showAnimation="@anim/fab_slide_in_from_right"
+        fab:menu_labels_showShadow="true"
+        fab:menu_labels_singleLine="false"
+        fab:menu_labels_textColor="#fbffff"
+        fab:menu_labels_textSize="15sp"
+        fab:menu_openDirection="up"
+        fab:menu_shadowColor="#663373f1"
+        fab:menu_shadowRadius="5dp"
+        fab:menu_shadowXOffset="1dp"
+        fab:menu_shadowYOffset="4dp"
+        fab:menu_showShadow="true">
 
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/start"
+            fab:fab_label="Start"
+            fab:fab_size="normal" />
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/stop"
+            fab:fab_label="Stop"
+            fab:fab_size="normal" />
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/connect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bluetooth"
+            fab:fab_label="Connect"
+            fab:fab_size="normal" />
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/info"
+            fab:fab_label="Info"
+            fab:fab_size="normal" />
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/checkpoint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/checkpoint"
+            fab:fab_label="Checkpoint"
+            fab:fab_size="normal" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/bluetoothcontrol"
+        android:visibility="invisible"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/pairedlist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+
+    </LinearLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/maplayout"
+    android:visibility="gone">
     <fragment
         android:name="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/map"
         android:orientation="vertical"
-        android:layout_above="@+id/buttoncontrols"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:visibility="invisible">
-        </fragment>
-<LinearLayout android:id="@+id/progressbar"
-    android:orientation="horizontal"
-    android:layout_centerInParent="true"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:visibility="invisible">
-    <ProgressBar
-        android:id="@+id/pbHeaderProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-    </ProgressBar>
+        >
+    </fragment>
 </LinearLayout>
-
-<LinearLayout android:id="@+id/listviewble"
-    android:visibility="invisible"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="428dp"
-        android:id="@+id/listView1">
-
-    </ListView>
-
-</LinearLayout>
-
-    <LinearLayout android:id="@+id/status"
-        android:layout_width="match_parent"
-        android:visibility="invisible"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation= "horizontal"
+            android:layout_height="wrap_content"
+            android:weightSum="5"
+            android:visibility="invisible"
+            android:id="@+id/sensorstatus">
+        <LinearLayout android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:id="@+id/leftsensor"
             android:weightSum="2">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/bleid"
                 android:layout_weight="1"
-                android:text="BLE STATUS :"
                 android:textSize="20dp"
-                android:textColor="@color/colorPrimary"/>
+                android:id="@+id/lstatus"
+                android:text="L"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/lstatus_image"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:id="@+id/middlesensor"
+                android:weightSum="2">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20dp"
+                    android:id="@+id/mstatus"
+                    android:text="M"
+                    android:textColor="@color/golden_yellow_for_fonts"
+                    android:layout_marginTop="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/mstatus_image"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1" />
+
+        </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:id="@+id/rightsensor"
+                android:weightSum="2">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20dp"
+                    android:id="@+id/rstatus"
+                    android:text="R"
+                    android:textColor="@color/golden_yellow_for_fonts"
+                    android:layout_marginTop="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/rstatus_image"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:id="@+id/rearsensor"
+                android:weightSum="2">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20dp"
+                    android:id="@+id/rearstatus"
+                    android:text="Rr"
+                    android:textColor="@color/golden_yellow_for_fonts"
+                    android:layout_marginTop="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/rearstatus_image"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:id="@+id/critical"
+                android:weightSum="2">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20dp"
+                    android:id="@+id/criticalstatus"
+                    android:text="C"
+                    android:textColor="@color/golden_yellow_for_fonts"
+                    android:layout_marginTop="15dp"
+                    />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/criticalstatus_image"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:weightSum="6"
+        android:visibility="invisible"
+        android:id="@+id/systemstatus"
+        android:layout_below="@id/sensorstatus">
+        <LinearLayout android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:id="@+id/ble_status"
+            android:weightSum="2">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/blevalue"
                 android:layout_weight="1"
                 android:textSize="20dp"
-                android:textColor="@color/colorPrimary"/>
+                android:id="@+id/sys_ble_status"
+                android:text="BLE STATUS"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sys_ble_statusimage"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
         </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation= "horizontal"
-        android:weightSum="2">
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/iostatus"
-            android:text="IO STATUS :"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/iovalue"
+            android:orientation="horizontal"
             android:layout_weight="1"
-            android:text="IO VALUE"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
+            android:id="@+id/io_status"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20dp"
+                android:id="@+id/sys_io_status"
+                android:text="IO STATUS"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sys_io_statusimage"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:id="@+id/geo_status"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20dp"
+                android:id="@+id/sys_geo_status"
+                android:text="GEO STATUS"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sys_geo_statusimage"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:id="@+id/master_status"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20dp"
+                android:id="@+id/sys_master_status"
+                android:text="MASTER STATUS"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sys_master_statusimage"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:id="@+id/motor_status"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20dp"
+                android:id="@+id/sys_motor_status"
+                android:text="MOTOR STATUS"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sys_motor_statusimage"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:id="@+id/sensor_status"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="20dp"
+                android:id="@+id/sys_sensor_status"
+                android:text="SENSOR STATUS"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:layout_marginTop="15dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sys_sensor_statusimage"
+                android:layout_gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1" />
+        </LinearLayout>
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation= "horizontal"
-        android:weightSum="2">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/masterstatus"
-            android:text="MASTER STATUS :"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/mastervalue"
-            android:layout_weight="1"
-            android:text="MASTER VALUE"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-        </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation= "horizontal"
-        android:weightSum="2">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/motorstatus"
-            android:text="MOTOR STATUS :"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/motorvalue"
-            android:layout_weight="1"
-            android:text="MOTOR VALUE"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-        </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation= "horizontal"
-        android:weightSum="2">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/sensorstatus"
-            android:text="SENSOR STATUS :"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/sensorrvalue"
-            android:layout_weight="1"
-            android:text="SENSOR VALUE"
-            android:textSize="20dp"
-            android:textColor="@color/colorPrimary"/>
-        </LinearLayout>
-        </LinearLayout>
-
-
-
-    <LinearLayout
-       android:layout_width="match_parent"
-       android:id="@+id/buttoncontrols"
-       android:weightSum="4"
-       android:layout_height="wrap_content"
-       android:orientation="horizontal"
-       android:layout_alignParentBottom="true">
-
-
-    <Button
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Connect"
-        android:id="@+id/button1"
-        android:layout_weight="1"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-        <Button
+        android:id="@+id/miscll"
+        android:weightSum="4"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        android:layout_below="@id/systemstatus">
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Check point"
-            android:id="@+id/button4"
             android:layout_weight="1"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:id="@+id/speedll"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SPEED"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:id="@+id/speed_label"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:id="@+id/speed_val"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/syscmdll"
+            android:weightSum="2">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SYSTEM COMMAND"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:id="@+id/syscmd_label"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/sysval_val"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:id="@+id/destrchdll"
+           >
 
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Start"
-        android:id="@+id/button2"
-        android:layout_weight="1"
-        android:layout_alignTop="@+id/button1"
-        android:layout_centerHorizontal="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
-        android:id="@+id/button3"
-        android:layout_alignTop="@+id/button2"
-        android:layout_weight="1"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/golden_yellow_for_fonts"
+                android:id="@+id/dstrchd"/>
+        </LinearLayout>
 
     </LinearLayout>
-
-    <!--<TextView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@+id/progressbar"-->
-        <!--android:layout_alignParentLeft="true"-->
-        <!--android:layout_alignParentStart="true"-->
-        <!--android:layout_marginLeft="17dp"-->
-        <!--android:layout_marginStart="17dp"-->
-        <!--android:layout_marginTop="14dp"-->
-        <!--android:id="@+id/display1" />-->
 </RelativeLayout>

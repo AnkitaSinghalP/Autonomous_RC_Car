@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Selfdriving Car</string>
     <string name="none_found">No devices found</string>
+    <string name="title_activity_splash_screen">SplashScreen</string>
 </resources>

@@ -15,46 +15,30 @@
 #include "file_logger.h"
 #include "queue.h"
 
-volatile int receive_data = 0;
-
-bool flag1;
-can_std_id_t id;
-bool flag_tx;
-can_msg_t abc;
-
 char *check_ptr_str;
+char tx_data[50];
+
 bool checkpoints_ready = false;
 int index1 = 0;
 bool checkpoint_received_flag = false;
 
 
-MASTER_SYSTEM_CMD_enum_E system_cmd = {SYSTEM_STOP};
-GEO_LOCATION_t geo_location = { 0 };
-
 can_msg_t can_msg = { 0 };
-MASTER_SYSTEM_STATUS_t master_system_status;
-
 BLE_HEARTBEAT_t ble_heartbeat_t = { 0 };
 BLE_CHCK_PT_t ble_chk_pt = { 0 };
 BLE_COMM_CMD_t ble_cmd = {COMM_STOP};
 
-SemaphoreHandle_t receive_sem;
-
-char rx_data;
-
-char delimiter1 = '-';
-char delimiter = '#';
-char com_delimiter = ',';
-char ble_limiter = 'b';
-char io_limiter = 'i';
-char sen_limiter = 's';
-char mas_limiter = 'm';
-char mot_limiter = 'l';
-
+char rx_data = ' ';
 
 bool n_flag = false;
 
-char tx_data[23];
+GEO_LOCATION_t geo_location = { 0 };
+GEO_DEST_RCHD_t geo_dest_rchd = {0};
+MASTER_SYSTEM_STATUS_t master_system_status = {0};
+MASTER_SYSTEM_CMD_t master_system_cmd = { SYSTEM_STOP };
+MOTOR_SPEED_t motor_speed = {0};
+SENSOR_BATT_t sensor_batt = {0};
+SENSOR_ULTRASONIC_t sensor_ultrasonic = {0};
 
 const uint32_t SYSTEM_CMD__MIA_MS = 1000;
 const MASTER_SYSTEM_CMD_enum_E SYSTEM_CMD__MIA_MSG = { SYSTEM_STOP };
@@ -79,13 +63,19 @@ Uart2& u2 = Uart2 :: getInstance();
 
 bool period_init(void)
 {
-	u2.init(115200,255,50);
-	CAN_init(can1, 100, 20, 20, 0, 0);
+	u2.init(115200,255,20);
+	CAN_init(can1, 100, 200, 200, 0, 0);
 	CAN_bypass_filter_accept_all_msgs();
 	CAN_reset_bus(can1);
 	LD.setNumber(0);
+/*	free(check_ptr_str);*/
 
-	check_ptr_str = new char [255];
+
+	//check_ptr_str = new char [255];
+
+	check_ptr_str = (char*)malloc(201);
+
+
 	return true; // Must return true upon success
 }
 
@@ -108,17 +98,61 @@ bool dbc_app_send_can_msg(uint32_t mid, uint8_t dlc, uint8_t bytes[8])
 	return CAN_tx(can1, &can_msg, 0);
 }
 
+int number_of_checkpoint = 0, send_checkpoints_count = 0;
+bool check_duplicate_zero = false;
+
+
 void period_1Hz(uint32_t count)
 {
-	if(CAN_is_bus_off(can1)){
+	if(CAN_is_bus_off(can1))
 		CAN_reset_bus(can1);
-	}
+
 
 	ble_heartbeat_t.BLE_HEARTBEAT_tx_bytes = 0x8;
 	ble_heartbeat_t.BLE_HEARTBEAT_rx_bytes = 0x7;
 
 	dbc_encode_and_send_BLE_HEARTBEAT(&ble_heartbeat_t);
+	if(checkpoints_ready)
+	{
+		//printf("received: %s\n",check_ptr_str);
 
+		if(*check_ptr_str == '%')
+		{
+			number_of_checkpoint = atoi(check_ptr_str + 1);
+		}
+		//printf("%d\n",number_of_checkpoint);
+
+		if(send_checkpoints_count < number_of_checkpoint)
+		{
+			check_ptr_str = strchr(check_ptr_str, 'c') + 1;
+			ble_chk_pt.BLE_CHCK_PT_lat = atof(check_ptr_str) / 1000000;
+
+
+			check_ptr_str = strchr(check_ptr_str, 'l') + 3;
+			ble_chk_pt.BLE_CHCK_PT_long = atof(check_ptr_str) / 1000000;
+
+
+			dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
+
+			//printf("lat = %f   long = %f\n",ble_chk_pt.BLE_CHCK_PT_lat,ble_chk_pt.BLE_CHCK_PT_long);
+			send_checkpoints_count ++;
+		}
+		else
+		{
+			free(check_ptr_str);
+			ble_chk_pt.BLE_CHCK_PT_lat = 0.0;
+			ble_chk_pt.BLE_CHCK_PT_long = 0.0;
+
+			if(!check_duplicate_zero)
+			{
+				//printf("sent last 0\n");
+				dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
+			}
+
+			check_duplicate_zero = true;
+
+		}
+	}
 }
 
 
@@ -129,50 +163,62 @@ void period_10Hz(uint32_t count)
 		can_msg_hdr.dlc = can_msg.frame_fields.data_len;
 		can_msg_hdr.mid = can_msg.msg_id;
 
-		//dbc_decode_GEO_LOCATION()
-	}
-//	if(!n_flag)
-//	{
-
-		float lat = 37.336837;
-		float lng = -121.881508;
-
-		tx_data[0] = '-';
-
-		sprintf(tx_data+1,"%f",lat);
-
-		tx_data[10] = ',';
-
-		sprintf(tx_data+11,"%f",lng);
-
-		tx_data[22] = '#';
-
-		//printf("%s\n",tx_data);
-
-		u2.putline(tx_data,0);
-//	}
-
-
-	if(checkpoints_ready)
-	{
-		check_ptr_str = strchr(check_ptr_str, 'c') + 1;
-		ble_chk_pt.BLE_CHCK_PT_lat = atof(check_ptr_str) / 1000000;
-
-
-		check_ptr_str = strchr(check_ptr_str, 'l') + 3;
-		ble_chk_pt.BLE_CHCK_PT_long = 0 - atof(check_ptr_str) / 1000000;
-
-		dbc_encode_and_send_BLE_CHCK_PT(&ble_chk_pt);
-
-		//printf("lat = %f   long = %f\n",ble_chk_pt.BLE_CHCK_PT_lat,ble_chk_pt.BLE_CHCK_PT_long);
-
+		dbc_decode_SENSOR_ULTRASONIC(&sensor_ultrasonic, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_MASTER_SYSTEM_STATUS(&master_system_status, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_MASTER_SYSTEM_CMD(&master_system_cmd, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_MOTOR_SPEED(&motor_speed, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_GEO_DEST_RCHD(&geo_dest_rchd, can_msg.data.bytes, &can_msg_hdr);
+		dbc_decode_SENSOR_BATT(&sensor_batt, can_msg.data.bytes, &can_msg_hdr);
+		//dbc_decode_GEO_LOCATION(&geo_location, can_msg.data.bytes, &can_msg_hdr);
 	}
 
 
-}
+//	sensor_ultrasonic.SENSOR_ULTRASONIC_left 			= 1;//
+//	sensor_ultrasonic.SENSOR_ULTRASONIC_middle 			= 0;//
+//	sensor_ultrasonic.SENSOR_ULTRASONIC_right 			= 1;//
+//	sensor_ultrasonic.SENSOR_ULTRASONIC_rear 			= 0;//
+//	sensor_ultrasonic.SENSOR_ULTRASONIC_critical 		= 1;//
+//	master_system_status.MASTER_SYSTEM_STATUS_ble		= 0;//
+//	master_system_status.MASTER_SYSTEM_STATUS_geo		= 0;//
+//	master_system_status.MASTER_SYSTEM_STATUS_io		= 0;//
+//	master_system_status.MASTER_SYSTEM_STATUS_master	= 0;//
+//	master_system_status.MASTER_SYSTEM_STATUS_motor		= 0;//
+//	master_system_status.MASTER_SYSTEM_STATUS_sensor	= 0;//
+//	master_system_cmd.MASTER_SYSTEM_CMD_enum			= SYSTEM_START;//
+//	motor_speed.MOTOR_SPEED_actual						= 99;//
+//	geo_dest_rchd.GEO_DEST_RCHD_stat					= 1;//
+//	sensor_batt.SENSOR_BATT_stat						= 99;//
+	//geo_location.GEO_LOCATION_lat 						= 37.336575;//
+	//geo_location.GEO_LOCATION_long 						= -121.882256;//
 
-void period_100Hz(uint32_t count)
-{
+	if(motor_speed.MOTOR_SPEED_actual > 99)
+		motor_speed.MOTOR_SPEED_actual = 99;
+
+	if(sensor_batt.SENSOR_BATT_stat > 99)
+		sensor_batt.SENSOR_BATT_stat = 99;
+
+	sprintf(tx_data,"@%d%d%d%d%d,%d%d%d%d%d%d,%d,%d,%d,%d$",
+			sensor_ultrasonic.SENSOR_ULTRASONIC_left,
+			sensor_ultrasonic.SENSOR_ULTRASONIC_middle,
+			sensor_ultrasonic.SENSOR_ULTRASONIC_right,
+			sensor_ultrasonic.SENSOR_ULTRASONIC_rear,
+			sensor_ultrasonic.SENSOR_ULTRASONIC_critical,
+			master_system_status.MASTER_SYSTEM_STATUS_ble,
+			master_system_status.MASTER_SYSTEM_STATUS_geo,
+			master_system_status.MASTER_SYSTEM_STATUS_io,
+			master_system_status.MASTER_SYSTEM_STATUS_master,
+			master_system_status.MASTER_SYSTEM_STATUS_motor,
+			master_system_status.MASTER_SYSTEM_STATUS_sensor,
+			master_system_cmd.MASTER_SYSTEM_CMD_enum,
+			(int)motor_speed.MOTOR_SPEED_actual,
+			geo_dest_rchd.GEO_DEST_RCHD_stat,
+			sensor_batt.SENSOR_BATT_stat);/*,
+			geo_location.GEO_LOCATION_lat,
+			geo_location.GEO_LOCATION_long);*/
+
+	u2.putline(tx_data,0);
+
+	//printf("%s\n",tx_data);
 
 
 	u2.getChar(&rx_data,0);
@@ -195,7 +241,7 @@ void period_100Hz(uint32_t count)
 			n_flag = true;
 			break;
 
-		case 'c':
+		case '%':
 			LD.setNumber(3);
 			checkpoint_received_flag = true;
 			break;
@@ -206,9 +252,8 @@ void period_100Hz(uint32_t count)
 
 	if(checkpoint_received_flag)
 	{
-		if(rx_data != '$')
+		if(rx_data != '$' && index1 < 200)
 		{
-
 			check_ptr_str[index1] = rx_data;
 			index1++;
 		}
@@ -218,6 +263,11 @@ void period_100Hz(uint32_t count)
 			checkpoints_ready = true;
 		}
 	}
+
+}
+
+void period_100Hz(uint32_t count)
+{
 
 }
 

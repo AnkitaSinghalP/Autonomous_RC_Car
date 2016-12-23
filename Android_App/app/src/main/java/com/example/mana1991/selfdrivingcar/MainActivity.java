@@ -18,18 +18,25 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v4.app.FragmentActivity;
 
+import com.cardiomood.android.controls.gauge.BatteryIndicatorGauge;
+import com.cardiomood.android.controls.gauge.SpeedometerGauge;
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -53,10 +60,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,21 +70,24 @@ import java.util.UUID;
 
 import android.os.Handler;
 
+import static com.example.mana1991.selfdrivingcar.R.id.sys_ble_statusimage;
+import static com.example.mana1991.selfdrivingcar.R.id.systemstatus;
+
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
     GoogleMap map1_main;
-    Button connect;
-    Button start;
-    Button end;
-    Button check_pt;
+    FloatingActionMenu materialDesignFAM;
+    FloatingActionButton start, stop, connect, checkpoint, display;
     int REQUEST_ENABLE_BT = 1;
-    ListView listView1;
-    LinearLayout listviewble;
-    LinearLayout progressBar;
-    LinearLayout status;
-    ArrayAdapter<BluetoothDevice> arrayAdapter;
+    ListView listViewPairedDevice;
 
+    LinearLayout bluetoothcontrol, maplayout, sensorstatus;
+    LinearLayout progressBar;
+    LinearLayout sys_status;
+    ArrayAdapter<BluetoothDevice> arrayAdapter;
+    private SpeedometerGauge speedometer;
+    private BatteryIndicatorGauge batteryindicator;
     ProgressBar pbheader;
 
     BluetoothAdapter bleAdapter;
@@ -103,7 +111,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     String lat_delimiter = "c";
     // String uart_mark = "b";
     String dest_limit = "$";
-
+    String byte_string[] = new String[17];
     public UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     ArrayList<BluetoothDevice> pairedDeviceArrayList;
     BluetoothDevice device1;
@@ -125,15 +133,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     List<LatLng> pack_checkpt = null;
 
     int readBufferPosition = 0;
-    char delimiter = 0x23;
-    char delimiter1 = 0x2D;
+    char delimiter_dollar = 0x24;
+    char delimiter1_at = 0x40;
     char com_delimiter = 0x2C;
     char delimiter2 = 0x62;
     char delimiter3 = 0x69;
     char delimiter4 = 0x73;
     char delimiter5 = 0x6D;
     char delimiter6 = 0x6C;
-    byte[] readBuffer;
+    //byte[] readBuffer = null;
+    ArrayList<Byte>readBuffer = null;
     int bytesAvailable = 0;
     TextView text_display;
     String data1;
@@ -145,16 +154,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     InputStream mmInStream;
     OutputStream mmOutStream;
 
-    TextView bleid;
-    TextView iostatus;
-    TextView masterstatus;
-    TextView motorstatus;
-    TextView sensorstatus;
+    TextView lstatus,rstatus,mstatus,rearstatus,criticalstatus;
+    ImageView lstatus_image,rstatus_image,cstatus_image,rearstatus_image,mstatus_image;
+    LinearLayout system_display;
+TableRow trow;
+    LinearLayout leftsensor,rightsensor,middlesensor,rearsensor,critical;
+LinearLayout llble_status,llio_status,llgeo_status,llmaster_status,llmotor_status,llsensor_status;
+    LinearLayout misc,speedll,syscmdll,destrchdll,batterystatusll;
     TextView blevalue;
     TextView iovalue;
     TextView mastervalue;
     TextView motorvalue;
     TextView sensorrvalue;
+    TextView geovalue;
+
+    TextView speed_label,syscmd_label,dstrchd,batrylabel,speed_val,btryval;
+    ImageView bleimage,geoimage,sensorimage,masterimage,motorimage,ioimage,sysval_val;
 
     String ble_status;
     String io_status;
@@ -207,12 +222,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     JSONArray jRoutes = null;
     JSONArray jLegs = null;
     JSONArray jSteps = null;
-    List<LatLng>check_path_pt = null;
+    List<LatLng> check_path_pt = null;
     LatLng check_pt_new;
     List<HashMap<String, String>> path;
 
+    String len_delimiter = "%";
+    boolean flag = false;
+
 
     Context context;
+    int j = 0;
 
 
     Handler handler = new Handler();
@@ -231,26 +250,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         setResult(Activity.RESULT_CANCELED);
 
-        progressBar = (LinearLayout) findViewById(R.id.progressbar);
-        listviewble = (LinearLayout) findViewById(R.id.listviewble);
-        status = (LinearLayout) findViewById(R.id.status);
-
-        bleid = (TextView) findViewById(R.id.bleid);
-        iostatus = (TextView) findViewById(R.id.iostatus);
-        masterstatus = (TextView) findViewById(R.id.masterstatus);
-        motorstatus = (TextView) findViewById(R.id.motorstatus);
-        sensorstatus = (TextView) findViewById(R.id.sensorstatus);
-
-        blevalue = (TextView) findViewById(R.id.blevalue);
-        iovalue = (TextView) findViewById(R.id.iovalue);
-        mastervalue = (TextView) findViewById(R.id.mastervalue);
-        motorvalue = (TextView) findViewById(R.id.motorvalue);
-        sensorrvalue = (TextView) findViewById(R.id.sensorrvalue);
-
-        pbheader = (ProgressBar) findViewById(R.id.pbHeaderProgress);
-        start = (Button) findViewById(R.id.button2);
-        end = (Button) findViewById(R.id.button3);
-        check_pt = (Button) findViewById(R.id.button4);
+        setupUI();
 
         // this.mContext = getApplicationContext();
 
@@ -259,15 +259,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Toast.makeText(MainActivity.this, "Bluetooth not available", Toast.LENGTH_SHORT).show();
         }
 
-        connect = (Button) findViewById(R.id.button1);
+
         connect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                sensorstatus.setVisibility(View.INVISIBLE);
+                sys_status.setVisibility(View.INVISIBLE);
+                misc.setVisibility(View.INVISIBLE);
+                maplayout.setVisibility(View.INVISIBLE);
 
-                connect();
+                ConnectTask connectTask = new ConnectTask();
+                connectTask.execute();
+
             }
         });
+        display.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
+
+                maplayout.setVisibility(View.INVISIBLE);
+                DisplayTask displayTask = new DisplayTask();
+                displayTask.execute();
+
+            }
+        });
 
         buildGoogleApiClient();
         mLocationRequest = LocationRequest.create()
@@ -277,7 +293,77 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // getLocation();
 
 
+    }
 
+    private void setupUI() {
+        bluetoothcontrol = (LinearLayout) findViewById(R.id.bluetoothcontrol);
+        maplayout = (LinearLayout) findViewById(R.id.maplayout);
+        //dashboard_layout = (LinearLayout) findViewById(R.id.dashboardlayout);
+        listViewPairedDevice = (ListView) findViewById(R.id.pairedlist);
+
+        materialDesignFAM = (FloatingActionMenu) findViewById(R.id.material_design_android_floating_action_menu);
+        start = (FloatingActionButton) findViewById(R.id.start);
+        stop = (FloatingActionButton) findViewById(R.id.stop);
+        connect = (FloatingActionButton) findViewById(R.id.connect);
+        display = (FloatingActionButton) findViewById(R.id.display);
+        checkpoint = (FloatingActionButton) findViewById(R.id.checkpoint);
+
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+
+        sensorstatus= (LinearLayout) findViewById(R.id.sensorstatus);
+        leftsensor = (LinearLayout) findViewById(R.id.leftsensor);
+        rightsensor = (LinearLayout) findViewById(R.id.rightsensor);
+        rearsensor = (LinearLayout) findViewById(R.id.rearsensor);
+        critical = (LinearLayout) findViewById(R.id.critical);
+        middlesensor = (LinearLayout) findViewById(R.id.middlesensor);
+
+        lstatus= (TextView)findViewById(R.id.lstatus) ;
+        rstatus= (TextView)findViewById(R.id.rstatus) ;
+        mstatus= (TextView)findViewById(R.id.mstatus) ;
+        criticalstatus= (TextView)findViewById(R.id.criticalstatus) ;
+        rearstatus= (TextView)findViewById(R.id.rearstatus) ;
+
+        lstatus_image = (ImageView) findViewById(R.id.lstatus_image) ;
+        rstatus_image = (ImageView) findViewById(R.id.rstatus_image) ;
+        mstatus_image = (ImageView) findViewById(R.id.mstatus_image) ;
+        cstatus_image = (ImageView) findViewById(R.id.criticalstatus_image) ;
+        rearstatus_image = (ImageView) findViewById(R.id.rearstatus_image) ;
+
+        sys_status=(LinearLayout) findViewById(systemstatus);
+        llble_status=(LinearLayout) findViewById(R.id.ble_status);
+        llgeo_status=(LinearLayout) findViewById(R.id.geo_status);
+        llio_status=(LinearLayout) findViewById(R.id.io_status);
+        llmaster_status=(LinearLayout) findViewById(R.id.master_status);
+        llmotor_status=(LinearLayout) findViewById(R.id.motor_status);
+        llsensor_status=(LinearLayout) findViewById(R.id.sensor_status);
+
+        blevalue=(TextView)findViewById(R.id.sys_ble_status) ;
+        iovalue=(TextView)findViewById(R.id.sys_io_status) ;
+        motorvalue=(TextView)findViewById(R.id.sys_motor_status) ;
+        mastervalue=(TextView)findViewById(R.id.sys_master_status) ;
+        sensorrvalue=(TextView)findViewById(R.id.sys_sensor_status) ;
+        geovalue=(TextView)findViewById(R.id.sys_geo_status) ;
+
+        bleimage = (ImageView) findViewById(R.id.sys_ble_statusimage) ;
+        geoimage=(ImageView) findViewById(R.id.sys_geo_statusimage) ;
+        ioimage=(ImageView) findViewById(R.id.sys_io_statusimage) ;
+        masterimage=(ImageView) findViewById(R.id.sys_io_statusimage) ;
+        motorimage=(ImageView) findViewById(R.id.sys_motor_statusimage) ;
+        sensorimage=(ImageView) findViewById(R.id.sys_sensor_statusimage) ;
+
+        misc=(LinearLayout) findViewById(R.id.miscll);
+        speedll=(LinearLayout) findViewById(R.id.speedll);
+        syscmdll=(LinearLayout) findViewById(R.id.syscmdll);
+        destrchdll=(LinearLayout) findViewById(R.id.destrchdll);
+
+
+        dstrchd=(TextView)findViewById(R.id.dstrchd) ;
+        syscmd_label=(TextView)findViewById(R.id.syscmd_label) ;
+        speed_label=(TextView)findViewById(R.id.speed_label) ;
+
+
+        sysval_val=(ImageView)findViewById(R.id.sysval_val) ;
+        speed_val=(TextView)findViewById(R.id.speed_val) ;
 
     }
 
@@ -292,10 +378,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (!bleAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getView().setVisibility(View.VISIBLE);
         mapFragment.getMapAsync(this);
         //Now lets connect to the API
         mGoogleApiClient.connect();
@@ -304,6 +398,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        try {
+            mmInStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            mmOutStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            mmSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (bleAdapter != null) {
             bleAdapter.cancelDiscovery();
@@ -314,27 +424,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(final GoogleMap map1) {
-        // Location location1;
-
-        check_pt = (Button) findViewById(R.id.button4);
-        check_pt.setOnClickListener(new View.OnClickListener() {
+        checkpoint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                maplayout.setVisibility(View.VISIBLE);
+
+                sensorstatus.setVisibility(View.INVISIBLE);
+                sys_status.setVisibility(View.INVISIBLE);
+                misc.setVisibility(View.INVISIBLE);
 
                 map1_main = map1;
 
                 markers = new ArrayList();
                 sanjose = new LatLng(37.3352, -121.8811);
 
-                // location = getLocation();
-                // start_lat = location.getLatitude();
-                //start_lng = location.getLongitude();
                 start_pt = new LatLng(currentLatitude, currentLongitude);
                 Log.i("lat_start", String.valueOf(start_pt.latitude));
                 Log.i("lat_start", String.valueOf(start_pt.longitude));
-               // if (start_pt.latitude != 0 && start_pt.longitude != 0) {
-                    map1_main.addMarker(new MarkerOptions().position(new LatLng(start_pt.latitude, start_pt.longitude)).title("Current location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
-               // }
+                // if (start_pt.latitude != 0 && start_pt.longitude != 0) {
+                map1_main.addMarker(new MarkerOptions().position(new LatLng(start_pt.latitude, start_pt.longitude)).title("Current location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+                // }
 
 
                 if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -344,74 +454,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 map1_main.moveCamera(CameraUpdateFactory.newLatLngZoom(sanjose, 15));
                 if (map1_main != null) {
                     map1_main.setMyLocationEnabled(true);
-
-
-//                    start_pt = new LatLng(currentLatitude, currentLongitude);
-//                    Log.i("lat_start", String.valueOf(start_pt.latitude));
-//                    Log.i("lat_start", String.valueOf(start_pt.longitude));
-
-                    // markers.add(start_pt);
-
-
-                    // options = new MarkerOptions();
-
-                    // options.position(start_pt);
-
-//                   if (markers.size() == 1) {
-//                       options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-//                    }
-//                    if (markers.size() > 1) {
-//                        markers.clear();
-//                        map1_main.clear();
-//                    }
-
                     map1_main.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                         @Override
                         public void onMapClick(LatLng latLng) {
 
                             map1_main.addMarker(new MarkerOptions().position(new LatLng(latLng.latitude, latLng.longitude)).title("Destination location").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
 
-
-                            // markers.add(start_pt);
-
-                            // markers.add(latLng);
-
-                            // Log.i("markers", String.valueOf(markers));
-
-                            // options = new MarkerOptions();
-                            // options1 = new MarkerOptions();
-
-                            // options1.position(start_pt);
-                            //  options.position(latLng);
-
-                            //options = new MarkerOptions();
-
-                            //options.position(start_pt);
-
-//                            if (markers.size() == 1) {
-//                                options1.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-//                            }
-                            // if(markers.size() == 1){
-                            //   options1.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                            //}
-//                            if(markers.size() == 1){
-//                                options1.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-//                            }
-//                            else if(markers.size()==2)
-//                            {
-//                                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-//                            }
-//
-//
-//                            map1_main.addMarker(options);
-//                            map1_main.addMarker(options1);
-
-
-                            //if (markers.size() >= 2) {
-                            //  LatLng start = (LatLng) markers.get(0);
-                            //LatLng dest = (LatLng) markers.get(1);
-                            //    Log.i("start Lat", String.valueOf(start.latitude));
-                            //    Log.i("start Lng", String.valueOf(start.longitude));
                             String url = getDirectionURL(start_pt, latLng);// "https://maps.googleapis.com/maps/api/directions/json?origin=37.336838,-121.881508&destination=37.33557357608086,-121.88304740935564&sensor=false&mode=walking";//getDirectionURL(start, dest);
 
                             DownloadTask downloadTask = new DownloadTask();
@@ -427,7 +475,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-
 
 
     private String getDirectionURL(LatLng start, LatLng dest) {
@@ -513,11 +560,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private String downloadUrl(String str_url)throws IOException{
+    private String downloadUrl(String str_url) throws IOException {
 
-        try{
+        try {
             URL url = new URL(str_url);
-            urlConnection = (HttpURLConnection)url.openConnection();
+            urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
 
             iStream = urlConnection.getInputStream();
@@ -526,23 +573,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             StringBuffer sb = new StringBuffer();
             String line = "";
-            while((line = br.readLine())!= null){
+            while ((line = br.readLine()) != null) {
                 sb.append(line);
             }
 
             data = sb.toString();
 
             br.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.d("Exception while downloading url", e.toString());
-        }finally{
+        } finally {
         }
         return data;
     }
 
-    private class DownloadTask extends AsyncTask<String, String, String>{
+    private class DownloadTask extends AsyncTask<String, String, String> {
         @Override
-        protected String doInBackground(String... url){
+        protected String doInBackground(String... url) {
 
             try {
                 data = downloadUrl(url[0]);
@@ -553,7 +600,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         @Override
-        protected void onPostExecute(String result){
+        protected void onPostExecute(String result) {
             super.onPostExecute(result);
 
             ParserTask parserTask = new ParserTask();
@@ -562,8 +609,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
-    private class ParserTask extends AsyncTask<String,Integer,List<List<HashMap<String,String>>> >{
+    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
         @Override
         protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
             JSONObject jsonObject = null;
@@ -599,12 +645,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     HashMap<String, String> point = path.get(j);
 
                     double lat = Double.parseDouble(point.get("lat"));
-                  //  Log.i("Lat", String.valueOf(lat));
+                    //  Log.i("Lat", String.valueOf(lat));
                     double lng = Double.parseDouble(point.get("lng"));
-                   // Log.i("Lng", String.valueOf(lng));
+                    // Log.i("Lng", String.valueOf(lng));
                     LatLng position = new LatLng(lat, lng);
 
-                    for(int l = 1; l<jSteps.length(); l++){
+                    for (int l = 1; l < jSteps.length(); l++) {
 
                         try {
                             polyline_lat = (Double) ((JSONObject) ((JSONObject) jSteps.get(l)).get("start_location")).get("lat");
@@ -616,29 +662,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                         check_pt_new = new LatLng(polyline_lat,polyline_lng);
-                         map1_main.addMarker(new MarkerOptions().position(check_pt_new).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
+                        check_pt_new = new LatLng(polyline_lat, polyline_lng);
+                        map1_main.addMarker(new MarkerOptions().position(check_pt_new).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
                     }
 
                     while (index < path.size()) {
                         HashMap<String, String> point1 = path.get(index);
 
-                       // DecimalFormat df = new DecimalFormat("#.######");
-                      //  df.setRoundingMode(RoundingMode.CEILING);
+                        // DecimalFormat df = new DecimalFormat("#.######");
+                        //  df.setRoundingMode(RoundingMode.CEILING);
 
                         double lat1 = Double.parseDouble(point1.get("lat"));
-                     //   Log.i("Lat", String.valueOf(lat1));
+                        //   Log.i("Lat", String.valueOf(lat1));
                         double lng1 = Double.parseDouble(point1.get("lng"));
-                       // Log.i("Lng", String.valueOf(lng1));
+                        // Log.i("Lng", String.valueOf(lng1));
                         LatLng position1 = new LatLng(lat1, lng1);
                         pack_checkpt.add(new LatLng(lat1, lng1));
 
-                       // Log.i("Path size", String.valueOf(path.size()));
+                        // Log.i("Path size", String.valueOf(path.size()));
                         for (int r = 0; r < pack_checkpt.size(); r++) {
                             Log.i("Check pt list", String.valueOf(pack_checkpt.get(r)));
                         }
-
-                       // map1_main.addMarker(new MarkerOptions().position(position1).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                        // map1_main.addMarker(new MarkerOptions().position(position1).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
                         index = index + 5;
                     }
 
@@ -648,7 +693,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 lineoptions.width(10);
                 lineoptions.color(Color.MAGENTA);
             }
-            if(lineoptions != null) {
+            if (lineoptions != null) {
                 map1_main.addPolyline(lineoptions);
             }
         }
@@ -658,34 +703,36 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     // Drawing polyline in the Google Map for the i-th route
     public class DirectionParser {
 
-        /** Receives a JSONObject and returns a list of lists containing latitude and longitude */
-        public List<List<HashMap<String,String>>> parse(JSONObject jObject){
+        /**
+         * Receives a JSONObject and returns a list of lists containing latitude and longitude
+         */
+        public List<List<HashMap<String, String>>> parse(JSONObject jObject) {
             markerOptions = new MarkerOptions();
 
-            List<List<HashMap<String, String>>> routes = new ArrayList<List<HashMap<String,String>>>() ;
-           // List path1;
+            List<List<HashMap<String, String>>> routes = new ArrayList<List<HashMap<String, String>>>();
+            // List path1;
 
             try {
 
                 jRoutes = jObject.getJSONArray("routes");
 
                 /** Traversing all routes */
-                jLegs = ( (JSONObject)jRoutes.get(0)).getJSONArray("legs");
+                jLegs = ((JSONObject) jRoutes.get(0)).getJSONArray("legs");
                 List path1 = new ArrayList<HashMap<String, String>>();
 
                 /** Traversing all legs */
-                jSteps = ( (JSONObject)jLegs.get(0)).getJSONArray("steps");
+                jSteps = ((JSONObject) jLegs.get(0)).getJSONArray("steps");
 
-                for(int k=0;k<jSteps.length();k++){
+                for (int k = 0; k < jSteps.length(); k++) {
                     String polyline = "";
-                    polyline = (String)((JSONObject)((JSONObject)jSteps.get(k)).get("polyline")).get("points");
+                    polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
                     List<LatLng> list = decodePoly(polyline);
 
                     /** Traversing all points */
-                    for(int l=0;l<list.size();l++){
+                    for (int l = 0; l < list.size(); l++) {
                         HashMap<String, String> hm = new HashMap<>();
-                        hm.put("lat", Double.toString((list.get(l)).latitude) );
-                        hm.put("lng", Double.toString((list.get(l)).longitude) );
+                        hm.put("lat", Double.toString((list.get(l)).latitude));
+                        hm.put("lng", Double.toString((list.get(l)).longitude));
                         path1.add(hm);
                     }
 
@@ -694,17 +741,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //routes.add(path);
 
                 /** Traversing all steps */
+                int jlen = jSteps.length();
                 int jStepslen = jSteps.length() - 1;
+                String len = String.valueOf(jlen);
+                /** Traversing all steps */
+                mmSocket.getOutputStream().write(len_delimiter.getBytes());
+                mmSocket.getOutputStream().write(len.getBytes());
+                //int jStepslen = jSteps.length() - 1;
 
                 for (int k = 1; k < jSteps.length(); k++) {
 //
                     //String poly_step = "";
                     polyline_lat = (Double) ((JSONObject) ((JSONObject) jSteps.get(k)).get("start_location")).get("lat");
                     polyline_lng = (Double) ((JSONObject) ((JSONObject) jSteps.get(k)).get("start_location")).get("lng");
-                   // check_pt_new = new LatLng(polyline_lat,polyline_lng);
-                   // map1_main.addMarker(new MarkerOptions().position(check_pt_new).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
+                    // check_pt_new = new LatLng(polyline_lat,polyline_lng);
+                    // map1_main.addMarker(new MarkerOptions().position(check_pt_new).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
 //                }
-                   // check_path_pt.add(check_pt_new);
+                    // check_path_pt.add(check_pt_new);
 
                     chk_pt_byte_lat = convert_to_byte_chk_pt(polyline_lat, 8, chk_pt_precision);
                     chk_pt_byte_lng = convert_to_byte_chk_pt(polyline_lng, 11, chk_pt_precision);//change to 11
@@ -757,30 +810,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 mmSocket.getOutputStream().write(dest_limit.getBytes());
 
-    //            for (int num1 = 0; num1 < check_path_pt.size(); num1++){
-                 //   map1_main.addMarker(new MarkerOptions().position(check_pt_new).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                //            for (int num1 = 0; num1 < check_path_pt.size(); num1++){
+                //   map1_main.addMarker(new MarkerOptions().position(check_pt_new).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 //                }
 
                 routes.add(path1);
 
             } catch (JSONException e) {
                 e.printStackTrace();
-            }catch (Exception e){
+            } catch (Exception e) {
             }
             return routes;
         }
 
         public byte[] convert_to_byte_chk_pt(double input, int size, int precision) {
             double tempInput = input;
-            tempInput *= Math.pow(10,precision);
+            tempInput *= Math.pow(10, precision);
             int output = (int) tempInput;
-            String strOut = String.format("%0"+size+"d", output);
+            String strOut = String.format("%0" + size + "d", output);
             return strOut.getBytes();
         }
 
         private List<LatLng> decodePoly(String encoded) {
 
-            Log.i("encode",encoded);
+            Log.i("encode", encoded);
             List<LatLng> poly = new ArrayList<LatLng>();
             int index = 0, len = encoded.length();
             int lat = 0, lng = 0;
@@ -821,72 +874,42 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void connect()
-    {
-        progressBar.setVisibility(View.VISIBLE);
-        setProgressBarIndeterminateVisibility(true);
+    public void connect() {
 
-        if(!bleAdapter.isEnabled()){
+
+        if (!bleAdapter.isEnabled()) {
             bleIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(bleIntent, REQUEST_ENABLE_BT);
         }
 
-        if(bleAdapter.isDiscovering()){
+        if (bleAdapter.isDiscovering()) {
             bleAdapter.cancelDiscovery();
         }
         bleAdapter.startDiscovery();
 
 
-        pairedDevices = bleAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            pairedDeviceArrayList = new ArrayList<BluetoothDevice>();
-
-            for (BluetoothDevice device : pairedDevices) {
-                pairedDeviceArrayList.add(device);
-            }
-        }
-
-        progressBar.setVisibility(View.INVISIBLE);
-        setProgressBarIndeterminateVisibility(false);
-
-        arrayAdapter = new ArrayAdapter<BluetoothDevice>(this,android.R.layout.simple_list_item_1,pairedDeviceArrayList);
-        listView1 = (ListView)findViewById(R.id.listView1);
-        listviewble.setVisibility(View.VISIBLE);
-        listView1.setVisibility(View.VISIBLE);
-        listView1.setAdapter(arrayAdapter);
-        listView1.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l){
-
-                status.setVisibility(View.INVISIBLE);
-                device1 = (BluetoothDevice)adapterView.getItemAtPosition(i);
-
-                mConnectThread = new ConnectThread(device1);
-                mConnectThread.start();
-                listviewble.setVisibility(View.INVISIBLE);
-                listView1.setVisibility(View.INVISIBLE);
-
-            }
-        });
     }
 
     public class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
+
         public ConnectThread(BluetoothDevice device) {
 
-            if(device == null)
-            {
-                Log.i("Status","Device is null");
+            if (device == null) {
+                Log.i("Status", "Device is null");
             }
 
             mmDevice = device;
             try {
                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
             mmSocket = tmp;
         }
+
         public void run() {
-            Log.i("Tag","Reached connect run");
+            Log.i("Tag", "Reached connect run");
             try {
                 mmSocket.connect();
             } catch (IOException e) {
@@ -895,10 +918,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             mConnectedThread = new ConnectedThread(mmSocket);
             mConnectedThread.start();
         }
+
         public void cancel() {
             try {
                 mmSocket.close();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -906,7 +931,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         public ConnectedThread(BluetoothSocket socket) {
-            Log.i("Tag","Reached connected thread");
+            Log.i("Tag", "Reached connected thread");
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
@@ -927,92 +952,67 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             String received = null;
 
             // Keep listening to the InputStream until an exception occurs
-            while(true) {
-
-                start.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        enter_flag = false;
-                        mapFragment.getView().setVisibility(View.VISIBLE);
-                        int count1 = 0;
-                        while (count1 <= 5) {
-                            byte[] send = message_1.getBytes();
-                            mConnectedThread.write(send);
-                            count1++;
-                        }
-                        handler.postDelayed(r, 1000);
-                    }
-                });
+            //    while (true) {
 
 
-                end.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        enter_flag = false;
-                        int count = 0;
-                        while (count <= 5) {
-                            byte[] send = message_2.getBytes();
-                            mConnectedThread.write(send);
-                            count++;
-                        }
-                    }
-                });
+//                try {
+//                    readBuffer = new byte[1024];
+//                    bytesAvailable = mmSocket.getInputStream().available();
+//                 //   if(bytesAvailable > 0 && enter_flag == true) {
+//                        byte[] packetBytes = new byte[bytesAvailable];
+//                        mmSocket.getInputStream().read(packetBytes);
+//                        byte b ;//= packetBytes[0];
+//                    for(i=1;i<45;i++){
+//                        b = packetBytes[i];
+//                        Log.i("bytes", String.valueOf(b));
+//                    }
+//                        if (b == delimiter1 && b != 0x00 && enter_flag == true) {
+//                            for (i = 1; i < 32 && enter_flag == true; i++) {
+//                                b = packetBytes[i];
+//                                if (b == com_delimiter && b != 0x00) {
+//                                    byte[] encodedBytes = new byte[readBufferPosition];
+//                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+//                                    data2 = new String(encodedBytes, "US-ASCII");
+//                                    start_lat = Double.parseDouble(data2);
+//                                    enter_map1 = true;
+//                                    readBufferPosition = 0;
+//
+//                                    enter_map1 = true;
+//                                    Log.i("Buffer1 data", String.valueOf(start_lat));
+//                                } else if (b == delimiter && b != 0x00) {
+//                                    byte[] encodedBytes = new byte[readBufferPosition];
+//                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+//                                    data1 = new String(encodedBytes, "US-ASCII");
+//                                    start_lng = Double.parseDouble(data1);
+//                                    enter_map2 = true;
+//                                    readBufferPosition = 0;
+//
+//                                    Log.i("Buffer2 data", String.valueOf(start_lng));
+//
+//                                } else if (b >= 0x30 || b <= 0x39 || b == 0x2E || b != delimiter1 || b != delimiter) {
+//
+//                                    readBuffer[readBufferPosition++] = b;
+//                            }
+//
+            //   }
+
+            //  enter_flag = false;
+            //    }
+
+            //   }
 
 
-                try {
-                    readBuffer = new byte[1024];
-                    bytesAvailable = mmInStream.available();
-                    if(bytesAvailable > 0 && enter_flag == true) {
-                        byte[] packetBytes = new byte[bytesAvailable];
-                        mmInStream.read(packetBytes);
-                        byte b = packetBytes[0];
-                        if (b == delimiter1 && b != 0x00 && enter_flag == true) {
-                            for (i = 1; i < 32 && enter_flag == true; i++) {
-                                b = packetBytes[i];
-                                if (b == com_delimiter && b != 0x00) {
-                                    byte[] encodedBytes = new byte[readBufferPosition];
-                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                    data2 = new String(encodedBytes, "US-ASCII");
-                                    start_lat = Double.parseDouble(data2);
-                                    enter_map1 = true;
-                                    readBufferPosition = 0;
-                                    enter_map1 = true;
-                                    Log.i("Buffer1 data", String.valueOf(start_lat));
-                                } else if (b == delimiter && b != 0x00) {
-                                    byte[] encodedBytes = new byte[readBufferPosition];
-                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                    data1 = new String(encodedBytes, "US-ASCII");
-                                    start_lng = Double.parseDouble(data1);
-                                    enter_map2 = true;
-                                    readBufferPosition = 0;
-
-                                    Log.i("Buffer2 data", String.valueOf(start_lng));
-
-                                } else if (b >= 0x30 || b <= 0x39 || b == 0x2E || b != delimiter1 || b != delimiter) {
-
-                                    readBuffer[readBufferPosition++] = b;
-                                }
-
-                            }
-
-                            enter_flag = false;
-                        }
-
-                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
 
 
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-            }
+            //    }
 
         }
 
         public void write(byte[] bytes) {
-            Log.i("Tag","Reached connected write");
+            Log.i("Tag", "Reached connected write");
             try {
                 mmOutStream.write(bytes);
             } catch (IOException e) {
@@ -1028,12 +1028,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    void system_status(){
+    void system_status() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 //listviewble.setVisibility(View.INVISIBLE);
-                status.setVisibility(View.VISIBLE);
+                // status.setVisibility(View.VISIBLE);
                 //text_display.setText(data1);
                 blevalue.setText(ble_status);
                 iovalue.setText(io_status);
@@ -1043,4 +1043,286 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
+
+    private class ConnectTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... url) {
+            connect();
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+
+            pairedDevices = bleAdapter.getBondedDevices();
+            if (pairedDevices.size() > 0) {
+                pairedDeviceArrayList = new ArrayList<BluetoothDevice>();
+
+                for (BluetoothDevice device : pairedDevices) {
+                    pairedDeviceArrayList.add(device);
+                }
+            }
+            arrayAdapter = new ArrayAdapter<BluetoothDevice>(MainActivity.this, R.layout.listview_item, pairedDeviceArrayList);
+            bluetoothcontrol.setVisibility(View.VISIBLE);
+            listViewPairedDevice.setAdapter(arrayAdapter);
+            listViewPairedDevice.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+
+                    device1 = (BluetoothDevice) adapterView.getItemAtPosition(i);
+
+                    mConnectThread = new ConnectThread(device1);
+                    mConnectThread.start();
+                    flag = true;
+
+
+                    bluetoothcontrol.setVisibility(View.INVISIBLE);
+                    // listViewPairedDevice.setVisibility(View.INVISIBLE);
+
+                }
+            });
+
+
+            start.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                   // enter_flag = false;
+                    sensorstatus.setVisibility(View.INVISIBLE);
+                    sys_status.setVisibility(View.INVISIBLE);
+                    misc.setVisibility(View.INVISIBLE);
+                    maplayout.setVisibility(View.INVISIBLE);
+                    //   mapFragment.getView().setVisibility(View.VISIBLE);
+                    int count1 = 0;
+                    while (count1 <= 5) {
+                        byte[] send = message_1.getBytes();
+                        mConnectedThread.write(send);
+                        count1++;
+                    }
+                    enter_flag = true;
+//                    DisplayTask displayTask = new DisplayTask();
+//                    displayTask.execute();
+                   // handler.postDelayed(r, 1000);
+                }
+            });
+
+
+            stop.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                   // enter_flag = false;
+                    sensorstatus.setVisibility(View.INVISIBLE);
+                    sys_status.setVisibility(View.INVISIBLE);
+                    misc.setVisibility(View.INVISIBLE);
+                    maplayout.setVisibility(View.INVISIBLE);
+                    int count = 0;
+                    while (count <= 5) {
+                        byte[] send = message_2.getBytes();
+                        mConnectedThread.write(send);
+                        count++;
+                    }
+                }
+            });
+        }
+
+    }
+
+    HashMap<Integer, byte[]> displayMap;
+
+    private class DisplayTask extends AsyncTask<String, Void, ArrayList<Byte>> {
+        @Override
+        protected ArrayList<Byte> doInBackground(String... url) {
+
+            displayMap = new HashMap<Integer, byte[]>();
+
+            if(enter_flag) {
+
+                readBuffer = new ArrayList<>();
+                try {
+                    bytesAvailable = mmInStream.available();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (bytesAvailable > 0) {
+                    byte[] packetBytes = new byte[bytesAvailable];
+                    try {
+                        mmInStream.read(packetBytes);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    byte b = packetBytes[0];
+
+                    if (b == delimiter1_at) {
+//                    flag = true;
+//                  //  enter_flag = false;
+//                }
+//                if(flag) {
+                        Log.i("bytes_1", String.valueOf(b));
+
+                        for (int i = 1; i < bytesAvailable; i++) {
+                            // i = 1;
+                            b = packetBytes[i];
+                            Log.i("bytesAvailable", String.valueOf(bytesAvailable));
+                            Log.i("index", String.valueOf(i));
+                            Log.i("bytes", String.valueOf(b));
+                            if (b == delimiter_dollar) {
+                                bytesAvailable = 0;
+                               // enter_flag = false;
+                                //  readBufferPosition = 0;
+                            }
+
+                            // while (b != delimiter_dollar) {
+
+                            else if (b != com_delimiter & b != delimiter1_at) {
+                                readBuffer.add(b);
+                                // readBufferPosition++;
+
+                            }
+                            // readBufferPosition++;
+                        }
+                    }
+
+
+                    // Log.i("bytes", String.valueOf(b));
+
+//                        if (b == delimiter_dollar && b != 0x00) {
+//                          //  byte[] encodedBytes = new byte[readBufferPosition];
+//                           // System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+//                            for(int k = 0; k<readBuffer.length; k++){
+//                                byte_string[k] = String.valueOf(readBuffer[k]);
+//                           }
+////                            displayMap.put(j, readBuffer);
+////                            Log.i("displayMap", String.valueOf(displayMap.get(j)));
+////                            j++;
+//                            readBufferPosition = 0;
+//                        }
+//                        } else if (b == delimiter && b != 0x00) {
+//                            byte[] encodedBytes = new byte[readBufferPosition];
+//                            System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+//                            data1 = new String(encodedBytes, "US-ASCII");
+//                            start_lng = Double.parseDouble(data1);
+//                            enter_map2 = true;
+//                            readBufferPosition = 0;
+//
+//                            Log.i("Buffer2 data", String.valueOf(start_lng));
+//
+//                        }
+//                        else if ( b != com_delimiter) {
+//
+//                            readBuffer[readBufferPosition++] = b;
+//                        }
+                    // i++;
+
+
+                    //  }
+
+
+                }
+                enter_flag = false;
+            }
+
+
+
+            return readBuffer;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Byte> result) {
+            super.onPostExecute(result);
+            sensorstatus.setVisibility(View.VISIBLE);
+            sys_status.setVisibility(View.VISIBLE);
+            misc.setVisibility(View.VISIBLE);
+
+            String left_sensor = readBuffer.get(0).toString();
+            String middle_sensor = readBuffer.get(1).toString();
+            String right_sensor = readBuffer.get(2).toString();
+            String rear_sensor = readBuffer.get(3).toString();
+            String critical_sensor = readBuffer.get(4).toString();
+
+            if(left_sensor.contentEquals("48"))
+                lstatus_image.setImageResource(R.drawable.sys_down);
+            if(left_sensor.contentEquals("49"))
+                lstatus_image.setImageResource(R.drawable.sys_up);
+            if(middle_sensor.contentEquals("48"))
+                mstatus_image.setImageResource(R.drawable.sys_down);
+            if(middle_sensor.contentEquals("49"))
+                mstatus_image.setImageResource(R.drawable.sys_up);
+            if(right_sensor.contentEquals("48"))
+                rstatus_image.setImageResource(R.drawable.sys_down);
+            if(right_sensor.contentEquals("49"))
+                rstatus_image.setImageResource(R.drawable.sys_up);
+            if(rear_sensor.contentEquals("48"))
+                rearstatus_image.setImageResource(R.drawable.sys_down);
+            if(rear_sensor.contentEquals("49"))
+                rearstatus_image.setImageResource(R.drawable.sys_up);
+            if(critical_sensor.contentEquals("48"))
+                cstatus_image.setImageResource(R.drawable.sys_down);
+            if(critical_sensor.contentEquals("49"))
+                cstatus_image.setImageResource(R.drawable.sys_up);
+
+
+            String ble_status = readBuffer.get(5).toString();
+            String geo_status = readBuffer.get(6).toString();
+            String io_status = readBuffer.get(7).toString();
+            String master_status = readBuffer.get(8).toString();
+            String motor_status = readBuffer.get(9).toString();
+            String sensor_status = readBuffer.get(10).toString();
+
+            if(ble_status.contentEquals("48"))
+                bleimage.setImageResource(R.drawable.sys_down);
+            if(ble_status.contentEquals("49"))
+                bleimage.setImageResource(R.drawable.sys_up);
+            if(geo_status.contentEquals("48"))
+                geoimage.setImageResource(R.drawable.sys_down);
+            if(geo_status.contentEquals("49"))
+                geoimage.setImageResource(R.drawable.sys_up);
+            if(io_status.contentEquals("48"))
+                ioimage.setImageResource(R.drawable.sys_down);
+            if(io_status.contentEquals("49"))
+                ioimage.setImageResource(R.drawable.sys_up);
+            if(master_status.contentEquals("48"))
+                masterimage.setImageResource(R.drawable.sys_down);
+            if(master_status.contentEquals("49"))
+                masterimage.setImageResource(R.drawable.sys_up);
+            if(motor_status.contentEquals("48"))
+                motorimage.setImageResource(R.drawable.sys_down);
+            if(motor_status.contentEquals("49"))
+                motorimage.setImageResource(R.drawable.sys_up);
+            if(sensor_status.contentEquals("48"))
+                sensorimage.setImageResource(R.drawable.sys_down);
+            if(sensor_status.contentEquals("49"))
+                sensorimage.setImageResource(R.drawable.sys_up);
+
+            String sys_cmd = readBuffer.get(11).toString();
+            if(sys_cmd.contentEquals("48"))
+                sysval_val.setImageResource(R.drawable.sys_down);
+            if(sys_cmd.contentEquals("49"))
+                sysval_val.setImageResource(R.drawable.sys_up);
+
+
+            String speed = readBuffer.get(12).toString() + readBuffer.get(13).toString();
+            speed_val.setText(speed);
+
+
+            String des_rchd = readBuffer.get(14).toString();
+
+            if(des_rchd.contentEquals("49"))
+                dstrchd.setText("Destinaltion Reached");
+
+         //   String battery_stat = readBuffer.get(15).toString() + readBuffer.get(16).toString();
+          //  btryval.setText(battery_stat);
+
+
+//
+//
+//            }
+
+
+        }
+    }
 }
+
+
+
+
